@@ -28,7 +28,6 @@
 
 #include <cmath>
 
-using namespace std;
 
 struct Point {
   float x;
@@ -75,7 +74,7 @@ class atom;
 
 struct gridcell {
   cellID ID;
-  vector<atom*> balls;
+  std::vector<atom*> balls;
   gridcell(int a, int b, int c) {
     ID.x = a;
     ID.y = b;

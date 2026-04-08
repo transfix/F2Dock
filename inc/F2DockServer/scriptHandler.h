@@ -29,38 +29,37 @@
 
 #include "dockingJobParams.h"
 
-using namespace std;
 
 class ScriptHandler
 {
 	DockingJobParams *dockJob;
 
-	string MolSurfPath;
-	string F2DockPath;
-	string GBRerankPath;
-	string PDB2PQRPath;
-	string DataPath;
+	std::string MolSurfPath;
+	std::string F2DockPath;
+	std::string GBRerankPath;
+	std::string PDB2PQRPath;
+	std::string DataPath;
 
 	public:
 	ScriptHandler(DockingJobParams *dj);
 	~ScriptHandler();
 
-	void initScript(ofstream *script);
-	void finalizeScript(ofstream *script);
+	void initScript(std::ofstream *script);
+	void finalizeScript(std::ofstream *script);
 	void submitScript(void);
 
-	void prepareDockingScript(ofstream *script);
-	void prepareRerankingScript(ofstream *script);
+	void prepareDockingScript(std::ofstream *script);
+	void prepareRerankingScript(std::ofstream *script);
 
-	void prepareF2dGenScript(ofstream *script);
-	void preparePQRGenScript(ofstream *script, bool receptor);
-	void prepareRAWNGenScript(ofstream *script, bool receptor);
-	void prepareQuadGenScript(ofstream *script, bool receptor);
+	void prepareF2dGenScript(std::ofstream *script);
+	void preparePQRGenScript(std::ofstream *script, bool receptor);
+	void prepareRAWNGenScript(std::ofstream *script, bool receptor);
+	void prepareQuadGenScript(std::ofstream *script, bool receptor);
 
 	void setupStartScript(int id);
-	void setupFinishScript(string id);
+	void setupFinishScript(std::string id);
 
-	string getDataPath(){return DataPath;}
+	std::string getDataPath(){return DataPath;}
 };
 
 ScriptHandler::ScriptHandler(DockingJobParams *dj)
@@ -123,49 +122,49 @@ ScriptHandler::ScriptHandler(DockingJobParams *dj)
 
 void ScriptHandler::setupStartScript(int id)
 {
-	ofstream stOutFP("gen-start-files.pl");
+	std::ofstream stOutFP("gen-start-files.pl");
 	if(!stOutFP)
 	{
-		cout<<"gen-start-files.pl script could not be created."<<endl;
+		std::cout<<"gen-start-files.pl script could not be created."<<std::endl;
 		return;
 	}
 	else
 	{
-		stOutFP << "#!/lusr/bin/perl" << endl;
-		stOutFP << "print \"\n\nStarting script\n\n\";" << endl;
-		stOutFP << "$dummyFile = qq("<<DataPath<<"/"<<id<<"_start.txt);" << endl;
-		stOutFP << "open OUT, \"> $dummyFile\" or die \"\nError: Cannot create dummy file!\n\n\"; " << endl;
-		stOutFP << "print OUT \"I am done.\n\"; " << endl;
-		stOutFP << "close OUT; " << endl;
-		stOutFP << endl;
+		stOutFP << "#!/lusr/bin/perl" << std::endl;
+		stOutFP << "print \"\n\nStarting script\n\n\";" << std::endl;
+		stOutFP << "$dummyFile = qq("<<DataPath<<"/"<<id<<"_start.txt);" << std::endl;
+		stOutFP << "open OUT, \"> $dummyFile\" or die \"\nError: Cannot create dummy file!\n\n\"; " << std::endl;
+		stOutFP << "print OUT \"I am done.\n\"; " << std::endl;
+		stOutFP << "close OUT; " << std::endl;
+		stOutFP << std::endl;
 		stOutFP.close();
 	}
 }
 
-void ScriptHandler::setupFinishScript(string id)
+void ScriptHandler::setupFinishScript(std::string id)
 {
-	ofstream stOutFP("gen-fin-files.pl");
+	std::ofstream stOutFP("gen-fin-files.pl");
 	if(!stOutFP)
 	{
-		cout<<"gen-fin-files.pl script could not be created."<<endl;
+		std::cout<<"gen-fin-files.pl script could not be created."<<std::endl;
 		return;
 	}
 	else
 	{
-		stOutFP << "#!/lusr/bin/perl" << endl;
-		stOutFP << "print \"\n\nStarting script\n\n\";" << endl;
-		stOutFP << "$dummyFile = qq("<<DataPath<<"/"<<id<<"_done.txt);" << endl;
-		stOutFP << "open OUT, \"> $dummyFile\" or die \"\nError: Cannot create dummy file!\n\n\"; " << endl;
-		stOutFP << "print OUT \"I am done.\n\"; " << endl;
-		stOutFP << "close OUT; " << endl;
-		stOutFP << endl;
+		stOutFP << "#!/lusr/bin/perl" << std::endl;
+		stOutFP << "print \"\n\nStarting script\n\n\";" << std::endl;
+		stOutFP << "$dummyFile = qq("<<DataPath<<"/"<<id<<"_done.txt);" << std::endl;
+		stOutFP << "open OUT, \"> $dummyFile\" or die \"\nError: Cannot create dummy file!\n\n\"; " << std::endl;
+		stOutFP << "print OUT \"I am done.\n\"; " << std::endl;
+		stOutFP << "close OUT; " << std::endl;
+		stOutFP << std::endl;
 		stOutFP.close();
 	}
 
 }
 
 
-void ScriptHandler::initScript(ofstream *script)
+void ScriptHandler::initScript(std::ofstream *script)
 {
 	if(dockJob->platform == PRISM2)
 	{
@@ -184,19 +183,19 @@ void ScriptHandler::initScript(ofstream *script)
 }
 
 
-void ScriptHandler::finalizeScript(ofstream *script)
+void ScriptHandler::finalizeScript(std::ofstream *script)
 {
 	char pidc[20];
 	sprintf(pidc, "%d", dockJob->jobId);	
 
-	string pid(pidc);
+	std::string pid(pidc);
 
 	(*script) << "echo \"Finished...\""<<"\n";
 	setupFinishScript(pid);
 	(*script) << "perl ./gen-fin-files.pl "<<pid<<"\n";
 
 
-	//ofstream jobscript(dockJob->scriptFileName.c_str());	
+	//std::ofstream jobscript(dockJob->scriptFileName.c_str());	
 	//jobscript << (*script);
 	//jobscript.close();
 }
@@ -206,25 +205,25 @@ void ScriptHandler::submitScript(void)
 {
 	if(dockJob->platform == LINUX)
 	{
-		string the_args = dockJob->scriptFileName;
-		string command ("chmod 700 ");	
+		std::string the_args = dockJob->scriptFileName;
+		std::string command ("chmod 700 ");	
 		command += the_args;
 
-		cout<<"Executing "<<the_args<<endl;
+		std::cout<<"Executing "<<the_args<<std::endl;
 		std::system(command.c_str()); 
 		std::system(the_args.c_str()); 				
 	}	
 	else if(dockJob->platform == PRISM2)
 	{
-		string the_args = "qsub " + dockJob->scriptFileName;
-		cout<<"Executing "<<the_args<<endl;
+		std::string the_args = "qsub " + dockJob->scriptFileName;
+		std::cout<<"Executing "<<the_args<<std::endl;
 		std::system(the_args.c_str()); 				
-		cout<<"Submission complete"<<endl;
+		std::cout<<"Submission complete"<<std::endl;
 	}
 }
 
 
-void ScriptHandler::prepareDockingScript(ofstream *script)
+void ScriptHandler::prepareDockingScript(std::ofstream *script)
 {
 	(*script) << "echo \"Starting Docking...\""<<"\n";
 	(*script) << F2DockPath <<" "<<dockJob->dockingInputFileName<<"\n";
@@ -233,7 +232,7 @@ void ScriptHandler::prepareDockingScript(ofstream *script)
 }
 
 
-void ScriptHandler::prepareRerankingScript(ofstream *script)
+void ScriptHandler::prepareRerankingScript(std::ofstream *script)
 {
 	(*script) << "echo \"Starting Reranking...\""<<"\n";
 	(*script) << GBRerankPath <<" "<<dockJob->rerankingInputFileName<<"\n";
@@ -241,11 +240,11 @@ void ScriptHandler::prepareRerankingScript(ofstream *script)
 }
 
 
-void ScriptHandler::preparePQRGenScript(ofstream *script, bool receptor)
+void ScriptHandler::preparePQRGenScript(std::ofstream *script, bool receptor)
 {
 	(*script) << "echo \"Starting PQRGen...\""<<"\n";
 
-	cout << "python "<<PDB2PQRPath<<" --ff=amber "<<dockJob->receptorPDBName<<" "<<dockJob->receptorPQRName<<"\n";
+	std::cout << "python "<<PDB2PQRPath<<" --ff=amber "<<dockJob->receptorPDBName<<" "<<dockJob->receptorPQRName<<"\n";
 
 	if(receptor) 
 		(*script) << "python "<<PDB2PQRPath<<" --ff=amber "<<dockJob->receptorPDBName<<" "<<dockJob->receptorPQRName<<"\n";
@@ -256,7 +255,7 @@ void ScriptHandler::preparePQRGenScript(ofstream *script, bool receptor)
 }
 
 
-void ScriptHandler::prepareF2dGenScript(ofstream *script)
+void ScriptHandler::prepareF2dGenScript(std::ofstream *script)
 {
 	(*script) << "echo \"Starting F2dGen...\""<<"\n";
 	//(*script) << "../Python/python ./f2dGenerator.py "<< dockJob->ligandPQRName << " " << dockJob->receptorPQRName << " " << dockJob->f2dDim <<"\n";	
@@ -268,7 +267,7 @@ void ScriptHandler::prepareF2dGenScript(ofstream *script)
 }
 
 
-void ScriptHandler::prepareRAWNGenScript(ofstream *script, bool receptor)
+void ScriptHandler::prepareRAWNGenScript(std::ofstream *script, bool receptor)
 {
 	(*script) << "echo \"Starting RAWNGen...\""<<"\n";
 
@@ -289,7 +288,7 @@ void ScriptHandler::prepareRAWNGenScript(ofstream *script, bool receptor)
 }
 
 
-void ScriptHandler::prepareQuadGenScript(ofstream *script, bool receptor)
+void ScriptHandler::prepareQuadGenScript(std::ofstream *script, bool receptor)
 {
 	(*script) << "echo \"Starting QuadGen...\""<<"\n";
 

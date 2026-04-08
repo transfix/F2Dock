@@ -26,7 +26,6 @@
 #include "cell.h"
 #include "1D-IntegerRange.h"
 //#include "ddriver.h"
-using namespace std;
 
 struct gridcell;
 

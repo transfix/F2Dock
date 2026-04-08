@@ -5536,7 +5536,7 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
 	break;
       }
 
-      string temp(str);
+      std::string temp(str);
 
       if(temp.compare("ATOM")==0 || temp.compare("HETATM")==0){
 	numStaticAtoms++;
@@ -5567,7 +5567,7 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
 	break;
       }
 
-      string temp(str);
+      std::string temp(str);
       int atomNum;
       char atomName[50];
       char resName[50];

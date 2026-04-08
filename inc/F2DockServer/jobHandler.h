@@ -28,7 +28,6 @@
 
 #include "scriptHandler.h"
 
-using namespace std;
 
 class JobHandler
 {
@@ -40,11 +39,11 @@ class JobHandler
 	void processF2dGenInput();
 	void processQuadGenInput();
 
-	bool submitDockingJob(ofstream *script);
-	bool submitRerankingJob(ofstream *script);
-	bool submitPQRJob(ofstream *script, bool receptor);
-	bool submitF2dGenJob(ofstream *script);
-	bool submitQuadGenJob(ofstream *script, bool receptor);
+	bool submitDockingJob(std::ofstream *script);
+	bool submitRerankingJob(std::ofstream *script);
+	bool submitPQRJob(std::ofstream *script, bool receptor);
+	bool submitF2dGenJob(std::ofstream *script);
+	bool submitQuadGenJob(std::ofstream *script, bool receptor);
 
 	void saveJob();
 
@@ -54,7 +53,7 @@ class JobHandler
 
 	bool submitJob();
 	
-	string getFileName(int index);
+	std::string getFileName(int index);
 };
 
 
@@ -67,7 +66,7 @@ JobHandler::JobHandler(DockingJobParams *dj)
 	char pidc[20];
 	sprintf(pidc, "%d", dockJob->jobId);	
 
-	string pid(pidc);
+	std::string pid(pidc);
 
 	dockJob->receptorPDBName = sh->getDataPath() + "/" + pid + "_r.pdb";
 	dockJob->ligandPDBName = sh->getDataPath() + "/" + pid + "_l.pdb";
@@ -114,7 +113,7 @@ JobHandler::JobHandler(DockingJobParams *dj)
 
 	dockJob->isDockingOutputAvailable = false;
 
-	cout<<" Created job handler "<<endl;
+	std::cout<<" Created job handler "<<std::endl;
 }
 
 
@@ -129,40 +128,40 @@ void JobHandler::saveJob()
 	char pidc[20];
 	sprintf(pidc, "%d", dockJob->jobId);	
 
-	string pid(pidc);
+	std::string pid(pidc);
 
-	string jobDescriptionFileName = sh->getDataPath() + "/" + "job"+pid+ ".txt";
-	ofstream job(jobDescriptionFileName.c_str());
+	std::string jobDescriptionFileName = sh->getDataPath() + "/" + "job"+pid+ ".txt";
+	std::ofstream job(jobDescriptionFileName.c_str());
 
-	job<<dockJob->jobId<<endl;
-	job<<dockJob->jobType<<endl;
+	job<<dockJob->jobId<<std::endl;
+	job<<dockJob->jobType<<std::endl;
 
-	job<<dockJob->receptorPDBName<<endl;
-	job<<dockJob->ligandPDBName<<endl;
+	job<<dockJob->receptorPDBName<<std::endl;
+	job<<dockJob->ligandPDBName<<std::endl;
 
-	job<<dockJob->receptorPQRName<<endl;
-	job<<dockJob->ligandPQRName<<endl;
+	job<<dockJob->receptorPQRName<<std::endl;
+	job<<dockJob->ligandPQRName<<std::endl;
 
-	job<<dockJob->receptorF2dName<<endl;
-	job<<dockJob->ligandF2dName<<endl;
+	job<<dockJob->receptorF2dName<<std::endl;
+	job<<dockJob->ligandF2dName<<std::endl;
 
-	job<<dockJob->receptorRAWNName<<endl;
-	job<<dockJob->ligandRAWNName<<endl;
+	job<<dockJob->receptorRAWNName<<std::endl;
+	job<<dockJob->ligandRAWNName<<std::endl;
 
-	job<<dockJob->receptorQuadName<<endl;
-	job<<dockJob->ligandQuadName<<endl;
+	job<<dockJob->receptorQuadName<<std::endl;
+	job<<dockJob->ligandQuadName<<std::endl;
 
-	job<<dockJob->dockingOutputFileName<<endl;
-	job<<dockJob->rerankingOutputFileName<<endl;
+	job<<dockJob->dockingOutputFileName<<std::endl;
+	job<<dockJob->rerankingOutputFileName<<std::endl;
 
-	job<<dockJob->dockingInputFileName<<endl;
-	job<<dockJob->rerankingOutputFileName<<endl;
+	job<<dockJob->dockingInputFileName<<std::endl;
+	job<<dockJob->rerankingOutputFileName<<std::endl;
 
 	job.close();
 }
 
 
-string JobHandler::getFileName(int index)
+std::string JobHandler::getFileName(int index)
 {
 	if(index == RECEPTOR_PQR) return dockJob->receptorPQRName;
 	else if(index == LIGAND_PQR) return dockJob->ligandPQRName;
@@ -187,12 +186,12 @@ bool JobHandler::submitJob()
 {
 	int type = dockJob->jobType;
 
-	cout << "Script file name: " << dockJob->scriptFileName.c_str() << endl;
+	std::cout << "Script file name: " << dockJob->scriptFileName.c_str() << std::endl;
 
-	ofstream jobscript(dockJob->scriptFileName.c_str());	//initializing the job script
+	std::ofstream jobscript(dockJob->scriptFileName.c_str());	//initializing the job script
 	sh->initScript(&jobscript);
 
-	cout<<" script initialized "<<endl; 
+	std::cout<<" script initialized "<<std::endl; 
 
 	if(type == DOCKING)
 	{
@@ -212,11 +211,11 @@ bool JobHandler::submitJob()
 		if(!submitQuadGenJob(&jobscript,false)) return false;
 	}
 
-	cout<<" script prepared "<<endl;
+	std::cout<<" script prepared "<<std::endl;
 
 	sh->finalizeScript(&jobscript);			//script has been prepared. Time to execute
 
-	cout<<" script finalized "<<endl;
+	std::cout<<" script finalized "<<std::endl;
 
 //	sh->submitScript();
 
@@ -224,7 +223,7 @@ bool JobHandler::submitJob()
 }
 
 
-bool JobHandler::submitDockingJob(ofstream *script)	//Check if sufficient data is available. Prepare the script for docking job. Make sure to include the generation of intermediate files
+bool JobHandler::submitDockingJob(std::ofstream *script)	//Check if sufficient data is available. Prepare the script for docking job. Make sure to include the generation of intermediate files
 {
 	bool rpdb = dockJob->isReceptorPDBAvailable;
 	bool rpqr = dockJob->isReceptorPQRAvailable;
@@ -278,7 +277,7 @@ bool JobHandler::submitDockingJob(ofstream *script)	//Check if sufficient data i
 }
 
 
-bool JobHandler::submitRerankingJob(ofstream *script)
+bool JobHandler::submitRerankingJob(std::ofstream *script)
 {
         bool rpdb = dockJob->isReceptorPDBAvailable;
         bool rpqr = dockJob->isReceptorPQRAvailable;
@@ -324,7 +323,7 @@ bool JobHandler::submitRerankingJob(ofstream *script)
 }
 
 
-bool JobHandler::submitPQRJob(ofstream *script, bool receptor)
+bool JobHandler::submitPQRJob(std::ofstream *script, bool receptor)
 {
 	if(receptor)
 	{
@@ -345,7 +344,7 @@ bool JobHandler::submitPQRJob(ofstream *script, bool receptor)
 }
 
 
-bool JobHandler::submitF2dGenJob(ofstream *script)
+bool JobHandler::submitF2dGenJob(std::ofstream *script)
 {
 	if(!dockJob->isReceptorPDBAvailable || !dockJob->isLigandPDBAvailable) return false;
 
@@ -383,7 +382,7 @@ bool JobHandler::submitF2dGenJob(ofstream *script)
 }
 
 
-bool JobHandler::submitQuadGenJob(ofstream *script, bool receptor)
+bool JobHandler::submitQuadGenJob(std::ofstream *script, bool receptor)
 {
 	processQuadGenInput();
 
@@ -435,9 +434,9 @@ bool JobHandler::submitQuadGenJob(ofstream *script, bool receptor)
 
 void JobHandler::processDockingInput()
 {
-	ofstream input(dockJob->dockingInputFileName.c_str(), ios_base::app);	
+	std::ofstream input(dockJob->dockingInputFileName.c_str(), std::ios_base::app);	
 
-	string inputstring = "staticMolecule " + dockJob->receptorF2dName + "\n";
+	std::string inputstring = "staticMolecule " + dockJob->receptorF2dName + "\n";
 	inputstring += "movingMolecule " + dockJob->ligandF2dName + "\n"; 
 	inputstring += "outFile " + dockJob->dockingOutputFileName + "\n";
 	inputstring += "staticMoleculePQR " + dockJob->receptorPQRName + "\n";
@@ -460,9 +459,9 @@ void JobHandler::processDockingInput()
 
 void JobHandler::processRerankingInput()
 {
-	ofstream input(dockJob->rerankingInputFileName.c_str(), ios_base::app);	
+	std::ofstream input(dockJob->rerankingInputFileName.c_str(), std::ios_base::app);	
 
-	string inputstring = "staticMoleculePQR " + dockJob->receptorPQRName + "\n";
+	std::string inputstring = "staticMoleculePQR " + dockJob->receptorPQRName + "\n";
 	inputstring += "movingMoleculePQR " + dockJob->ligandPQRName + "\n";
 	inputstring += "staticMoleculeQUAD " + dockJob->receptorQuadName + "\n";
 	inputstring += "movingMoleculeQUAD " + dockJob->ligandQuadName + "\n";
@@ -484,7 +483,7 @@ void JobHandler::processF2dGenInput()
 
 	if(dockJob->isF2dGenInputAvailable)
 	{
-		ifstream input(dockJob->f2dGenInputFileName.c_str());	
+		std::ifstream input(dockJob->f2dGenInputFileName.c_str());	
 
 		if(!input) return;
 
@@ -502,7 +501,7 @@ void JobHandler::processQuadGenInput()
 
 	if(dockJob->isQuadGenInputAvailable)
 	{
-		ifstream input(dockJob->quadGenInputFileName.c_str());	
+		std::ifstream input(dockJob->quadGenInputFileName.c_str());	
 
 		if(!input) return;
 

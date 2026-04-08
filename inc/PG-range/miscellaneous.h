@@ -24,9 +24,8 @@
 #ifndef MISC_H
 #define MISC_H
 #include <vector>
-using namespace std;
 
-int binSearch(int key, const vector<int>& x, int low, int high) {
+int binSearch(int key, const std::vector<int>& x, int low, int high) {
   if(high < low) return -1;
   int mid;
   while(true) {

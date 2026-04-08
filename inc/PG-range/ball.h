@@ -29,7 +29,6 @@
 #include <slist.h>
 #include <hash_map.h>
 #include <string>
-using namespace std;
 
 struct eqcurve
 {
