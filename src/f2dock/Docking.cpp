@@ -5311,7 +5311,7 @@ void markCluster( int x, int y, int z, double *markedPeaks, int numFreq, double 
       {
        for ( int yy = ly, dxy = dx + ( y - ly ) * ( y - ly ); yy <= hy; yy++ )
          {
-          int dxy = dx + ( y - yy ) * ( y - yy );
+          dxy = dx + ( y - yy ) * ( y - yy );
 
           for ( int zz = lz, dxyz = dxy + ( z - lz ) * ( z - lz ); zz <= hz; zz++ )
              {
@@ -5368,7 +5368,7 @@ int getClusterValue( int x, int y, int z, double *markedPeaks, int numFreq, doub
       {
        for ( int yy = ly, dxy = dx + ( y - ly ) * ( y - ly ); yy <= hy; yy++ )
          {
-          int dxy = dx + ( y - yy ) * ( y - yy );
+          dxy = dx + ( y - yy ) * ( y - yy );
 
           for ( int zz = lz, dxyz = dxy + ( z - lz ) * ( z - lz ); zz <= hz; zz++ )
              {

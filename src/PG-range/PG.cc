@@ -67,16 +67,16 @@ vector<Point*> PG::range(Point *q, double delta)
   
   vector<Point*> result;
   
-  vector<tuple<line*> >  temp1;
-  vector<tuple<gridcell*> >  temp2, S0, S1;
-  vector<tuple<gridcell*> >::iterator start2, end2; 
+  vector<RangeTuple<line*> >  temp1;
+  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
+  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
   
   
 
   int tts;
 
 
-  vector<tuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
   rangeCount++;
 
   if(S2.empty())
@@ -150,14 +150,14 @@ bool PG::pointsWithinRange(Point *q, double delta)
 
   int i,j,k,size,size1,size2,m;
   
-  vector<tuple<line*> >  temp1;
-  vector<tuple<gridcell*> >  temp2, S0, S1;
-  vector<tuple<gridcell*> >::iterator start2, end2; 
+  vector<RangeTuple<line*> >  temp1;
+  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
+  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
   
   int tts;
 
 
-  vector<tuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
   rangeCount++;
 
   if(S2.empty())
@@ -230,13 +230,13 @@ int PG::countPointsWithinRange(Point *q, double delta)
 
   int i,j,k,size,size1,size2,m;
   
-  vector<tuple<line*> >  temp1;
-  vector<tuple<gridcell*> >  temp2, S0, S1;
-  vector<tuple<gridcell*> >::iterator start2, end2; 
+  vector<RangeTuple<line*> >  temp1;
+  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
+  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
   
   int tts;
 
-  vector<tuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
   rangeCount++;
 
   if(S2.empty())
@@ -311,7 +311,7 @@ void PG::addPoint(Point *a)
   int cz = (int)center.z/DIM;
   int cy = (int)center.y/DIM;
   int cx = (int)center.x/DIM;
-  tuple<plane*> temp;
+  RangeTuple<plane*> temp;
   plane* p;
   line* l;
   gridcell* c;
@@ -319,35 +319,35 @@ void PG::addPoint(Point *a)
 //  if(rmax<radius)
 //	rmax = radius;
 
-  vector<tuple<plane*> > P = g.RR.report(cz,cz);
+  vector<RangeTuple<plane*> > P = g.RR.report(cz,cz);
   
   if(P.empty()) 
   {
     planes++;
     p = new plane(cz);
-    temp = tuple<plane*>(cz, p);
+    temp = RangeTuple<plane*>(cz, p);
     P.push_back(temp);
     g.RR.insert(cz, p);
   }
   
-  vector<tuple<line*> > L = P[0].ptr->RR.report(cy,cy);
+  vector<RangeTuple<line*> > L = P[0].ptr->RR.report(cy,cy);
   
   if(L.empty()) 
   {
     lines++;
     l = new line(cy, cz); 
-    tuple<line*> temp1(cy, l);
+    RangeTuple<line*> temp1(cy, l);
     L.push_back(temp1);
     P[0].ptr->RR.insert(cy, l); //same here
   }
   
-  vector<tuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
+  vector<RangeTuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
   
   if(C.empty()) 
   {
     cells++;
     c = new gridcell(cx, cy, cz); //and here
-    tuple<gridcell*> temp2(cx, c);
+    RangeTuple<gridcell*> temp2(cx, c);
     C.push_back(temp2);
     L[0].ptr->RR.insert(cx, c); //and here
   }
@@ -376,19 +376,19 @@ cout<<"Inside removeatom"<<endl;
   int cy = (int)center.y/DIM;
   int cx = (int)center.x/DIM;
   
-  vector<tuple<plane*> > P = g.RR.report(cz,cz);
+  vector<RangeTuple<plane*> > P = g.RR.report(cz,cz);
   if(P.empty()) {
     cout<<"Atom does not exist"<<endl;
     return;
   }
 
-  vector<tuple<line*> > L = P[0].ptr->RR.report(cy,cy);
+  vector<RangeTuple<line*> > L = P[0].ptr->RR.report(cy,cy);
   if(L.empty()) {
     cout<<"Atom does not exist"<<endl;
     return;
   }
 
-  vector<tuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
+  vector<RangeTuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
   if(C.empty()) {
     cout<<"Atom does not exist"<<endl;
     return;

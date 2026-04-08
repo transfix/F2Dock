@@ -41,42 +41,42 @@ using namespace std;
 
 
 template<typename T>
-class tuple {
+class RangeTuple {
  public:
   int id;
   T ptr;
  
-  tuple(int a, T b) {
+  RangeTuple(int a, T b) {
     id = a;
     ptr = b;
   }
-  tuple() {
+  RangeTuple() {
     id = -1;
     ptr = NULL;
   }
 
-  tuple(const tuple<T>& that) {
+  RangeTuple(const RangeTuple<T>& that) {
       id = that.id;
       ptr = that.ptr;
 
   }
 
-  bool operator==(const tuple<T>& that) const{
+  bool operator==(const RangeTuple<T>& that) const{
     return (id == that.id);
   }
-  bool operator<(const tuple<T>& that) const{
+  bool operator<(const RangeTuple<T>& that) const{
     return id < that.id;
   }
-  bool operator>(const tuple<T>& that) const{
+  bool operator>(const RangeTuple<T>& that) const{
     return id > that.id;
   }
-  bool operator<=(const tuple<T>& that) const{
+  bool operator<=(const RangeTuple<T>& that) const{
     return (operator<(that) || operator==(that));
   }
-  bool operator>=(const tuple<T>& that) const{
+  bool operator>=(const RangeTuple<T>& that) const{
     return (operator>(that) || operator==(that));
   }
-  bool operator!=(const tuple<T>& that) const{
+  bool operator!=(const RangeTuple<T>& that) const{
     return !(operator==(that));
   }
 
@@ -91,7 +91,7 @@ class tuple {
 };
 
 template<typename T>
-ostream& operator<<(ostream& ost, const tuple<T>& p) {
+ostream& operator<<(ostream& ost, const RangeTuple<T>& p) {
   string end = "";
   ost<<p.id<<" "<<p.ptr;
   return ost << end;
@@ -103,10 +103,10 @@ class IntegerRange
 	int W;
 	int U;
 	int n;
-	vector<BinarySearchTree<tuple<T> >*> BST;
+	vector<BinarySearchTree<RangeTuple<T> >*> BST;
 	dict_ptr D;
 	vector<int> repMap; // maps cluster id with representative
-	//tuple<T> notfound(-1, NULL);
+	//RangeTuple<T> notfound(-1, NULL);
 
 	int get_pre_rep(int key) 
 	{
@@ -233,8 +233,8 @@ class IntegerRange
   
 		if(s > SPLIT_THRESH) 
 		{
-			tuple<T> notfound(-1, NULL);
-			BinarySearchTree<tuple<T> >* t = new BinarySearchTree<tuple<T> >(notfound);
+			RangeTuple<T> notfound(-1, NULL);
+			BinarySearchTree<RangeTuple<T> >* t = new BinarySearchTree<RangeTuple<T> >(notfound);
 			BST[index]->split(t);
 	
 			//   cout<<"In split"<<endl;
@@ -245,7 +245,7 @@ class IntegerRange
 			p = p + (index + 1);
 			repMap.insert(p, (t->findMax()).id);
 
-			typename vector<BinarySearchTree<tuple<T> >*>::iterator q = BST.begin();
+			typename vector<BinarySearchTree<RangeTuple<T> >*>::iterator q = BST.begin();
 			q = q + index + 1;
 			BST.insert(q, t);
 
@@ -312,7 +312,7 @@ class IntegerRange
 			repMap[index] = (BST[index]->findMax()).id;
 			insertInHash(repMap[index]);
 
-			typename vector<BinarySearchTree<tuple<T> >*>::iterator p = BST.begin();
+			typename vector<BinarySearchTree<RangeTuple<T> >*>::iterator p = BST.begin();
 			p = p + merge_with;
 			BST.erase(p);
 
@@ -387,8 +387,8 @@ public:
     
 			insertInHash(x);
 			repMap.push_back(x);
-			tuple<T> notfound(-1, NULL);
-			BST.push_back(new BinarySearchTree<tuple<T> >(notfound));
+			RangeTuple<T> notfound(-1, NULL);
+			BST.push_back(new BinarySearchTree<RangeTuple<T> >(notfound));
     
 			//printReps();
   		}
@@ -398,7 +398,7 @@ public:
 		increment n
 		*/
 
-		tuple<T> item(x,y);
+		RangeTuple<T> item(x,y);
   
 		BST[next_clus]->insert(item);
 
@@ -426,7 +426,7 @@ public:
 		int pre_rep = get_pre_rep(k);
 		int next_clus = get_cluster(pre_rep, k);
  
-		tuple<T> item(k,NULL);
+		RangeTuple<T> item(k,NULL);
 		BST[next_clus]->remove(item);
 		n--;
   
@@ -441,7 +441,7 @@ public:
 		{
 			delete BST[next_clus];
 	    
-			typename vector<BinarySearchTree<tuple<T> >*>::iterator p = BST.begin();
+			typename vector<BinarySearchTree<RangeTuple<T> >*>::iterator p = BST.begin();
 			p = p + next_clus;
 			BST.erase(p);
 	    
@@ -477,24 +477,24 @@ public:
 
 	/*Return the predecessor of an element*/
 
-	tuple<T> predecessor(int x)
+	RangeTuple<T> predecessor(int x)
   	{
 		int pre_rep = get_pre_rep(x);  
   		int next_clus = get_cluster(pre_rep, x);
   
   		if(next_clus == (int)BST.size())
 		{   
-			tuple<T> temp(pre_rep, NULL);
+			RangeTuple<T> temp(pre_rep, NULL);
 			return BST[next_clus-1]->find(temp);
 		}
 
   
-		tuple<T> item(x, NULL);
-		tuple<T> pre = BST[next_clus]->predecessor(item);
+		RangeTuple<T> item(x, NULL);
+		RangeTuple<T> pre = BST[next_clus]->predecessor(item);
   
 		if(pre.id == -1 && next_clus > 0) 
 		{
-			tuple<T> pretup(pre_rep, NULL);
+			RangeTuple<T> pretup(pre_rep, NULL);
 			return BST[next_clus-1]->find(pretup);
 		}
   
@@ -504,11 +504,11 @@ public:
 
 	/*Reports all integers between 'a' and 'b' (inclusive)*/
 	
-	vector<tuple<T> > report(int a, int b)
+	vector<RangeTuple<T> > report(int a, int b)
 	{
 //		cout<<"Inside RR.report"<<endl;
 		  
-		vector<tuple<T> > x;
+		vector<RangeTuple<T> > x;
 
 //		cout<<n;
 //		int abc;
@@ -519,7 +519,7 @@ public:
 //			cout<<"returning"<<endl;
 			return x;
 		}
-		tuple<T> pre = predecessor(b);
+		RangeTuple<T> pre = predecessor(b);
 	  
 		//cout << "a = " << a << ", b = " << b << endl;
 	  
