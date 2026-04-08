@@ -1,16 +1,15 @@
-cmake_minimum_required (VERSION 2.6)
-project (F2Dock)
+cmake_minimum_required(VERSION 3.16)
+project(F2Dock LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Global Variables
 if(CMAKE_HOST_UNIX)
-  # standard setup
-  set (CMAKE_CXX_FLAGS "$ENV{CPPFLAGS} -I${CMAKE_SOURCE_DIR}/inc -O2")
-  set (CMAKE_LD_FLAGS "$ENV{LDFLAGS}")
-  
-  # Debugging and profiling friendly flags:
-  #set (CMAKE_CXX_FLAGS "$ENV{CPPFLAGS} -pg")
-  #set (CMAKE_LD_FLAGS "$ENV{LDFLAGS} -pg")
-endif(CMAKE_HOST_UNIX)
+  set(CMAKE_CXX_FLAGS "$ENV{CPPFLAGS} -I${CMAKE_SOURCE_DIR}/inc -O2")
+  set(CMAKE_LD_FLAGS "$ENV{LDFLAGS}")
+endif()
 
 
 # CMake Modules

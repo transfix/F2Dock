@@ -51,7 +51,8 @@ jobs:
             build-essential \
             cmake \
             ninja-build \
-            libfftw3-dev
+            libfftw3-dev \
+            libboost-dev
           # Coverage tools
           if [ "${{ matrix.coverage }}" = "true" ]; then
             sudo apt-get install -y --no-install-recommends lcov
@@ -64,7 +65,8 @@ jobs:
           brew install \
             cmake \
             ninja \
-            fftw
+            fftw \
+            boost
 
       # ── Configure ──
       - name: Configure (Unix)

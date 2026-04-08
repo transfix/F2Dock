@@ -27,74 +27,33 @@
 
 #include "cuckoo.h"
 #include "BinarySearchTree.h"
-//#include "hash3d.h"
-//#include "miscellaneous.h"
 #include <string>
 #include <iostream>
 #include <cmath>
-using namespace std;
+#include <compare>
+#include <utility>
+#include <vector>
 
-//#define W 4
-//#define U 16
 #define SPLIT_THRESH 2*n/W
 #define MERGE_THRESH n/(2*W)
 
 
+// Tagged pointer: compares/sorts by integer key only.
 template<typename T>
-class RangeTuple {
- public:
-  int id;
-  T ptr;
- 
-  RangeTuple(int a, T b) {
-    id = a;
-    ptr = b;
-  }
-  RangeTuple() {
-    id = -1;
-    ptr = NULL;
-  }
+struct RangeTuple {
+  int id = -1;
+  T ptr{};
 
-  RangeTuple(const RangeTuple<T>& that) {
-      id = that.id;
-      ptr = that.ptr;
+  RangeTuple() = default;
+  RangeTuple(int a, T b) : id(a), ptr(b) {}
 
-  }
-
-  bool operator==(const RangeTuple<T>& that) const{
-    return (id == that.id);
-  }
-  bool operator<(const RangeTuple<T>& that) const{
-    return id < that.id;
-  }
-  bool operator>(const RangeTuple<T>& that) const{
-    return id > that.id;
-  }
-  bool operator<=(const RangeTuple<T>& that) const{
-    return (operator<(that) || operator==(that));
-  }
-  bool operator>=(const RangeTuple<T>& that) const{
-    return (operator>(that) || operator==(that));
-  }
-  bool operator!=(const RangeTuple<T>& that) const{
-    return !(operator==(that));
-  }
-
-  /*
-  ostream& operator<<(ostream& ost) {
-    string end = "";
-    ost << this->id;
-    return ost << end;
-  }
-  */
-
+  auto operator<=>(const RangeTuple& o) const { return id <=> o.id; }
+  bool operator==(const RangeTuple& o) const  { return id == o.id; }
 };
 
 template<typename T>
-ostream& operator<<(ostream& ost, const RangeTuple<T>& p) {
-  string end = "";
-  ost<<p.id<<" "<<p.ptr;
-  return ost << end;
+std::ostream& operator<<(std::ostream& ost, const RangeTuple<T>& p) {
+  return ost << p.id << " " << p.ptr;
 }
 
 template <class T>
@@ -103,9 +62,9 @@ class IntegerRange
 	int W;
 	int U;
 	int n;
-	vector<BinarySearchTree<RangeTuple<T> >*> BST;
+	std::vector<BinarySearchTree<RangeTuple<T> >*> BST;
 	dict_ptr D;
-	vector<int> repMap; // maps cluster id with representative
+	std::vector<int> repMap; // maps cluster id with representative
 	//RangeTuple<T> notfound(-1, NULL);
 
 	int get_pre_rep(int key) 
@@ -129,7 +88,7 @@ class IntegerRange
 		if(!m)
 	    		return -1;
 
-		// cout<<"******* before "<<m<<endl;
+		// std::cout<<"******* before "<<m<<std::endl;
 		int level = (int) log2((double)m);
 		int i = level+2;
 		c=m;
@@ -156,7 +115,7 @@ class IntegerRange
 				m = 2*m;
 		}
 
-		// cout<<"******* after "<<m<<endl;
+		// std::cout<<"******* after "<<m<<std::endl;
 		return m-U;
 	}
 
@@ -169,7 +128,7 @@ class IntegerRange
 		int num_clusters = (int)BST.size();
 		for(int i = 0; i < num_clusters; i++) 
 		{
-			cout<<"Printing tree # "<<i+1<<endl;
+			std::cout<<"Printing tree # "<<i+1<<std::endl;
 			BST[i]->printTree(); /*cout for tuple*/
 		}
 		return;
@@ -183,7 +142,7 @@ class IntegerRange
 		int num_clusters = (int)repMap.size();
 	
 		for(int i = 0; i < num_clusters; i++) 
-			cout<<"Representative for tree # "<<i+1<<" is "<<repMap[i]<<endl;
+			std::cout<<"Representative for tree # "<<i+1<<" is "<<repMap[i]<<std::endl;
 
 		return;
 	}
@@ -237,15 +196,15 @@ class IntegerRange
 			BinarySearchTree<RangeTuple<T> >* t = new BinarySearchTree<RangeTuple<T> >(notfound);
 			BST[index]->split(t);
 	
-			//   cout<<"In split"<<endl;
+			//   std::cout<<"In split"<<std::endl;
 			//   printReps();
 			removeFromHash(repMap[index]);
 			repMap[index] = (BST[index]->findMax()).id;
-			vector<int>::iterator p = repMap.begin();
+			std::vector<int>::iterator p = repMap.begin();
 			p = p + (index + 1);
 			repMap.insert(p, (t->findMax()).id);
 
-			typename vector<BinarySearchTree<RangeTuple<T> >*>::iterator q = BST.begin();
+			typename std::vector<BinarySearchTree<RangeTuple<T> >*>::iterator q = BST.begin();
 			q = q + index + 1;
 			BST.insert(q, t);
 
@@ -259,7 +218,7 @@ class IntegerRange
 
 
 
-	int binSearch(int key, const vector<int>& x, int low, int high) 
+	int binSearch(int key, const std::vector<int>& x, int low, int high) 
 	{
 		if(high < low) return -1;
 		int mid;
@@ -312,11 +271,11 @@ class IntegerRange
 			repMap[index] = (BST[index]->findMax()).id;
 			insertInHash(repMap[index]);
 
-			typename vector<BinarySearchTree<RangeTuple<T> >*>::iterator p = BST.begin();
+			typename std::vector<BinarySearchTree<RangeTuple<T> >*>::iterator p = BST.begin();
 			p = p + merge_with;
 			BST.erase(p);
 
-			vector<int>::iterator q = repMap.begin();
+			std::vector<int>::iterator q = repMap.begin();
 			q = q + merge_with;
 			repMap.erase(q);
 
@@ -367,11 +326,11 @@ public:
 	/*Insert into S*/
 	void insert(int x, T y)
 	{
-		//cout<<"Inserting "<<"x = "<<x<<endl;
+		//std::cout<<"Inserting "<<"x = "<<x<<std::endl;
 		//printReps();
 		int pre_rep = get_pre_rep(x);
 		int next_clus = get_cluster(pre_rep, x);
-		//cout<<" pre = "<<pre_rep<<" next = "<<next_clus<<endl;
+		//std::cout<<" pre = "<<pre_rep<<" next = "<<next_clus<<std::endl;
  
 		/*
 		If new cluster needs to be created, then:
@@ -383,7 +342,7 @@ public:
 		int s = (int)BST.size();
 		if(next_clus == s) 
 		{
-			//cout<<"Creating new BST"<<endl;
+			//std::cout<<"Creating new BST"<<std::endl;
     
 			insertInHash(x);
 			repMap.push_back(x);
@@ -405,7 +364,7 @@ public:
 		//BST[next_clus]->printTree();
 		
 		n++;
-		//cout<<"n = "<<n<<endl;
+		//std::cout<<"n = "<<n<<std::endl;
   
 		if(BST[next_clus]->size()*2/W < 2 )
 		{
@@ -413,7 +372,7 @@ public:
 		} 
   
   		splitBST(next_clus);
-		//  cout<<"Splitted"<<endl;
+		//  std::cout<<"Splitted"<<std::endl;
 		//  printReps();
 		return;
   	}
@@ -441,11 +400,11 @@ public:
 		{
 			delete BST[next_clus];
 	    
-			typename vector<BinarySearchTree<RangeTuple<T> >*>::iterator p = BST.begin();
+			typename std::vector<BinarySearchTree<RangeTuple<T> >*>::iterator p = BST.begin();
 			p = p + next_clus;
 			BST.erase(p);
 	    
-			vector<int>::iterator q  = repMap.begin();
+			std::vector<int>::iterator q  = repMap.begin();
 			q  = q + next_clus;
 			repMap.erase(q);
 
@@ -504,19 +463,19 @@ public:
 
 	/*Reports all integers between 'a' and 'b' (inclusive)*/
 	
-	vector<RangeTuple<T> > report(int a, int b)
+	std::vector<RangeTuple<T> > report(int a, int b)
 	{
-//		cout<<"Inside RR.report"<<endl;
+//		std::cout<<"Inside RR.report"<<std::endl;
 		  
-		vector<RangeTuple<T> > x;
+		std::vector<RangeTuple<T> > x;
 
-//		cout<<n;
+//		std::cout<<n;
 //		int abc;
 //		scanf("%d", &abc);
 
 		if(n == 0)
 		{ 
-//			cout<<"returning"<<endl;
+//			std::cout<<"returning"<<std::endl;
 			return x;
 		}
 		RangeTuple<T> pre = predecessor(b);
@@ -538,7 +497,7 @@ public:
 			pre = predecessor(b);
 		}
 
-//		cout<<"returning with "<<(int)x.size()<<endl;
+//		std::cout<<"returning with "<<(int)x.size()<<std::endl;
 		return x;
 	}
 
