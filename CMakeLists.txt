@@ -37,3 +37,10 @@ ADD_DEFINITIONS(-DMACOS_X)
 ENDIF(APPLE)
 
 add_subdirectory (src)
+
+# ── Testing ──
+option(F2DOCK_BUILD_TESTS "Build unit tests" ON)
+if(F2DOCK_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests/unit)
+endif()
