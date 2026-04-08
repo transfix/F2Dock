@@ -24,7 +24,6 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES ".*BSD")
 
 ADD_LIBRARY (XmlRPC STATIC ${SOURCE_FILES} ${INCLUDE_FILES})
 
-#Windows requires wsock32
 if(WIN32)
-  target_link_libraries(XmlRPC wsock32)
-endif(WIN32)
+  target_link_libraries(XmlRPC ws2_32)
+endif()

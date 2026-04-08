@@ -11,11 +11,10 @@ INCLUDE_DIRECTORIES(
 )
 
 SET(POST_FILTERING_LINK_LIBS 
-
   fast-clash
   math
   utils
-  pthread
+  Threads::Threads
 )
 
 ADD_EXECUTABLE (FilterOutput FilterOutput.cpp ${SOURCE_FILES})

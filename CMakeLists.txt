@@ -6,11 +6,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Global Variables
-if(CMAKE_HOST_UNIX)
+if(MSVC)
+  include_directories(${CMAKE_SOURCE_DIR}/inc)
+  add_compile_options(/W3 /EHsc)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX -D_USE_MATH_DEFINES)
+else()
   set(CMAKE_CXX_FLAGS "$ENV{CPPFLAGS} -I${CMAKE_SOURCE_DIR}/inc -O2")
   set(CMAKE_LD_FLAGS "$ENV{LDFLAGS}")
 endif()
 
+find_package(Threads REQUIRED)
 
 # CMake Modules
 SET(CMAKE_MODULE_PATH

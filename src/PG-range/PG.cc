@@ -24,7 +24,11 @@
 #include "PG.h"
 #include <cmath>
 #include <time.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#else
+#include <sys/timeb.h>
+#endif
 
 using namespace std;
 
@@ -34,6 +38,7 @@ double gtod_sec = 0.0E0;
 
 double gtod_timer()
 {
+#ifndef _WIN32
    struct timeval tv;
    struct timezone Tzp;
    double sec;
@@ -45,6 +50,14 @@ double gtod_timer()
    sec = (double)tv.tv_sec - gtod_sec;
 
    return sec + 1.0E-06*(double)tv.tv_usec;
+#else
+   struct _timeb tb;
+   _ftime(&tb);
+   if(gtod_sec == 0.0E0)
+      gtod_sec = (double)tb.time;
+   double sec = (double)tb.time - gtod_sec;
+   return sec + 1.0E-03*(double)tb.millitm;
+#endif
 }
 
 

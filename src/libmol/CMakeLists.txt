@@ -23,7 +23,7 @@ SET(LIBMOL_LINK_LIBS
   libmol
   fft-utils
   fftw3
-  pthread
+  Threads::Threads
 )
 
 #ADD_EXECUTABLE (test test.cpp)

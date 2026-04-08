@@ -32,6 +32,13 @@ jobs:
           - os: macos-latest
             build_type: Release
             coverage: false
+          # Windows
+          - os: windows-latest
+            build_type: Debug
+            coverage: false
+          - os: windows-latest
+            build_type: Release
+            coverage: false
 
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} / ${{ matrix.build_type }}
@@ -66,8 +73,16 @@ jobs:
             ninja \
             fftw
 
-      # ── Configure ──
+      # ── Windows dependencies (vcpkg) ──
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          vcpkg install fftw3:x64-windows pthreads:x64-windows
+
+      # ── Configure (Unix) ──
       - name: Configure (Unix)
+        if: runner.os != 'Windows'
         run: |
           cmake_args=(
             -B build
@@ -84,15 +99,19 @@ jobs:
           fi
           cmake "${cmake_args[@]}"
 
+      # ── Configure (Windows) ──
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
+
       # ── Build ──
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} --parallel
-
-      # ── Test ──
-      # F2Dock does not currently have a CTest-based test suite.
-      # When tests are added, enable the step below.
-      # - name: Run tests
-      #   run: ctest --test-dir build --build-config ${{ matrix.build_type }} --output-on-failure --parallel
 
       # ── Coverage (Linux Debug only) ──
       - name: Generate coverage report
@@ -129,14 +148,34 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      # ── Verify executables ──
-      - name: Verify executables exist
+      # ── Verify executables (Unix) ──
+      - name: Verify executables exist (Unix)
+        if: runner.os != 'Windows'
         run: |
           test -x build/bin/F2Dock
           test -x build/bin/GB-Rerank
           test -x build/bin/F2DockServer
           test -x build/bin/FilterOutput
           echo "All 4 executables built successfully"
+
+      # ── Verify executables (Windows) ──
+      - name: Verify executables exist (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exes = @("F2Dock.exe", "GB-Rerank.exe", "F2DockServer.exe", "FilterOutput.exe")
+          foreach ($exe in $exes) {
+            $path = "build/bin/${{ matrix.build_type }}/$exe"
+            if (-not (Test-Path $path)) {
+              $path = "build/bin/$exe"
+            }
+            if (-not (Test-Path $path)) {
+              Write-Error "$exe not found"
+              exit 1
+            }
+            Write-Host "Found: $path"
+          }
+          Write-Host "All 4 executables built successfully"
 
       # ── Upload build artifacts ──
       - name: Upload build artifact

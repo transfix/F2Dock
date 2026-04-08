@@ -15,10 +15,11 @@ SET(GBRERANK_LINK_LIBS
   fast-GB 
   PG-range
   utils
-  c
-  m
-  pthread
+  Threads::Threads
 )
+if(UNIX)
+  list(APPEND GBRERANK_LINK_LIBS c m)
+endif()
 
 
 ADD_EXECUTABLE (GB-Rerank ${SOURCE_FILES} ${INCLUDE_FILES})

@@ -33,10 +33,11 @@ SET(F2DOCK_LINK_LIBS
   misc-ident
 #  ${FFTW_LIB}
   fftw3
-  c
-  m
-  pthread
+  Threads::Threads
 )
+if(UNIX)
+  list(APPEND F2DOCK_LINK_LIBS c m)
+endif()
 
 if(HAVE_LIBMOL)
 SET(F2DOCK_LINK_LIBS  ${F2DOCK_LINK_LIBS} 

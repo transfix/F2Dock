@@ -20,7 +20,9 @@
 #define SPARSE3DFFT_ENABLE_PENTIUM_TIMER 0
 #define SPARSE3DFFT_CYCLES_PER_SEC 550000000
 
+#if !defined(_WIN32)
 #define HAVE_GETTIMEOFDAY 1
+#endif
 
 #if defined(__GNUC__) && defined(__i386__) && SPARSE3DFFT_ENABLE_PENTIUM_TIMER
 
