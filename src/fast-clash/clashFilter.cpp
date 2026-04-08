@@ -128,7 +128,8 @@ void clashFilter::setDefaults( void )
       
    printStatus = true;
    
-   pthread_mutex_init( &nodesLock, NULL );   
+   pthread_mutex_init( &nodesLock, NULL );
+   pthread_mutex_init( &subtreeRootsLock, NULL );
 }
 
 
@@ -190,8 +191,8 @@ clashFilter::clashFilter( int numStaticAtoms, double *stAtoms, int numMovingAtom
 }
 
 clashFilter::clashFilter( int numStaticAtoms, double *stAtoms, int numMovingAtoms, double *mvAtoms )
+   : clashFilter( numStaticAtoms, stAtoms, numMovingAtoms, mvAtoms, true )
 {
-   clashFilter( numStaticAtoms, stAtoms, numMovingAtoms, mvAtoms, true );
 }
 
 
@@ -715,6 +716,7 @@ bool clashFilter::buildOctrees( void )
    if ( ( minRadius != minRadiusUsed ) || ( maxLeafSize != maxLeafSizeUsed ) || ( !movingAtomsOctreeBuilt ) ) buildMovingAtomsOctree( );
    minRadiusUsed = minRadius;
    maxLeafSizeUsed = maxLeafSize;
+   return true;
 }
 
 

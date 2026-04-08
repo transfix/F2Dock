@@ -169,6 +169,7 @@ class clashFilter
         tR->nSevereClashes += nSevereClashes;
         tR->interactionValue += interactionValue;
        }
+     return nullptr;
     }
 
     
