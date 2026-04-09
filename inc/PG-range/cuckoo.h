@@ -23,6 +23,8 @@
 #ifndef CUCKOO_H
 #define CUCKOO_H 
 
+#include <stdlib.h>
+
 typedef struct cell {       /* hash table cell type */ 
   int key; 
 } celltype;
@@ -60,11 +62,22 @@ void rehash(dict_ptr D, int new_size);
 /* There is no proof that this is always the case, and there  */
 /* may be a better choice of function.                        */
 
+/* Build a full-range random int from rand() regardless of RAND_MAX.
+   On Windows, RAND_MAX is only 32767 (15 bits), which produces hash
+   coefficients too small to index a 1024-entry table after >> 22.
+   This combines multiple rand() calls to fill 32 bits. */
+static inline int cuckoo_full_rand(void) {
+  int r = rand() & 0x7FFF;          /* bits  0-14 */
+  r |= (rand() & 0x7FFF) << 15;    /* bits 15-29 */
+  r |= (rand() & 0x3)    << 30;    /* bits 30-31 */
+  return r;
+}
+
 #define inithashcuckoo(a) \
 {\
-  a[0] = ((int)rand() << 1) + 1;\
-  a[1] = ((int)rand() << 1) + 1;\
-  a[2] = ((int)rand() << 1) + 1;\
+  a[0] = (cuckoo_full_rand() << 1) | 1;\
+  a[1] = (cuckoo_full_rand() << 1) | 1;\
+  a[2] = (cuckoo_full_rand() << 1) | 1;\
 }
 
 #define hashcuckoo(h,a,shift,key)\

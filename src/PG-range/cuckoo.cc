@@ -126,12 +126,17 @@ dict_ptr construct_dict(int min_size)
 
 
 /*------insert-----------------------------------------*/
-boolean insertD (dict_ptr D, int key) 
+static boolean insertD_impl (dict_ptr D, int key, int depth)
 { 
 
   unsigned long h1,h2;
   int j;
   celltype x,temp;
+
+  if (depth > 20) {
+    fprintf(stderr, "cuckoo insertD: max rehash depth exceeded for key %d\n", key);
+    return FALSE;
+  }
   
   /*If element already in D then replace and return*/
   hashcuckoo(h1,D->a1,D->shift,key);
@@ -173,9 +178,13 @@ boolean insertD (dict_ptr D, int key)
   else {
     rehash(D, 2*D->tablesize);
   }
-  insertD(D,x.key);
+  insertD_impl(D, x.key, depth + 1);
   return TRUE;
 } /*insert*/ 
+
+boolean insertD (dict_ptr D, int key) {
+  return insertD_impl(D, key, 0);
+}
 
 /*-------lookup--------------------------------------*/
 boolean lookup (dict_ptr D, int key) 

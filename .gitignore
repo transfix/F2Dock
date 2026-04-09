@@ -43,3 +43,4 @@ paths.ini
 *.back
 *.bak
 *.orig
+build-asan/

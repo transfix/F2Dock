@@ -23,19 +23,6 @@
 #include <algorithm>
 #include "PG-range/PG.h"
 
-// PG's cuckoo hash data structure segfaults on Windows/MSVC.
-// The root cause appears to be in the cuckoo hash table's interaction
-// with MSVC's runtime.  Tests that only construct PG objects pass fine;
-// tests that insert points and perform range queries crash.
-// TODO: investigate and fix the underlying cuckoo hash issue on Windows.
-#ifdef _WIN32
-#define PG_TEST(suite, name) TEST(suite, DISABLED_##name)
-#define PG_TEST_F(suite, name) TEST_F(suite, DISABLED_##name)
-#else
-#define PG_TEST(suite, name) TEST(suite, name)
-#define PG_TEST_F(suite, name) TEST_F(suite, name)
-#endif
-
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 static float distance(const Point& a, const Point& b) {
@@ -71,7 +58,7 @@ TEST(PGRange, ConstructBoundingBox) {
 
 // ── Single point ───────────────────────────────────────────────────────────────
 
-PG_TEST(PGRange, AddSinglePoint) {
+TEST(PGRange, AddSinglePoint) {
     PG pg(3.5, 100.0, 5.0);
     Point p(10.0f, 20.0f, 30.0f);
     pg.addPoint(&p);
@@ -82,7 +69,7 @@ PG_TEST(PGRange, AddSinglePoint) {
     EXPECT_GE(result.size(), 1u);
 }
 
-PG_TEST(PGRange, CountSinglePoint) {
+TEST(PGRange, CountSinglePoint) {
     PG pg(3.5, 100.0, 5.0);
     Point p(5.0f, 5.0f, 5.0f);
     pg.addPoint(&p);
@@ -120,7 +107,7 @@ protected:
     }
 };
 
-PG_TEST_F(PGRangeMultiTest, RangeQueryMatchesBruteForce) {
+TEST_F(PGRangeMultiTest, RangeQueryMatchesBruteForce) {
     // Query near point[25] = (25, 12.5, 7.5)
     Point q(25.0f, 12.5f, 7.5f);
     double radius = 5.0;
@@ -134,7 +121,7 @@ PG_TEST_F(PGRangeMultiTest, RangeQueryMatchesBruteForce) {
         << "PG returned fewer points than brute force within radius " << radius;
 }
 
-PG_TEST_F(PGRangeMultiTest, CountMatchesBruteForce) {
+TEST_F(PGRangeMultiTest, CountMatchesBruteForce) {
     Point q(10.0f, 5.0f, 3.0f);
     double radius = 8.0;
 
@@ -144,13 +131,13 @@ PG_TEST_F(PGRangeMultiTest, CountMatchesBruteForce) {
     EXPECT_GE(pgCount, static_cast<int>(bfResult.size()));
 }
 
-PG_TEST_F(PGRangeMultiTest, PointsWithinRangeBoolean) {
+TEST_F(PGRangeMultiTest, PointsWithinRangeBoolean) {
     // Query exactly at a known point — should always return true
     Point q(10.0f, 5.0f, 3.0f);
     EXPECT_TRUE(pg->pointsWithinRange(&q, 5.0));
 }
 
-PG_TEST_F(PGRangeMultiTest, NoPointsFarAway) {
+TEST_F(PGRangeMultiTest, NoPointsFarAway) {
     // Query far from all inserted points
     Point q(999.0f, 999.0f, 999.0f);
     auto result = pg->range(&q, 1.0);
@@ -159,7 +146,7 @@ PG_TEST_F(PGRangeMultiTest, NoPointsFarAway) {
 
 // ── Point removal ──────────────────────────────────────────────────────────────
 
-PG_TEST(PGRange, RemovePoint) {
+TEST(PGRange, RemovePoint) {
     PG pg(3.5, 100.0, 5.0);
     Point a(10.0f, 10.0f, 10.0f);
     Point b(20.0f, 20.0f, 20.0f);
@@ -201,7 +188,7 @@ TEST(PGRange, EmptyGridRangeQuery) {
     EXPECT_EQ(result.size(), 0u);
 }
 
-PG_TEST(PGRange, CoincidentPoints) {
+TEST(PGRange, CoincidentPoints) {
     PG pg(3.5, 100.0, 5.0);
     Point a(5.0f, 5.0f, 5.0f);
     Point b(5.0f, 5.0f, 5.0f);
@@ -214,7 +201,7 @@ PG_TEST(PGRange, CoincidentPoints) {
     EXPECT_GE(result.size(), 2u);
 }
 
-PG_TEST(PGRange, LargeRadius) {
+TEST(PGRange, LargeRadius) {
     PG pg(0.0, 0.0, 0.0, 10.0, 10.0, 10.0, 2.0);
     std::vector<Point> pts;
     std::vector<Point*> ptrs;
