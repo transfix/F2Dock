@@ -4056,6 +4056,7 @@ static void *startApplyRotationsThread( void *v )
     	     	   pr->smallElectrostaticsKernel,
  		   pr->smoothSkin, pr->smoothingFunction, pr->localTopValues,
 		   pr->functionScaleFactor, pr );
+   return nullptr;
 }
 
 void printInputParamters( PARAMS_IN *pr, FILE* fp )
@@ -4461,6 +4462,7 @@ static void *startApplyFiltersThread( void *v )
    FILTER_PARAMS *pr = ( FILTER_PARAMS * ) v;
 
    applyFilters( pr );
+   return nullptr;
 }
 
 
