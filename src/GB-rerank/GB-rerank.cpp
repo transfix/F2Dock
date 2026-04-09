@@ -237,7 +237,7 @@ void printRerankingParamters( PARAMS_IN *p, FILE* fp )
 bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_INFO *movingMol )
 {
    int range[ ] = { 1, 10, 100, 1000, 10000, 100000 };
-   int nRange = sizeof( range ) / sizeof( range[ 0 ] );
+   constexpr int nRange = 6;
    int hitsInRange[ nRange ];
    double rmsdGood = 5.0;
    int numGoodPeaks = 0;

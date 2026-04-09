@@ -31,8 +31,7 @@ SET(F2DOCK_LINK_LIBS
   vol
   fft-utils
   misc-ident
-#  ${FFTW_LIB}
-  fftw3
+  ${FFTW_LIB}
   Threads::Threads
 )
 if(UNIX)

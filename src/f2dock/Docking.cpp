@@ -24,6 +24,7 @@
 #include "Docking.h"
 
 #include "TopValues.h"
+#include <vector>
 
 using CCVOpenGLMath::Matrix;
 using CCVOpenGLMath::Vector;
@@ -2681,14 +2682,13 @@ void printIntermediateStats( FILE *fp,
   double max_iv_ss = -10000000000, max_iv_cc = -10000000000, max_iv_sc = -10000000000;
 #endif
 
-  int counter[ rmsdToReport ]; //keep until 20A
+  std::vector<int> counter( rmsdToReport, 0 ); //keep until 20A
   int hitsInRange[ 6 ]; // 0, 0-9, 0-99, 0-999, 0-9999, 0-99999
-  int highestPos[ rmsdToReport ];
+  std::vector<int> highestPos( rmsdToReport );
 
   int maxRank = n + 1;
   for ( int i = 0; i < rmsdToReport; i++ )
     {
-      counter[ i ] = 0;
       highestPos[ i ] = maxRank;
     }
 
@@ -4470,8 +4470,8 @@ void filterPoses( PARAMS *params, TopValues *globalIn, TopValues *globalOut,
 {
    PARAMS_IN *pr = ( PARAMS_IN * ) params->pri;
    int numThreads = pr->numThreads;
-   FILTER_PARAMS prT[ numThreads ];
-   pthread_t p[ numThreads ];
+   std::vector<FILTER_PARAMS> prT( numThreads );
+   std::vector<pthread_t> p( numThreads );
 
    ValuePosition3D sol;
 
@@ -6061,16 +6061,13 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
   double hydrophobicity_imag_magnitude = sqrt( hydroPhilicPhilicWeight );
 
   // results
-  TopValues *localTopValues[ numThreads ];
+  std::vector<TopValues *> localTopValues( numThreads, nullptr );
   TopValues *globalTopValues = 0;
 
   TopValues *funnel = 0;
   int *peakList;
 
   double mainStartTime = getTime();
-
-  for ( int i = 0; i < numThreads; i++ )
-    localTopValues[ i ] = 0;
 
 //  double numFreq3 = numFreq*numFreq*numFreq;
   FFTW_complex* centerFrequenciesA = (FFTW_complex*)FFTW_malloc( sizeof(FFTW_complex)*numFreq3 ) ;
@@ -6106,42 +6103,42 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
 
   FFTW_complex* ourMoreFrequenciesA;
 
-  FFTW_complex* centerFrequenciesB[ numThreads ];
-  FFTW_complex* centerFrequenciesProduct[ numThreads ];
-  FFTW_complex* sparseProfile[ numThreads ];
+  std::vector<FFTW_complex*> centerFrequenciesB( numThreads );
+  std::vector<FFTW_complex*> centerFrequenciesProduct( numThreads );
+  std::vector<FFTW_complex*> sparseProfile( numThreads );
 
-  FFTW_complex* sparseShapeProfile[ numThreads ];
+  std::vector<FFTW_complex*> sparseShapeProfile( numThreads );
 
-  FFTW_complex* centerElecFrequenciesB[ numThreads ];
-  FFTW_complex* centerFrequenciesElecProduct[ numThreads ];
-  FFTW_complex* sparseElecProfile[ numThreads ];
+  std::vector<FFTW_complex*> centerElecFrequenciesB( numThreads );
+  std::vector<FFTW_complex*> centerFrequenciesElecProduct( numThreads );
+  std::vector<FFTW_complex*> sparseElecProfile( numThreads );
 
-  FFTW_complex* sparseHbondProfile[ numThreads ];
-  FFTW_complex* sparseHydrophobicityProfile[ numThreads ];
-  FFTW_complex* sparseHydrophobicityTwoProfile[ numThreads ];
-  FFTW_complex* sparseSimpleComplementarityProfile[ numThreads ];
+  std::vector<FFTW_complex*> sparseHbondProfile( numThreads );
+  std::vector<FFTW_complex*> sparseHydrophobicityProfile( numThreads );
+  std::vector<FFTW_complex*> sparseHydrophobicityTwoProfile( numThreads );
+  std::vector<FFTW_complex*> sparseSimpleComplementarityProfile( numThreads );
 
-  FFTW_complex* freqHat[ numThreads ];
+  std::vector<FFTW_complex*> freqHat( numThreads );
 
-  FFTW_complex* ourMoreFrequencies[ numThreads ];
-  FFTW_complex* ourMoreFrequenciesOut[ numThreads ];
+  std::vector<FFTW_complex*> ourMoreFrequencies( numThreads );
+  std::vector<FFTW_complex*> ourMoreFrequenciesOut( numThreads );
 
-  FFTW_complex* elecGridB[ numThreads ];
+  std::vector<FFTW_complex*> elecGridB( numThreads );
 
-  FFTW_plan freqPlan[ numThreads ];
+  std::vector<FFTW_plan> freqPlan( numThreads );
   sparse3DFFT_plan sparseFreqPlanBackward;
-  FFTW_plan elecFreqPlan[ numThreads ];
+  std::vector<FFTW_plan> elecFreqPlan( numThreads );
 
-  FFTW_plan freqHatPlan[ numThreads ];
+  std::vector<FFTW_plan> freqHatPlan( numThreads );
 
-  FFTW_plan moreFreqPlan[ numThreads ];
+  std::vector<FFTW_plan> moreFreqPlan( numThreads );
   sparse3DFFT_plan sparseFreqPlanForward;
   FFTW_plan moreFreqPlanA;
 
-  FFTW_plan moreElecFreqPlan[ numThreads ];
+  std::vector<FFTW_plan> moreElecFreqPlan( numThreads );
   FFTW_plan moreElecFreqPlanA;
 
-  double *sortedPeaks[ numThreads ];
+  std::vector<double *> sortedPeaks( numThreads );
 
   // static molecule
   double *xkAOrig = pr->xkAOrig;
@@ -6162,8 +6159,8 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
   double *ykBOrig = pr->ykBOrig;
   double *zkBOrig = pr->zkBOrig;
   int numCentersB = pr->numCentersB;
-  double *xkB[ numThreads ], *ykB[ numThreads ], *zkB[ numThreads ];
-  float *rkB[ numThreads ];
+  std::vector<double *> xkB( numThreads ), ykB( numThreads ), zkB( numThreads );
+  std::vector<float *> rkB( numThreads );
   char *typeB = pr->typeB;
   char *hbondTypeB = pr->hbondTypeB;
   float *chargesB = pr->chargesB;
@@ -6328,7 +6325,7 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
      peakList = new int[ 2 * numberOfPositions ];
     }
 
-  SmoothingFunction* smoothingFunction[ numThreads ];
+  std::vector<SmoothingFunction*> smoothingFunction( numThreads );
 
   double n = ( int ) ( alpha * numFreq );
   int alphaM = ( int ) n;
@@ -6437,9 +6434,9 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
 
   FFTW_complex *centerFrequenciesA_01 = 0, *centerFrequenciesA_10 = 0, *centerFrequenciesA_11 = 0;
 
-  FFTW_complex* sparseProfile_01[ numThreads ];
-  FFTW_complex* sparseProfile_10[ numThreads ];
-  FFTW_complex* sparseProfile_11[ numThreads ];
+  std::vector<FFTW_complex*> sparseProfile_01( numThreads );
+  std::vector<FFTW_complex*> sparseProfile_10( numThreads );
+  std::vector<FFTW_complex*> sparseProfile_11( numThreads );
 
   if ( breakDownScores )
     {
@@ -6927,8 +6924,8 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
 
 
 
-	PARAMS prT[ numThreads ];
-	pthread_t p[ numThreads ];
+	std::vector<PARAMS> prT( numThreads );
+	std::vector<pthread_t> p( numThreads );
 
         initRotationServer( numberOfRotations, numThreads );
 
