@@ -20,6 +20,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <array>
 #include <cmath>
 #include <vector>
 #include "fast-clash/clashFilter.h"

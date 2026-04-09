@@ -180,6 +180,7 @@ class fastBornRadius
         if ( nextRoot < 0 ) break;      
         fBR->approximateIntegrals( nextRoot, fBR->qPointsOctreeRoot );
        }
+     return nullptr;
     }
 
    static void *pushIntegralsToAtomsThread( void *v )
@@ -192,6 +193,7 @@ class fastBornRadius
         if ( nextRoot < 0 ) break;      
         fBR->pushIntegralsToAtoms( nextRoot, 0, 0 );
        }
+     return nullptr;
     }
     
  public:

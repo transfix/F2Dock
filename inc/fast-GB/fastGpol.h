@@ -160,6 +160,7 @@ class fastGpol
         fastGB::fastGpol::PARAMS *pr = ( fastGB::fastGpol::PARAMS * ) v;
 
         pr->thisPtr->computeThreadedFastGpol( pr->threadID, pr->octree, pr->qSum, pr->approxR, pr->numGroupR, pr->atom, pr->eps, &( pr->Gpol ) );
+        return nullptr;
       }
                                  
    

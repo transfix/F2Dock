@@ -1239,6 +1239,8 @@ bool fastLJ::buildOctrees( void )
    minRadiusUsed = minRadius;
    maxLeafSizeUsed = maxLeafSize;
    minInterAtomDistUsed = minInterAtomDist; 
+
+   return true;
 }
 
 
@@ -1297,7 +1299,7 @@ void fastLJ::approximatePotential( int threadID, double *transMat, int nodeS, in
    
    if ( /*( d2 > 4 * sumRad2 ) && */( d2 > ( sumRad2 / ( epsilon * epsilon ) ) ) ) farEnough = true;
    
-   register double pot = 0;
+   double pot = 0;
    
    if ( farEnough ) 
       {
@@ -1488,7 +1490,7 @@ void fastLJ::computePotentialNaively( int threadID, double *transMat, double *LJ
       
    double minD2 = minInterAtomDist * minInterAtomDist;
    
-   register double pot = 0;   
+   double pot = 0;   
    
    for ( int k = 0; k < numAtomType; k++ )
      for ( int l = 0; l < numAtomType; l++ )  

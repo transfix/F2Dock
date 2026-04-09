@@ -7,6 +7,7 @@
 #define __BASE64_H_INCLUDED__ 1
 #ifndef MAKEDEPEND
 # include <iterator>
+# include <ios>
 #endif
 static
 int _base64Chars[]= {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
@@ -153,7 +154,7 @@ class base64
 			while (_First != _Last)
 			{
 				_3to4.zero();
-				// берём по 3 символа
+				// пїЅпїЅпїЅпїЅ пїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				_3to4.set_0(*_First);
 				_First++;
 				if (_First == _Last)
@@ -192,7 +193,7 @@ class base64
 				++_To;
 				*_To = _Tr::to_char_type(_base64Chars[_3to4.b64_3()]);
 				++_To;
-				if (line_octets == 17) // base64 позволяет длину строки не более 72 символов
+				if (line_octets == 17) // base64 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 72 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				{
 					//_To = _Endl(_To);
 					*_To = '\n';

@@ -685,6 +685,8 @@ bool resContFilter::buildOctrees( void )
    minRadiusUsed = minRadius;
    maxLeafSizeUsed = maxLeafSize;
    distCutoffUsed = distCutoff;
+
+   return true;
 }
 
 

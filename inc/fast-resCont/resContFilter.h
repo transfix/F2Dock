@@ -201,6 +201,7 @@ class resContFilter
         tR->interactionValuePos += interactionValuePos;
         tR->interactionValueNeg += interactionValueNeg;        
        }
+     return nullptr;
     }
 
     

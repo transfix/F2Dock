@@ -1138,6 +1138,8 @@ bool fastBornRadius::buildOctrees( void )
    if ( ( minRadius != minRadiusUsed ) || ( maxLeafSize != maxLeafSizeUsed ) || ( !atomsOctreeBuilt ) ) buildAtomsOctree( );
    minRadiusUsed = minRadius;
    maxLeafSizeUsed = maxLeafSize;
+
+   return true;
 }
 
 
