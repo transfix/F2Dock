@@ -18,6 +18,9 @@ else()
 endif()
 
 find_package(Threads REQUIRED)
+if(WIN32)
+  find_package(PThreads4W REQUIRED)
+endif()
 
 # CMake Modules
 SET(CMAKE_MODULE_PATH
