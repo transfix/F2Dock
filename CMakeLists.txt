@@ -46,3 +46,29 @@ if(F2DOCK_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests/unit)
 endif()
+
+# ── Install targets ──
+install(TARGETS F2Dock GB-Rerank FilterOutput F2DockServer
+        RUNTIME DESTINATION bin)
+
+# Install data files needed at runtime
+install(FILES
+  deg04.matrix deg06.matrix deg08.matrix deg10.matrix
+  deg12.matrix deg20.matrix
+  DESTINATION share/F2Dock/data)
+
+# ── CPack configuration ──
+set(CPACK_PACKAGE_NAME "F2Dock")
+set(CPACK_PACKAGE_VENDOR "CVC, The University of Texas at Austin")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Fast Fourier protein-protein docking")
+set(CPACK_PACKAGE_VERSION_MAJOR 2)
+set(CPACK_PACKAGE_VERSION_MINOR 0)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/INSTALL")
+
+# DEB-specific
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CVC Lab <bajaj@cs.utexas.edu>")
+set(CPACK_DEBIAN_PACKAGE_SECTION "science")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-3")
+
+include(CPack)

@@ -1,0 +1,190 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
+jobs:
+  # ── Linux: .deb + portable tarball ──
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build libfftw3-dev dpkg-dev
+
+      - name: Configure
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DF2DOCK_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      # Portable tarball (statically-linked where practical)
+      - name: Create portable tarball
+        run: |
+          cmake --install build --prefix staging/F2Dock
+          # Bundle the required shared libs next to the binaries
+          mkdir -p staging/F2Dock/lib
+          for bin in staging/F2Dock/bin/*; do
+            ldd "$bin" 2>/dev/null | grep -oP '/\S+libfftw\S+' | while read lib; do
+              cp -uL "$lib" staging/F2Dock/lib/
+            done
+          done
+          # Create a wrapper script that sets LD_LIBRARY_PATH
+          for bin in staging/F2Dock/bin/*; do
+            name=$(basename "$bin")
+            mv "$bin" "$bin.real"
+            cat > "$bin" <<'WRAPPER'
+          #!/bin/sh
+          DIR="$(cd "$(dirname "$0")" && pwd)"
+          export LD_LIBRARY_PATH="$DIR/../lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          exec "$DIR/BINNAME.real" "$@"
+          WRAPPER
+            sed -i "s/BINNAME/$name/" "$bin"
+            chmod +x "$bin"
+          done
+          tar -czf "F2Dock-linux-x86_64.tar.gz" -C staging F2Dock
+
+      # .deb package via CPack
+      - name: Build .deb package
+        run: |
+          cd build
+          cpack -G DEB
+          cp *.deb ../
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            F2Dock-linux-x86_64.tar.gz
+            *.deb
+
+  # ── macOS: .dmg ──
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install cmake ninja fftw
+
+      - name: Configure
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DF2DOCK_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Create .dmg
+        run: |
+          cmake --install build --prefix staging/F2Dock.app/Contents/Resources
+          mkdir -p staging/F2Dock.app/Contents/MacOS
+
+          # Copy binaries into MacOS dir
+          cp staging/F2Dock.app/Contents/Resources/bin/* \
+             staging/F2Dock.app/Contents/MacOS/
+
+          # Bundle FFTW dylib
+          mkdir -p staging/F2Dock.app/Contents/Frameworks
+          for bin in staging/F2Dock.app/Contents/MacOS/*; do
+            otool -L "$bin" 2>/dev/null | grep -oE '/[^ ]+libfftw[^ ]+' | while read lib; do
+              bname=$(basename "$lib")
+              cp -n "$lib" staging/F2Dock.app/Contents/Frameworks/ 2>/dev/null || true
+              install_name_tool -change "$lib" \
+                "@executable_path/../Frameworks/$bname" "$bin" 2>/dev/null || true
+            done
+          done
+
+          # Create the DMG
+          hdiutil create -volname F2Dock \
+            -srcfolder staging/F2Dock.app \
+            -ov -format UDZO \
+            F2Dock-macOS-arm64.dmg
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-package
+          path: F2Dock-macOS-arm64.dmg
+
+  # ── Windows: .zip ──
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        shell: bash
+        run: vcpkg install fftw3:x64-windows pthreads:x64-windows
+
+      - name: Configure
+        shell: bash
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DCMAKE_INSTALL_PREFIX=install \
+            -DF2DOCK_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Create zip
+        shell: bash
+        run: |
+          cmake --install build --config Release --prefix staging/F2Dock
+
+          # Bundle vcpkg runtime DLLs alongside the executables
+          cp "$VCPKG_INSTALLATION_ROOT"/installed/x64-windows/bin/*.dll \
+             staging/F2Dock/bin/ 2>/dev/null || true
+
+          cd staging
+          7z a -tzip ../F2Dock-windows-x64.zip F2Dock/
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: F2Dock-windows-x64.zip
+
+  # ── Create GitHub Release ──
+  release:
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: find artifacts -type f | sort
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.deb
+            artifacts/*.dmg
+            artifacts/*.zip

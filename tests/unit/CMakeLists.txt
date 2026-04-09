@@ -8,6 +8,8 @@ FetchContent_Declare(
 )
 # Prevent GTest from overriding our compiler/linker options on Windows
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+# Don't install GTest headers/libs with our project
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 include(GoogleTest)
