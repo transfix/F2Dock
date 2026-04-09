@@ -49,9 +49,13 @@ f2dock_add_test(test_pairing_heap
 )
 
 # ── clashFilter tests ──
+set(CLASH_FILTER_LIBS fast-clash math Threads::Threads)
+if(WIN32)
+  list(APPEND CLASH_FILTER_LIBS PThreads4W::PThreads4W)
+endif()
 f2dock_add_test(test_clash_filter
   SOURCES test_clash_filter.cpp
-  LIBS fast-clash math Threads::Threads
+  LIBS ${CLASH_FILTER_LIBS}
 )
 
 # ── File format tests (F2D, PQR, QUAD, parameter parsing) ──
