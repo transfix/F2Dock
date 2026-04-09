@@ -407,15 +407,16 @@ cout<<"Inside removeatom"<<endl;
     return;
   }
 
-  int index;
+  int index = -1;
   for(int i=0; i<(int)(C[0].ptr->balls).size(); i++) 
   {
-    if(center.x == C[0].ptr->balls[i]->x && center.y == C[0].ptr->balls[i]->y && center.z == C[0].ptr->balls[i]->z) 
+    if(a->x == C[0].ptr->balls[i]->x && a->y == C[0].ptr->balls[i]->y && a->z == C[0].ptr->balls[i]->z) 
     {
       index = i;
       break;
     }
   }
+  if(index < 0) return;
   C[0].ptr->balls[index] = C[0].ptr->balls[C[0].ptr->balls.size()-1];
   C[0].ptr->balls.pop_back();
   

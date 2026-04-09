@@ -160,6 +160,7 @@ class PG {
 	DIM = divisionsize;
     else
 	DIM = 3.5;
+    TRANSLATE = 0.0;
     rmax = 1.5;
     cells = 0;
     lines = 0;
