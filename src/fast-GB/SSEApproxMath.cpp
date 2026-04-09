@@ -32,6 +32,8 @@
 
 #include "SSEApproxMath.h"
 
+#if F2DOCK_HAS_SSE
+
 /* natural logarithm computed for 4 simultaneous float 
    return NaN for x <= 0
 */
@@ -201,3 +203,5 @@ v4sf exp_ps(v4sf x) {
   y = _mm_mul_ps(y, pow2n);
   return y;
 }
+
+#endif /* F2DOCK_HAS_SSE */

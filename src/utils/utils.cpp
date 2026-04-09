@@ -28,46 +28,18 @@
 #include "utils.h"
 
 
-void printError( char *format, ... )
+void printError( const std::string& msg )
 {
-   char eMsg[ 500 ];
-   va_list args;
-   
-   va_start( args, format );
-   
-   vsprintf( eMsg, format, args );
-   
-   va_end( args );
-   
-   printf( "\nError: %s\n\n", eMsg );   
-   
-   fflush( stdout );   
+   std::cerr << "\nError: " << msg << "\n\n";
 }
 
 
-void flushPrint( char *format, ... )
+void f_printf( FILE *fp, const std::string& msg )
 {
-   va_list args;
-   
-   va_start( args, format );   
-   vprintf( format, args );
-   va_end( args );
-
-   fflush( stdout );
-}
-
-
-void f_printf( FILE *fp, char *format, ... )
-{
-   va_list args, args2;
-   
-   va_start( args, format );
-   va_copy( args2, args );
-   
-   vprintf( format, args );
-   vfprintf( fp, format, args2 );
-   
-   va_end( args );
+   std::cout << msg;
+   std::cout.flush();
+   fputs( msg.c_str(), fp );
+   fflush( fp );
 }
 
 

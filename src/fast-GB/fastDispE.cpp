@@ -65,7 +65,7 @@ fastDispE::fastDispE( char *paramFile, int numStaticAtoms, double *staticAtomsPQ
   
   if ( ( atoms == NULL ) || ( qPoints == NULL ) )
     {
-      printError( (char *)"Memory Allocation Failed!" );
+      printError( "Memory Allocation Failed!" );
       freeMemory( );
       exit( 1 );
     }
@@ -107,7 +107,7 @@ bool fastDispE::getParamsFromFile( PARAMS_IN *p, char *paramFile )
 
   if ( fp == NULL )
     {
-      printError( (char *)"Failed to open parameter file %s!", paramFile );
+      printError( std::format("Failed to open parameter file {}!", paramFile) );
       return false;
     }
 
@@ -140,7 +140,7 @@ bool fastDispE::getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 0 )
                  {
-                   printError( (char *)"%s must be a non-negative float!", key );
+                   printError( std::format("{} must be a non-negative float!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -153,13 +153,13 @@ bool fastDispE::getParamsFromFile( PARAMS_IN *p, char *paramFile )
     
   if ( p->staticMoleculeQUAD == NULL )  
     { 
-      printError( (char *)"Missing QUAD file name for the static molecule!" );
+      printError( "Missing QUAD file name for the static molecule!" );
       return false;
     }
 
   if ( p->movingMoleculeQUAD == NULL )  
     { 
-      printError( (char *)"Missing QUAD file name for the moving molecule!" );
+      printError( "Missing QUAD file name for the moving molecule!" );
       return false;
     }
         

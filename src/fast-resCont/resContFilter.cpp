@@ -28,18 +28,9 @@
 #include "resContFilter.h"
 
 
-void resContFilter::printError( char *format, ... )
+void resContFilter::printError( const std::string& msg )
 {
-   char eMsg[ 500 ];
-   va_list args;
-
-   va_start( args, format );
-
-   vsprintf( eMsg, format, args );
-
-   va_end( args );
-
-   printf( "\nError: %s\n\n", eMsg );
+   std::cerr << "\nError: " << msg << "\n\n";
 }
 
 
@@ -80,7 +71,7 @@ bool resContFilter::allocateMovingAtomsSubtreeRootsArray( int nThreads )
 
    if ( movingAtomsSubtreeRoots == NULL )
      {
-      printError( (char *)"Failed to allocate memory!" );
+      printError( "Failed to allocate memory!" );
       return false;
      }
 
@@ -189,7 +180,7 @@ bool resContFilter::readInteractionMatrix( char *intFile )
 
    if ( fp == NULL )
      {
-        printError( (char *)"Failed to open interaction matrix file (%s)!", intFile );
+        printError( std::format("Failed to open interaction matrix file ({})!", intFile) );
         return false;
      }
 
@@ -225,7 +216,7 @@ bool resContFilter::setMinRadius( double minRad )
 {
    if ( minRad < 0 )
      {
-      printError( (char *)"minRadius must be a non-negative real number!" );
+      printError( "minRadius must be a non-negative real number!" );
       return false;
      }
 
@@ -243,7 +234,7 @@ bool resContFilter::setMaxLeafSize( int maxLfSize )
 {
    if ( maxLfSize <= 0 )
      {
-      printError( (char *)"maxLeafSize must be a positive integer!" );
+      printError( "maxLeafSize must be a positive integer!" );
       return false;
      }
 
@@ -261,7 +252,7 @@ bool resContFilter::setDistanceCutoff( double distanceCutoff )
 {
    if ( distanceCutoff < 0 )
      {
-      printError( (char *)"distCutoff must be a non-negative real number!" );
+      printError( "distCutoff must be a non-negative real number!" );
       return false;
      }
 
@@ -281,7 +272,7 @@ bool resContFilter::setNumThreads( int nThreads )
 {
    if ( nThreads < 1 )
      {
-      printError( (char *)"numThreads must be a positive integer!" );
+      printError( "numThreads must be a positive integer!" );
       return false;
      }
 
@@ -376,7 +367,7 @@ bool resContFilter::copyAtomsFromArray( int numAtomsSrc, double *atmsSrc, int *n
 
    if ( numAtomsSrc <= 0 )
      {
-      printError( (char *)"No atoms to copy!" );
+      printError( "No atoms to copy!" );
       return false;
      }
 
@@ -385,7 +376,7 @@ bool resContFilter::copyAtomsFromArray( int numAtomsSrc, double *atmsSrc, int *n
 
    if ( ( *atmsDest ) == NULL )
      {
-      printError( (char *)"Failed to allocate memory for atoms!" );
+      printError( "Failed to allocate memory for atoms!" );
       return false;
      }
 
@@ -597,7 +588,7 @@ bool resContFilter::buildStaticAtomsOctree( void )
 
    if ( atomsT == NULL )
      {
-      printError( (char *)"Failed to allocate temporary memory for static atoms!" );
+      printError( "Failed to allocate temporary memory for static atoms!" );
       if ( !staticAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -611,7 +602,7 @@ bool resContFilter::buildStaticAtomsOctree( void )
 
    if ( atomsOctreeT == NULL )
      {
-      printError( (char *)"Unable to %s static atoms octree - memory allocation failed!", ( staticAtomsOctreeBuilt ) ? "rebuild" : "build" );
+      printError( std::format("Unable to {} static atoms octree - memory allocation failed!", ( staticAtomsOctreeBuilt ) ? "rebuild" : "build") );
       if ( !staticAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -645,7 +636,7 @@ bool resContFilter::buildMovingAtomsOctree( void )
 
    if ( atomsT == NULL )
      {
-      printError( (char *)"Failed to allocate temporary memory for moving atoms!" );
+      printError( "Failed to allocate temporary memory for moving atoms!" );
       if ( !movingAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -659,7 +650,7 @@ bool resContFilter::buildMovingAtomsOctree( void )
 
    if ( atomsOctreeT == NULL )
      {
-      printError( (char *)"Unable to %s moving atoms octree - memory allocation failed!", ( movingAtomsOctreeBuilt ) ? "rebuild" : "build" );
+      printError( std::format("Unable to {} moving atoms octree - memory allocation failed!", ( movingAtomsOctreeBuilt ) ? "rebuild" : "build") );
       if ( !movingAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -806,8 +797,8 @@ bool resContFilter::computeInteractions( Matrix transMat, double *interactionVal
        initSubtreeRootServer( );
        initFreeNodeServer( numThreads );
 
-       pthread_t p[ numThreads ];
-       THREAD_RESULT threadResults[ numThreads ];
+       std::vector<pthread_t> p( numThreads );
+       std::vector<THREAD_RESULT> threadResults( numThreads );
 
        for ( int i = 0; i < numThreads; i++ )
          {

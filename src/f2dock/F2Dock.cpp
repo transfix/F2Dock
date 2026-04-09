@@ -692,7 +692,7 @@ bool readEffGridFile( char *effGridFile, PARAMS_IN *pr )
 
 
 
-#define returnSpectrumError1( ) { printError( "Invalid spectrum ( %s )!", p->spectrum ); return false; }
+#define returnSpectrumError1( ) { printError( std::format("Invalid spectrum ( {} )!", p->spectrum) ); return false; }
 #define returnSpectrumError2( ) { freeMem( p->bands ); returnSpectrumError1( ); }
 
 bool decodeSpectrum( PARAMS_IN *p )
@@ -1927,7 +1927,7 @@ bool getComplexType( PARAMS_IN *p, char *paramFile )
 
   if ( fp == NULL )
     {
-      printError( "Failed to open parameter file %s!", paramFile );
+      printError( std::format("Failed to open parameter file {}!", paramFile) );
       return false;
     }
 

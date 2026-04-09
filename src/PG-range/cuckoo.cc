@@ -27,7 +27,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-#include<strings.h>
+#include<string.h>
 #include<time.h>
 #include<math.h>
 #include "cuckoo.h" 
@@ -84,8 +84,8 @@ boolean rehash_insert (dict_ptr D, int key)
     x = temp;
   }
 
-  bzero(D->T1,D->tablesize * sizeof(celltype));
-  bzero(D->T2,D->tablesize * sizeof(celltype));
+  memset(D->T1, 0, D->tablesize * sizeof(celltype));
+  memset(D->T2, 0, D->tablesize * sizeof(celltype));
 
   inithashcuckoo(D->a1);
   inithashcuckoo(D->a2);

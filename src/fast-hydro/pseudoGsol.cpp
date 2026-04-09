@@ -90,7 +90,7 @@ void pseudoGsol::processQPoints( void )
                
   if ( ( staticQPointsPG == NULL ) || ( movingQPointsPG == NULL ) )
      {
-       printError( (char *)"Failed to allocate memory!" );  
+       printError( "Failed to allocate memory!" );  
        exit( 1 );                 
      }
                  
@@ -138,7 +138,7 @@ void pseudoGsol::processQPoints( void )
                
   if ( ( staticQPointsOctreeFlags == NULL ) || ( movingQPointsOctreeFlags == NULL ) )
      {
-       printError( (char *)"Failed to allocate memory!" );  
+       printError( "Failed to allocate memory!" );  
        exit( 1 );                 
      }                                 
 }
@@ -153,7 +153,7 @@ pseudoGsol::pseudoGsol( char *paramFile, int nStAtoms, double *stAtoms, int nMvA
   
   if ( nThreads <= 0 )
     {
-      printError( (char *)"Invalid number of threads ( %d )!", numThreads );  
+      printError( std::format("Invalid number of threads ( {} )!", numThreads) );  
       exit( 1 );                     
     }
     
@@ -179,7 +179,7 @@ pseudoGsol::pseudoGsol( char *paramFile, int nThreads )
   
   if ( nThreads <= 0 )
     {
-      printError( (char *)"Invalid number of threads ( %d )!", numThreads );  
+      printError( std::format("Invalid number of threads ( {} )!", numThreads) );  
       exit( 1 );                     
     }
     
@@ -211,7 +211,7 @@ bool pseudoGsol::readQPoints( char *qPtsFile, int *nQPoints, QPOINT **qPoints )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open quadrature points file (%s)!", qPtsFile );
+      printError( std::format("Failed to open quadrature points file ({})!", qPtsFile) );
       return false;
      }
    
@@ -227,7 +227,7 @@ bool pseudoGsol::readQPoints( char *qPtsFile, int *nQPoints, QPOINT **qPoints )
    
    if ( *qPoints == NULL )
      {
-      printError( (char *)"Failed to allocate memory for quadrature points!" );
+      printError( "Failed to allocate memory for quadrature points!" );
       return false;
      }
      
@@ -235,7 +235,7 @@ bool pseudoGsol::readQPoints( char *qPtsFile, int *nQPoints, QPOINT **qPoints )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open quadrature points file (%s)!", qPtsFile );
+      printError( std::format("Failed to open quadrature points file ({})!", qPtsFile) );
       return false;
      }
 
@@ -243,7 +243,7 @@ bool pseudoGsol::readQPoints( char *qPtsFile, int *nQPoints, QPOINT **qPoints )
      {          
       if ( fscanf( fp, (char *)"%lf %lf %lf %lf %lf %lf %lf", &qPt.x, &qPt.y, &qPt.z, &nx, &ny, &nz, &qPt.w ) != 7 )
         {
-         printError( (char *)"Failed to read the quadrature points file (%s)!", qPtsFile );
+         printError( std::format("Failed to read the quadrature points file ({})!", qPtsFile) );
          return false;
         }
 
@@ -262,7 +262,7 @@ bool pseudoGsol::copyAtomsFromArray( int numAtoms, double *atms, int *nAtoms, AT
 {
    if ( numAtoms <= 0 )
      {
-      printError( (char *)"No atoms to copy!" );
+      printError( "No atoms to copy!" );
       return false;
      }
    
@@ -271,7 +271,7 @@ bool pseudoGsol::copyAtomsFromArray( int numAtoms, double *atms, int *nAtoms, AT
    
    if ( *atoms == NULL )
      {
-      printError( (char *)"Failed to allocate memory for atoms!" );
+      printError( "Failed to allocate memory for atoms!" );
       return false;
      }
 
@@ -376,7 +376,7 @@ bool pseudoGsol::readAtoms( char *atomsFile, int *nAtoms, ATOM **atoms )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open PQR file (%s)!", atomsFile );
+      printError( std::format("Failed to open PQR file ({})!", atomsFile) );
       return false;
      }
    
@@ -398,7 +398,7 @@ bool pseudoGsol::readAtoms( char *atomsFile, int *nAtoms, ATOM **atoms )
    
    if ( *atoms == NULL )
      {
-      printError( (char *)"Failed to allocate memory for atoms!" );
+      printError( "Failed to allocate memory for atoms!" );
       return false;
      }
      
@@ -406,7 +406,7 @@ bool pseudoGsol::readAtoms( char *atomsFile, int *nAtoms, ATOM **atoms )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open PQR file (%s)!", atomsFile );
+      printError( std::format("Failed to open PQR file ({})!", atomsFile) );
       return false;
      }
 
@@ -670,7 +670,7 @@ bool pseudoGsol::buildAtomsOctree( int nAtoms, ATOM *atoms, int *numAtomsOctreeN
    
    if ( atomsT == NULL )
      {
-      printError( (char *)"Failed to allocate temporary memory for atoms!" );
+      printError( "Failed to allocate temporary memory for atoms!" );
       return false;
      }
 
@@ -682,7 +682,7 @@ bool pseudoGsol::buildAtomsOctree( int nAtoms, ATOM *atoms, int *numAtomsOctreeN
 
    if ( *atomsOctree == NULL )
      {
-      printError( (char *)"Unable to build atoms octree - memory allocation failed!" );
+      printError( "Unable to build atoms octree - memory allocation failed!" );
       return false;
      }
  
@@ -863,7 +863,7 @@ bool pseudoGsol::buildQPointsOctree( int nQPoints, QPOINT *qPoints, int *numQPoi
    
    if ( qPointsT == NULL )
      {
-      printError( (char *)"Failed to allocate temporary memory for quadrature points!" );
+      printError( "Failed to allocate temporary memory for quadrature points!" );
       return false;
      }
 
@@ -875,7 +875,7 @@ bool pseudoGsol::buildQPointsOctree( int nQPoints, QPOINT *qPoints, int *numQPoi
    
    if ( *qPointsOctree == NULL )
      {
-      printError( (char *)"Unable to build quadrature points octree - memory allocation failed!" );
+      printError( "Unable to build quadrature points octree - memory allocation failed!" );
       return false;
      }
  
@@ -1226,7 +1226,7 @@ void pseudoGsol::getPseudoGsol( int threadID, double *trans, double *pGsol,
 {
    if ( ( threadID < 0 ) || ( threadID >= numThreads ) )
      {
-       printError( (char *)"Invalid thread id!" );
+       printError( "Invalid thread id!" );
        exit( 1 );
      }
    
@@ -1283,7 +1283,7 @@ bool pseudoGsol::getParamsFromFile( PARAMS_IN *p, char *paramFile, bool atomsFro
 
   if ( fp == NULL )
     {
-      printError( (char *)"Failed to open parameter file %s!", paramFile );
+      printError( std::format("Failed to open parameter file {}!", paramFile) );
       return false;
     }
 
@@ -1307,7 +1307,7 @@ bool pseudoGsol::getParamsFromFile( PARAMS_IN *p, char *paramFile, bool atomsFro
                
                if ( v < 0 )
                  {
-                   printError( (char *)"%s must be a non-negative float!", key );
+                   printError( std::format("{} must be a non-negative float!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -1338,7 +1338,7 @@ bool pseudoGsol::getParamsFromFile( PARAMS_IN *p, char *paramFile, bool atomsFro
                
                if ( v < 1 )
                  {
-                   printError( (char *)"%s must be a positive integer!", key );
+                   printError( std::format("{} must be a positive integer!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -1353,26 +1353,26 @@ bool pseudoGsol::getParamsFromFile( PARAMS_IN *p, char *paramFile, bool atomsFro
     {
       if ( p->staticMoleculePQR == NULL )  
         { 
-          printError( (char *)"Missing PQR file name for the static molecule!" );
+          printError( "Missing PQR file name for the static molecule!" );
           return false;
         }
       
       if ( p->movingMoleculePQR == NULL )  
         { 
-          printError( (char *)"Missing PQR file name for the moving molecule!" );
+          printError( "Missing PQR file name for the moving molecule!" );
           return false;
         }    
     }
     
   if ( p->staticMoleculeQUAD == NULL )  
     { 
-      printError( (char *)"Missing QUAD file name for the static molecule!" );
+      printError( "Missing QUAD file name for the static molecule!" );
       return false;
     }
 
   if ( p->movingMoleculeQUAD == NULL )  
     { 
-      printError( (char *)"Missing QUAD file name for the moving molecule!" );
+      printError( "Missing QUAD file name for the moving molecule!" );
       return false;
     }
     

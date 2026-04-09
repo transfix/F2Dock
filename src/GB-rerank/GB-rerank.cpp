@@ -251,7 +251,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
 
    if ( ifp == NULL ) 
      {
-       printError( (char *)"Failed to open F2Dock output file ( %s )!", params->F2DockOutputFile );
+       printError( std::format("Failed to open F2Dock output file ( {} )!", params->F2DockOutputFile) );
        return false;
      }  
      
@@ -259,7 +259,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
      
    if ( ofp == NULL ) 
      {
-       printError( (char *)"Failed to create reranked output file ( %s )!", params->rerankedOutputFile );
+       printError( std::format("Failed to create reranked output file ( {} )!", params->rerankedOutputFile) );
        freeClose1( );
        return false;
      }  
@@ -277,7 +277,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
            
            if ( sscanf( t, "%d", &m ) != 1 )
              {
-               printError( (char *)"Error reading F2Dock output file ( %s )!", params->F2DockOutputFile );  
+               printError( std::format("Error reading F2Dock output file ( {} )!", params->F2DockOutputFile) );  
                freeClose2( );
                return false;
              }
@@ -294,7 +294,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
              {
                if ( ( m == 1 ) && !skipInitial( s, (char *)"#	 COLNAME rank int", t ) )
                  {
-                   printError( (char *)"First column of F2Dock output must be the rank ( int )!" );  
+                   printError( "First column of F2Dock output must be the rank ( int )!" );  
                    freeClose2( );
                    return false;
                  }
@@ -313,14 +313,14 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
              {
                if ( ( matLoc <= 0 ) || ( rmsdLoc <= 0 ) )
                  {
-                   printError( (char *)"Missing format data in F2Dock output file ( %s )!", params->F2DockOutputFile );  
+                   printError( std::format("Missing format data in F2Dock output file ( {} )!", params->F2DockOutputFile) );  
                    freeClose2( );
                    return false;
                  }
                  
                if ( ( matLoc <= rmsdLoc ) && ( matLoc + 12 > rmsdLoc ) )
                  {
-                   printError( (char *)"Invalid format data in F2Dock output file ( %s )!", params->F2DockOutputFile );  
+                   printError( std::format("Invalid format data in F2Dock output file ( {} )!", params->F2DockOutputFile) );  
                    freeClose2( );
                    return false;
                  }  
@@ -334,7 +334,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
                
                if ( ( atomsPQR == NULL ) || ( qPoints == NULL ) )
                  {
-                   printError( (char *)"Failed to allocate memory!" );  
+                   printError( "Failed to allocate memory!" );  
                    freeClose4( );
                    return false;                 
                  }
@@ -344,7 +344,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
                
                if ( ( staticQPoints == NULL ) || ( movingQPoints == NULL ) )
                  {
-                   printError( (char *)"Failed to allocate memory!" );  
+                   printError( "Failed to allocate memory!" );  
                    freeClose5( );
                    return false;                 
                  }
@@ -379,7 +379,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
 
                        if ( !getDoublesInRange( s, 1, 1, &d ) )
                          {
-                           printError( (char *)"Error reading F2Dock output file ( %s )!", params->F2DockOutputFile );  
+                           printError( std::format("Error reading F2Dock output file ( {} )!", params->F2DockOutputFile) );  
                            freeClose6( );
                            return false;
                          }
@@ -393,7 +393,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
                        
                        if ( solInfo == NULL )
                          {
-                           printError( (char *)"Failed to allocate memory!" );  
+                           printError( "Failed to allocate memory!" );  
                            freeClose6( );
                            return false;
                          }    
@@ -414,7 +414,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
                        
                        if ( !getDoublesInRange( s, rmsdLoc, rmsdLoc, &rmsd ) )
                          {
-                           printError( (char *)"Error reading F2Dock output file ( %s )!", params->F2DockOutputFile );  
+                           printError( std::format("Error reading F2Dock output file ( {} )!", params->F2DockOutputFile) );  
                            freeClose6( );
                            return false;
                          }
@@ -449,7 +449,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
                    
                    if ( !getDoublesInRange( s, matLoc, matLoc + 11, trans ) || !getDoublesInRange( s, rmsdLoc, rmsdLoc, &rmsd ) )
                      {
-                       printError( (char *)"Error reading F2Dock output file ( %s )!", params->F2DockOutputFile );  
+                       printError( std::format("Error reading F2Dock output file ( {} )!", params->F2DockOutputFile) );  
                        freeClose6( );
                        return false;
                      }  
@@ -523,7 +523,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
                        
                    if ( !getDoublesInRange( s, scoreLoc, scoreLoc, &origScore ) )
                      {
-                       printError( (char *)"Error reading F2Dock output file ( %s )!", params->F2DockOutputFile );  
+                       printError( std::format("Error reading F2Dock output file ( {} )!", params->F2DockOutputFile) );  
                        freeClose6( );
                        return false;
                      }
@@ -680,20 +680,20 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
              
       else if ( skipInitial( s, (char *)"#Hits in Range:", t ) ) 
              {
-               f_printf( ofp, (char *)"%s", s );
+               f_printf( ofp, s );
                for ( int i = 0; i < nRange; i++ )
-		 f_printf( ofp, (char *)"# [%d, %d] --> %d\n", 1, range[ i ], hitsInRange[ i ] );
+		 f_printf( ofp, std::format("# [{}, {}] --> {}\n", 1, range[ i ], hitsInRange[ i ]) );
 
                while ( fgets( s, 1999, ifp ) != NULL )
                  {
                    if ( !skipInitial( s, (char *)"# [", t ) ) break;
                  }
                  
-               f_printf( ofp, (char *)"%s", s );                 
+               f_printf( ofp, s );                 
              }
       else if ( skipInitial( s, (char *)"# good peaks under ", t ) ) 
              {           
-               f_printf( ofp, (char *)"# good peaks under %.0lf A: count = %d highest rank = %d min RMSD = %lf\n", rmsdGood, numGoodPeaks, rankMin, minRMSD );  
+               f_printf( ofp, std::format("# good peaks under {:.0f} A: count = {} highest rank = {} min RMSD = {:f}\n", rmsdGood, numGoodPeaks, rankMin, minRMSD) );  
              }  
       else if ( skipInitial( s, (char *)"# best peak: rmsd = ", t ) ) 
              {
@@ -705,8 +705,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
                 i = getString( t, i, s );  // "="
                 i = getDouble( t, i, &d );  // rank value
                 
-                f_printf( ofp, (char *)"# best peak: rmsd = %lf rank = %d delgpol = %lf %s", minRMSD, rankMinRMSD, 
-                         ( indexMinRMSD < 0 ) ? ( ( double ) 0.0 ) : solInfo[ indexMinRMSD ].DelGpol, t + i );                  
+                f_printf( ofp, std::format("# best peak: rmsd = {:f} rank = {} delgpol = {:f} {}", minRMSD, rankMinRMSD, ( indexMinRMSD < 0 ) ? ( ( double ) 0.0 ) : solInfo[ indexMinRMSD ].DelGpol, t + i) );                  
              }             
       else if ( skipInitial( s, (char *)"# total time = ", t ) )       
              {
@@ -734,7 +733,7 @@ bool rerankF2DockOutput( PARAMS_IN *params, MOLECULE_INFO *staticMol, MOLECULE_I
 }
 
 
-#define returnSpectrumError1( ) { printError( (char *)"Invalid spectrum ( %s )!", spectrum ); return false; }
+#define returnSpectrumError1( ) { printError( std::format("Invalid spectrum ( {} )!", spectrum) ); return false; }
 #define returnSpectrumError2( ) { freeMem( p->bands ); returnSpectrumError1( ); }
 
 bool decodeSpectrum( PARAMS_IN *p, char *spectrum )
@@ -829,7 +828,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
 
   if ( fp == NULL )
     {
-      printError( (char *)"Failed to open parameter file %s!", paramFile );
+      printError( std::format("Failed to open parameter file {}!", paramFile) );
       return false;
     }
 
@@ -869,7 +868,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 0 )
                  {
-                   printError( (char *)"%s must be a non-negative float!", key );
+                   printError( std::format("{} must be a non-negative float!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -882,7 +881,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 1 )
                  {
-                   printError( (char *)"%s must be a positive integer!", key );
+                   printError( std::format("{} must be a positive integer!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -895,7 +894,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 1 )
                  {
-                   printError( (char *)"%s must be a positive integer!", key );
+                   printError( std::format("{} must be a positive integer!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -908,7 +907,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 0 )
                  {
-                   printError( (char *)"%s must be a non-negative float!", key );
+                   printError( std::format("{} must be a non-negative float!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -921,7 +920,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 0 )
                  {
-                   printError( (char *)"%s must be a non-negative float!", key );
+                   printError( std::format("{} must be a non-negative float!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -934,7 +933,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
 	       else if ( !strcasecmp( val, "false" ) ) p->useApproxMath = false;
 	            else  
 	              {
-		        printError( (char *)"%s must be a Boolean value!", key );
+		        printError( std::format("{} must be a Boolean value!", key) );
 		        fclose( fp );
 		        return false;
 	              }	    
@@ -945,7 +944,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 1 )
                  {
-                   printError( (char *)"%s must be a positive integer!", key );
+                   printError( std::format("{} must be a positive integer!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -959,37 +958,37 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
     
   if ( p->staticMoleculePQR == NULL )  
     { 
-      printError( (char *)"Missing PQR file name for the static molecule!" );
+      printError( "Missing PQR file name for the static molecule!" );
       return false;
     }
 
   if ( p->movingMoleculePQR == NULL )  
     { 
-      printError( (char *)"Missing PQR file name for the moving molecule!" );
+      printError( "Missing PQR file name for the moving molecule!" );
       return false;
     }
 
   if ( p->staticMoleculeQUAD == NULL )  
     { 
-      printError( (char *)"Missing QUAD file name for the static molecule!" );
+      printError( "Missing QUAD file name for the static molecule!" );
       return false;
     }
 
   if ( p->movingMoleculeQUAD == NULL )  
     { 
-      printError( (char *)"Missing QUAD file name for the moving molecule!" );
+      printError( "Missing QUAD file name for the moving molecule!" );
       return false;
     }
     
   if ( p->F2DockOutputFile == NULL )  
     { 
-      printError( (char *)"Missing F2Dock output file name!" );
+      printError( "Missing F2Dock output file name!" );
       return false;
     }
 
   if ( p->rerankedOutputFile == NULL )  
     { 
-      printError( (char *)"Missing file name for reranked output!" );
+      printError( "Missing file name for reranked output!" );
       return false;
     }
         
@@ -1020,7 +1019,7 @@ int main( int argc, char *argv[ ] )
 {
   if ( argc < 2 )
     {
-      printError( (char *)"Input text file not specified!" );
+      printError( "Input text file not specified!" );
       return 1;
     }
      

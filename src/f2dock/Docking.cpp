@@ -2695,10 +2695,10 @@ void printIntermediateStats( FILE *fp,
   for ( int i = 0; i < 6; i++ )
     hitsInRange[ i ] = 0;
 
-  f_printf( fp, (char *)"\n# grid spacing = %f angstrom\n# ", 1.0 / ( ( double ) scale_B * curTopValues->getGridSize( ) ) );
-  f_printf( fp, (char *)"\n# number of peaks = %d\n# ", n );
-  f_printf( fp, (char *)"\n# score scale down factor = %lf\n# ", functionScaleFactor );
-  f_printf( fp, (char *)"\n# number of rotation matrices processed = %d ( %0.2lf\% )\n# ", processedRotations, ( processedRotations * 100.0 ) / pr->pri->numberOfRotations );
+  f_printf( fp, std::format("\n# grid spacing = {:f} angstrom\n# ", 1.0 / ( ( double ) scale_B * curTopValues->getGridSize( ) )) );
+  f_printf( fp, std::format("\n# number of peaks = {}\n# ", n) );
+  f_printf( fp, std::format("\n# score scale down factor = {:f}\n# ", functionScaleFactor) );
+  f_printf( fp, std::format("\n# number of rotation matrices processed = {} ( {:.2f}% )\n# ", processedRotations, ( processedRotations * 100.0 ) / pr->pri->numberOfRotations) );
 
   fprintf( fp, (char *)"\n# START PEAKS" );
 
@@ -2831,20 +2831,20 @@ void printIntermediateStats( FILE *fp,
 //      if ( highestPos[ i ] < highestRank ) highestRank = highestPos[ i ];
 //     }
 
-   f_printf( fp, (char *)"\n#\n#" );
+   f_printf( fp, "\n#\n#" );
    for ( int i = 0; i < rmsdToReport; i++ )
-      f_printf( fp, (char *)" %d --> %d %d\n# ", i, counter[ i ], ( highestPos[ i ] == maxRank ) ? -1 : highestPos[ i ] );
+      f_printf( fp, std::format(" {} --> {} {}\n# ", i, counter[ i ], ( highestPos[ i ] == maxRank ) ? -1 : highestPos[ i ]) );
 
-   f_printf( fp, (char *)"\n#\n#Hits in Range:\n#" );
+   f_printf( fp, "\n#\n#Hits in Range:\n#" );
    for ( int i = 0, j = 1; i < 6; i++ )
      {
-      f_printf( fp, (char *)" [%d, %d] --> %d\n#", 1, j, hitsInRange[ i ] );
+      f_printf( fp, std::format(" [{}, {}] --> {}\n#", 1, j, hitsInRange[ i ]) );
       j *= 10;
      }
 
-   f_printf( fp, (char *)"\n# good peaks under %d A: count = %d highest rank = %d min RMSD = %f\n# ", rmsdGood, numberOfGoodPeaks, highestRank + 1, mrmsd );
+   f_printf( fp, std::format("\n# good peaks under {} A: count = {} highest rank = {} min RMSD = {:f}\n# ", rmsdGood, numberOfGoodPeaks, highestRank + 1, mrmsd) );
 
-   f_printf( fp, (char *)"\n# best peak: rmsd = %f rank = %d score = %lf ", mrmsd, rank, ( double ) mv / functionScaleFactor );
+   f_printf( fp, std::format("\n# best peak: rmsd = {:f} rank = {} score = {:f} ", mrmsd, rank, ( double ) mv / functionScaleFactor) );
 
    if ( breakDownScores )
       fprintf( fp, (char *)"realScore = < skin-skin = %lf core-core = %lf skin-core = %lf >, unrealScore = < skin-skin = %lf core-core = %lf skin-core = %lf >, elecScore = %lf, hbondScore = %lf, hydrophobicityScore = %lf, simpleComplementarityScore = %lf, vdWPotential = %lf, nClashes = %d, pGsol = %lf, pGsolH = %lf, delDispE = %lf ",
@@ -2939,8 +2939,8 @@ void printUntransformedScore( FILE *fp, PARAMS *pr )
   int nclashes, mnclashes, r, f, c;
   Matrix transformation;
 
-  f_printf( fp, (char *)"\n# grid spacing = %f angstrom\n# ", 1.0 / ( ( double ) scale_B * curTopValues->getGridSize( ) ) );
-  f_printf( fp, (char *)"\n# score scale down factor = %lf\n# ", functionScaleFactor );
+  f_printf( fp, std::format("\n# grid spacing = {:f} angstrom\n# ", 1.0 / ( ( double ) scale_B * curTopValues->getGridSize( ) )) );
+  f_printf( fp, std::format("\n# score scale down factor = {:f}\n# ", functionScaleFactor) );
 
   fprintf( fp, (char *)"\n# START UNTRANSFORMED SCORE" );
 

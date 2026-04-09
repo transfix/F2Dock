@@ -10,6 +10,8 @@ if(MSVC)
   include_directories(${CMAKE_SOURCE_DIR}/inc)
   add_compile_options(/W3 /EHsc)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX -D_USE_MATH_DEFINES)
+  # POSIX strcasecmp is _stricmp on MSVC
+  add_definitions(-Dstrcasecmp=_stricmp -Dstrncasecmp=_strnicmp)
 else()
   set(CMAKE_CXX_FLAGS "$ENV{CPPFLAGS} -I${CMAKE_SOURCE_DIR}/inc -O2")
   set(CMAKE_LD_FLAGS "$ENV{LDFLAGS}")

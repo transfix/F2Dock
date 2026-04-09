@@ -27,6 +27,8 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
+#include <format>
 #include <math.h>
 #include <cstdlib>
 #include <cstring>
@@ -70,9 +72,8 @@
    #define INV_SQRT_TWO 0.70710678118654752440084436210485
 #endif
 
-void printError( char *format, ... );
-void flushPrint( char *format, ... );
-void f_printf( FILE *fp, char *format, ... );
+void printError( const std::string& msg );
+void f_printf( FILE *fp, const std::string& msg );
 double getTime( void );
 int skipWhiteSpaces( char *buf, int i );
 int skipInitial( char *s1, char *s2, char *p );

@@ -113,6 +113,11 @@ jobs:
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
+      # ── Test ──
+      - name: Run tests
+        working-directory: build
+        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 4
+
       # ── Coverage (Linux Debug only) ──
       - name: Generate coverage report
         if: matrix.coverage
@@ -123,7 +128,8 @@ jobs:
             '*/test/*' \
             '*/tests/*' \
             '*/_deps/*' \
-            --output-file build/coverage_filtered.info
+            --output-file build/coverage_filtered.info \
+            --ignore-errors unused
           genhtml build/coverage_filtered.info \
             --output-directory build/coverage_html \
             --title "F2Dock Code Coverage" \
