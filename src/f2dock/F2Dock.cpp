@@ -22,12 +22,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fstream>
 #include "TopValues.h"
 #include "Docking.h"
 #include <vector>
 #include <string>
 #include "ElementInformation.h"
+#include "f2dock/Version.h"
 
 using namespace std;
 
@@ -72,7 +74,7 @@ void generateRandomRotationMatrix( Matrix &randRot )
 
 
 // from: Arvo, James (1992), "Fast random rotation matrices", in David Kirk, Graphics Gems III,
-//       San Diego: Academic Press Professional, pp. 117–120, ISBN 978-0-12-409671-4
+//       San Diego: Academic Press Professional, pp. 117ï¿½120, ISBN 978-0-12-409671-4
 
     double theta = ( ( ( double ) rand( ) ) / ( ( double ) ( RAND_MAX ) ) ) * 2.0 * M_PI;
     double phi   = ( ( ( double ) rand( ) ) / ( ( double ) ( RAND_MAX ) ) ) * 2.0 * M_PI;
@@ -1986,10 +1988,33 @@ int main( int argc, char* argv[] )
 {
   char *fixedMolFileName, *movingMolFileName, paramFileName[256];
 
+  if (argc == 2 && (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0)) {
+    printf("F2Dock %s\n", F2DOCK_VERSION_STRING);
+    return 0;
+  }
+
+  if (argc == 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)) {
+    printf("F2Dock %s - Fast Fourier protein-protein docking\n\n", F2DOCK_VERSION_STRING);
+    printf("Usage: F2Dock [options] [-score|saveGrid|vdw|effGridFile] parameterFile\n\n");
+    printf("Options:\n");
+    printf("  -h, --help     Show this help message\n");
+    printf("  -v, --version  Show version information\n\n");
+    printf("Modes:\n");
+    printf("  -score         Score docking poses\n");
+    printf("  saveGrid       Save grid to file\n");
+    printf("  vdw            Compute van der Waals interactions\n");
+    printf("  effGridFile    Use effective grid file\n");
+    return 0;
+  }
+
   if (argc<2 || argc>3 ) {
+    printf("F2Dock %s\n", F2DOCK_VERSION_STRING);
     printf("Usage: F2Dock -score|saveGrid|vdw|effGridFile parameterFile\n");
+    printf("       F2Dock --help for more information\n");
     return(1);
   }
+
+  printf("F2Dock %s\n", F2DOCK_VERSION_STRING);
 
   if ( argc == 2 ) {
     strcpy(paramFileName, argv[1]);

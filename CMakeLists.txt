@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(F2Dock LANGUAGES C CXX)
+project(F2Dock VERSION 2.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -41,6 +41,13 @@ IF(APPLE)
 ADD_DEFINITIONS(-DMACOS_X)
 ENDIF(APPLE)
 
+# ── Version header ──
+configure_file(
+  "${CMAKE_SOURCE_DIR}/inc/f2dock/Version.h.in"
+  "${CMAKE_BINARY_DIR}/inc/f2dock/Version.h"
+  @ONLY)
+include_directories("${CMAKE_BINARY_DIR}/inc")
+
 add_subdirectory (src)
 
 # ── Testing ──
@@ -64,9 +71,9 @@ install(FILES
 set(CPACK_PACKAGE_NAME "F2Dock")
 set(CPACK_PACKAGE_VENDOR "CVC, The University of Texas at Austin")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Fast Fourier protein-protein docking")
-set(CPACK_PACKAGE_VERSION_MAJOR 2)
-set(CPACK_PACKAGE_VERSION_MINOR 0)
-set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/INSTALL")
 
 # DEB-specific
