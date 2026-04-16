@@ -56,7 +56,7 @@ typedef struct _ElementInformation
 //
 static const int MAX_BIOCHEM_ELEMENTS = 410;
 
-static const ElementInformation defaultInformation={" XX ", "XXX", 2.0f, 0.3f, 0.3f, 0.3f, 0.0, 0, 0, 0, 0 };
+static const ElementInformation defaultInformation={" XX ", "XXX", 2.0f, 0.3f, 0.3f, 0.3f, 0, 0, 0, 0, 0 };
 
 // set proper RNA atom colors SKVINAY
 

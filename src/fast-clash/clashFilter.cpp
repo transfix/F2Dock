@@ -27,18 +27,9 @@
 #include "clashFilter.h"
 
 
-void clashFilter::printError( char *format, ... )
+void clashFilter::printError( const std::string& msg )
 {
-   char eMsg[ 500 ];
-   va_list args;
-   
-   va_start( args, format );
-   
-   vsprintf( eMsg, format, args );
-   
-   va_end( args );
-   
-   printf( (char *)"\nError: %s\n\n", eMsg );   
+   std::cerr << "\nError: " << msg << "\n\n";
 }
 
 
@@ -79,7 +70,7 @@ bool clashFilter::allocateMovingAtomsSubtreeRootsArray( int nThreads )
    
    if ( movingAtomsSubtreeRoots == NULL )
      {
-      printError( (char *)"Failed to allocate memory!" );
+      printError( "Failed to allocate memory!" );
       return false;
      }
      
@@ -128,7 +119,8 @@ void clashFilter::setDefaults( void )
       
    printStatus = true;
    
-   pthread_mutex_init( &nodesLock, NULL );   
+   pthread_mutex_init( &nodesLock, NULL );
+   pthread_mutex_init( &subtreeRootsLock, NULL );
 }
 
 
@@ -190,8 +182,8 @@ clashFilter::clashFilter( int numStaticAtoms, double *stAtoms, int numMovingAtom
 }
 
 clashFilter::clashFilter( int numStaticAtoms, double *stAtoms, int numMovingAtoms, double *mvAtoms )
+   : clashFilter( numStaticAtoms, stAtoms, numMovingAtoms, mvAtoms, true )
 {
-   clashFilter( numStaticAtoms, stAtoms, numMovingAtoms, mvAtoms, true );
 }
 
 
@@ -207,7 +199,7 @@ bool clashFilter::setProximityFactors( double clashFactor, double severeClashFac
 {
    if ( clashFactor < 0 )
      {
-      printError( (char *)"clashFactor must be a non-negative real number!" );
+      printError( "clashFactor must be a non-negative real number!" );
       return false;     
      }
      
@@ -216,13 +208,13 @@ bool clashFilter::setProximityFactors( double clashFactor, double severeClashFac
 
    if ( severeClashFactor < 0 )
      {
-      printError( (char *)"severeClashFactor must be a non-negative real number!" );
+      printError( "severeClashFactor must be a non-negative real number!" );
       return false;     
      }
 
    if ( severeClashFactor > clashFactor )
      {
-      printError( (char *)"severeClashFactor cannot be larger than clashFactor!" );
+      printError( "severeClashFactor cannot be larger than clashFactor!" );
       return false;     
      }
      
@@ -231,7 +223,7 @@ bool clashFilter::setProximityFactors( double clashFactor, double severeClashFac
      
    if ( fuzzyFactor < 0 )
      {
-      printError( (char *)"fuzzyFactor must be a non-negative real number!" );
+      printError( "fuzzyFactor must be a non-negative real number!" );
       return false;     
      }
      
@@ -246,7 +238,7 @@ bool clashFilter::setMinRadius( double minRad )
 {
    if ( minRad < 0 )
      {
-      printError( (char *)"minRadius must be a non-negative real number!" );
+      printError( "minRadius must be a non-negative real number!" );
       return false;     
      }
      
@@ -264,7 +256,7 @@ bool clashFilter::setMaxLeafSize( int maxLfSize )
 {
    if ( maxLfSize <= 0 )
      {
-      printError( (char *)"maxLeafSize must be a positive integer!" );
+      printError( "maxLeafSize must be a positive integer!" );
       return false;     
      }
      
@@ -282,7 +274,7 @@ bool clashFilter::setEpsilon( double eps )
 {
    if ( eps < 0 )
      {
-      printError( (char *)"epsilon must be a non-negative real number!" );
+      printError( "epsilon must be a non-negative real number!" );
       return false;     
      }
      
@@ -298,7 +290,7 @@ bool clashFilter::setNumThreads( int nThreads )
 {
    if ( nThreads < 1 )
      {
-      printError( (char *)"numThreads must be a positive integer!" );
+      printError( "numThreads must be a positive integer!" );
       return false;     
      }
      
@@ -393,7 +385,7 @@ bool clashFilter::copyAtomsFromArray( int numAtomsSrc, double *atmsSrc, int *num
    
    if ( numAtomsSrc <= 0 )
      {
-      printError( (char *)"No atoms to copy!" );
+      printError( "No atoms to copy!" );
       return false;
      }
    
@@ -402,7 +394,7 @@ bool clashFilter::copyAtomsFromArray( int numAtomsSrc, double *atmsSrc, int *num
    
    if ( ( *atmsDest ) == NULL )
      {
-      printError( (char *)"Failed to allocate memory for atoms!" );
+      printError( "Failed to allocate memory for atoms!" );
       return false;
      }
 
@@ -623,7 +615,7 @@ bool clashFilter::buildStaticAtomsOctree( void )
    
    if ( atomsT == NULL )
      {
-      printError( (char *)"Failed to allocate temporary memory for static atoms!" );
+      printError( "Failed to allocate temporary memory for static atoms!" );
       if ( !staticAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -637,7 +629,7 @@ bool clashFilter::buildStaticAtomsOctree( void )
 
    if ( atomsOctreeT == NULL )
      {
-      printError( (char *)"Unable to %s static atoms octree - memory allocation failed!", ( staticAtomsOctreeBuilt ) ? (char *)"rebuild" : (char *)"build" );
+      printError( std::format("Unable to {} static atoms octree - memory allocation failed!", ( staticAtomsOctreeBuilt ) ? "rebuild" : "build") );
       if ( !staticAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -671,7 +663,7 @@ bool clashFilter::buildMovingAtomsOctree( void )
    
    if ( atomsT == NULL )
      {
-      printError( (char *)"Failed to allocate temporary memory for moving atoms!" );
+      printError( "Failed to allocate temporary memory for moving atoms!" );
       if ( !movingAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -685,7 +677,7 @@ bool clashFilter::buildMovingAtomsOctree( void )
 
    if ( atomsOctreeT == NULL )
      {
-      printError( (char *)"Unable to %s moving atoms octree - memory allocation failed!", ( movingAtomsOctreeBuilt ) ? (char *)"rebuild" : (char *)"build" );
+      printError( std::format("Unable to {} moving atoms octree - memory allocation failed!", ( movingAtomsOctreeBuilt ) ? "rebuild" : "build") );
       if ( !movingAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -715,6 +707,7 @@ bool clashFilter::buildOctrees( void )
    if ( ( minRadius != minRadiusUsed ) || ( maxLeafSize != maxLeafSizeUsed ) || ( !movingAtomsOctreeBuilt ) ) buildMovingAtomsOctree( );
    minRadiusUsed = minRadius;
    maxLeafSizeUsed = maxLeafSize;
+   return true;
 }
 
 
@@ -845,8 +838,8 @@ bool clashFilter::computeInteractions( Matrix transMat, int *nClashes, int *nSev
        initSubtreeRootServer( );
        initFreeNodeServer( numThreads );      
              
-       pthread_t p[ numThreads ];         
-       THREAD_RESULT threadResults[ numThreads ]; 
+       std::vector<pthread_t> p( numThreads );         
+       std::vector<THREAD_RESULT> threadResults( numThreads ); 
        
        for ( int i = 0; i < numThreads; i++ )
          {

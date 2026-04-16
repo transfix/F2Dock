@@ -176,7 +176,7 @@ bool countResidues( char *pqrFile, int res, int *count, int *total )
 
    if ( fp == NULL )
      {
-        printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+        printError( std::format("Failed to open PQR file ({})!", pqrFile) );
         return false;
      }
 
@@ -260,7 +260,7 @@ bool readResidues( char *pqrFile, int *nRes, RESIDUE **res, int *nChn, int **chn
 
    if ( fp == NULL )
      {
-        printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+        printError( std::format("Failed to open PQR file ({})!", pqrFile) );
         return false;
      }
 
@@ -302,7 +302,7 @@ bool readResidues( char *pqrFile, int *nRes, RESIDUE **res, int *nChn, int **chn
 
    if ( ( *res == NULL ) || ( *chn == NULL ) )
      {
-        printError( (char *)"Failed to allocate memory!" );
+        printError( "Failed to allocate memory!" );
         return false;
      }
 
@@ -310,7 +310,7 @@ bool readResidues( char *pqrFile, int *nRes, RESIDUE **res, int *nChn, int **chn
 
    if ( fp == NULL )
      {
-         printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+         printError( std::format("Failed to open PQR file ({})!", pqrFile) );
          return false;
      }
 
@@ -368,7 +368,7 @@ bool readAtomsAndResidues( char *pqrFile, int *nAtm, double **atm, int *nRes, RE
 
    if ( fp == NULL )
      {
-        printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+        printError( std::format("Failed to open PQR file ({})!", pqrFile) );
         return false;
      }
 
@@ -414,7 +414,7 @@ bool readAtomsAndResidues( char *pqrFile, int *nAtm, double **atm, int *nRes, RE
 
    if ( ( *atm == NULL ) || ( *res == NULL ) || ( *chn == NULL ) )
      {
-        printError( (char *)"Failed to allocate memory!" );
+        printError( "Failed to allocate memory!" );
         return false;
      }
 
@@ -422,7 +422,7 @@ bool readAtomsAndResidues( char *pqrFile, int *nAtm, double **atm, int *nRes, RE
 
    if ( fp == NULL )
      {
-         printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+         printError( std::format("Failed to open PQR file ({})!", pqrFile) );
          return false;
      }
 
@@ -502,7 +502,7 @@ bool readAtomsOnly( char *pqrFile, int *nAtm, double **atm )
 
    if ( fp == NULL )
      {
-        printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+        printError( std::format("Failed to open PQR file ({})!", pqrFile) );
         return false;
      }
 
@@ -529,7 +529,7 @@ bool readAtomsOnly( char *pqrFile, int *nAtm, double **atm )
 
    if ( *atm == NULL )
      {
-        printError( (char *)"Failed to allocate memory!" );
+        printError( "Failed to allocate memory!" );
         return false;
      }
 
@@ -537,7 +537,7 @@ bool readAtomsOnly( char *pqrFile, int *nAtm, double **atm )
 
    if ( fp == NULL )
      {
-         printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+         printError( std::format("Failed to open PQR file ({})!", pqrFile) );
          return false;
      }
 
@@ -593,7 +593,7 @@ bool readAtomsWithResidueInfo( char *pqrFile, int *nAtm, double **atm )
 
    if ( fp == NULL )
      {
-        printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+        printError( std::format("Failed to open PQR file ({})!", pqrFile) );
         return false;
      }
 
@@ -636,7 +636,7 @@ bool readAtomsWithResidueInfo( char *pqrFile, int *nAtm, double **atm )
 
    if ( *atm == NULL )
      {
-        printError( (char *)"Failed to allocate memory!" );
+        printError( "Failed to allocate memory!" );
         return false;
      }
 
@@ -644,7 +644,7 @@ bool readAtomsWithResidueInfo( char *pqrFile, int *nAtm, double **atm )
 
    if ( fp == NULL )
      {
-         printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+         printError( std::format("Failed to open PQR file ({})!", pqrFile) );
          return false;
      }
 
@@ -730,7 +730,7 @@ bool readGlycines( char *pqrFile, int *nAtm, double **atm )
 
    if ( fp == NULL )
      {
-        printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+        printError( std::format("Failed to open PQR file ({})!", pqrFile) );
         return false;
      }
 
@@ -758,7 +758,7 @@ bool readGlycines( char *pqrFile, int *nAtm, double **atm )
 
    if ( *atm == NULL )
      {
-        printError( (char *)"Failed to allocate memory!" );
+        printError( "Failed to allocate memory!" );
         return false;
      }
 
@@ -766,7 +766,7 @@ bool readGlycines( char *pqrFile, int *nAtm, double **atm )
 
    if ( fp == NULL )
      {
-         printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+         printError( std::format("Failed to open PQR file ({})!", pqrFile) );
          return false;
      }
 
@@ -839,7 +839,7 @@ bool getTotalCharge( char *pqrFile, double *tCharge )
 
    if ( fp == NULL )
      {
-        printError( (char *)"Failed to open PQR file (%s)!", pqrFile );
+        printError( std::format("Failed to open PQR file ({})!", pqrFile) );
         return false;
      }
      

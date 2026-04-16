@@ -11,12 +11,14 @@ INCLUDE_DIRECTORIES(
 )
 
 SET(POST_FILTERING_LINK_LIBS 
-
   fast-clash
   math
   utils
-  pthread
+  Threads::Threads
 )
+if(WIN32)
+  list(APPEND POST_FILTERING_LINK_LIBS PThreads4W::PThreads4W)
+endif()
 
 ADD_EXECUTABLE (FilterOutput FilterOutput.cpp ${SOURCE_FILES})
 TARGET_LINK_LIBRARIES(FilterOutput ${POST_FILTERING_LINK_LIBS})

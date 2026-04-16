@@ -1,13 +1,18 @@
 #include "fast-clash/clashFilter.h"
 #include <vector>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/vector.hpp>
+#include <array>
 #include <cassert>
 #include <cstdio>
 #include <iostream>
 #include <fstream>
-typedef boost::numeric::ublas::matrix<double> Matrix;
-typedef boost::numeric::ublas::vector<double> bVector;
+#include <cstring>
+
+// Simple 4x4 double matrix replacing boost::numeric::ublas::matrix<double>
+struct Matrix4x4 {
+  std::array<std::array<double, 4>, 4> m{};
+  double& operator()(int r, int c) { return m[r][c]; }
+  double  operator()(int r, int c) const { return m[r][c]; }
+};
 
 using namespace std;
 
@@ -115,11 +120,11 @@ void readRaw(const char* forbiddenVolFileName, int& numStaticAtoms, double*& sta
     fclose(rawfp);
 }
 
-void readTransformation(const char* filename, std::vector<Matrix>& transformations)
+void readTransformation(const char* filename, std::vector<Matrix4x4>& transformations)
 {
 
   std::ifstream ifile(filename);
-  Matrix T(4,4);
+  Matrix4x4 T;
   std::string dummy;
   ifile>>dummy;
   while(ifile>>T(0,0)>>T(0,1)>>T(0,2)>>T(0,3)>>T(1,0)>>T(1,1)>>T(1,2)>>T(1,3)>>T(2,0)>>T(2,1)>>T(2,2)>>T(2,3)>>T(3,0)>>T(3,1)>>T(3,2)>>T(3,3)) 
@@ -150,7 +155,7 @@ bool initForbiddenVolumeFilter(const char* forbiddenVolFileName, const char* mov
   return true;
 }
 
-void applyFilter(clashFilter* fFilter, const std::vector<Matrix>& transformations, const char* transformationFileName)
+void applyFilter(clashFilter* fFilter, const std::vector<Matrix4x4>& transformations, const char* transformationFileName)
 {
 
   FILE * fp = fopen(transformationFileName, "w");
@@ -161,7 +166,7 @@ void applyFilter(clashFilter* fFilter, const std::vector<Matrix>& transformation
 
     double intVal;
     int nclashes = 0, nclose = 0;
-    Matrix m = transformations.at(i);
+    Matrix4x4 m = transformations.at(i);
     CCVOpenGLMath::Matrix transM(m(0,0), m(0,1), m(0,2), m(0,3),
 				 m(1,0), m(1,1), m(1,2), m(1,3),
 				 m(2,0), m(2,1), m(2,2), m(2,3),
@@ -207,7 +212,7 @@ int main(int argc, char** argv)
   const char* XFormsFile = argv[3];
   const char* output = argv[4];
   clashFilter* cFilter;
-  std::vector<Matrix> transformations;
+  std::vector<Matrix4x4> transformations;
   
   initForbiddenVolumeFilter(fVolRaw, ligandPQR,&cFilter);
   readTransformation(XFormsFile,  transformations);

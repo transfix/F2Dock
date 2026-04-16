@@ -24,6 +24,7 @@
 #include "Docking.h"
 
 #include "TopValues.h"
+#include <vector>
 
 using CCVOpenGLMath::Matrix;
 using CCVOpenGLMath::Vector;
@@ -2681,24 +2682,23 @@ void printIntermediateStats( FILE *fp,
   double max_iv_ss = -10000000000, max_iv_cc = -10000000000, max_iv_sc = -10000000000;
 #endif
 
-  int counter[ rmsdToReport ]; //keep until 20A
+  std::vector<int> counter( rmsdToReport, 0 ); //keep until 20A
   int hitsInRange[ 6 ]; // 0, 0-9, 0-99, 0-999, 0-9999, 0-99999
-  int highestPos[ rmsdToReport ];
+  std::vector<int> highestPos( rmsdToReport );
 
   int maxRank = n + 1;
   for ( int i = 0; i < rmsdToReport; i++ )
     {
-      counter[ i ] = 0;
       highestPos[ i ] = maxRank;
     }
 
   for ( int i = 0; i < 6; i++ )
     hitsInRange[ i ] = 0;
 
-  f_printf( fp, (char *)"\n# grid spacing = %f angstrom\n# ", 1.0 / ( ( double ) scale_B * curTopValues->getGridSize( ) ) );
-  f_printf( fp, (char *)"\n# number of peaks = %d\n# ", n );
-  f_printf( fp, (char *)"\n# score scale down factor = %lf\n# ", functionScaleFactor );
-  f_printf( fp, (char *)"\n# number of rotation matrices processed = %d ( %0.2lf\% )\n# ", processedRotations, ( processedRotations * 100.0 ) / pr->pri->numberOfRotations );
+  f_printf( fp, std::format("\n# grid spacing = {:f} angstrom\n# ", 1.0 / ( ( double ) scale_B * curTopValues->getGridSize( ) )) );
+  f_printf( fp, std::format("\n# number of peaks = {}\n# ", n) );
+  f_printf( fp, std::format("\n# score scale down factor = {:f}\n# ", functionScaleFactor) );
+  f_printf( fp, std::format("\n# number of rotation matrices processed = {} ( {:.2f}% )\n# ", processedRotations, ( processedRotations * 100.0 ) / pr->pri->numberOfRotations) );
 
   fprintf( fp, (char *)"\n# START PEAKS" );
 
@@ -2831,20 +2831,20 @@ void printIntermediateStats( FILE *fp,
 //      if ( highestPos[ i ] < highestRank ) highestRank = highestPos[ i ];
 //     }
 
-   f_printf( fp, (char *)"\n#\n#" );
+   f_printf( fp, "\n#\n#" );
    for ( int i = 0; i < rmsdToReport; i++ )
-      f_printf( fp, (char *)" %d --> %d %d\n# ", i, counter[ i ], ( highestPos[ i ] == maxRank ) ? -1 : highestPos[ i ] );
+      f_printf( fp, std::format(" {} --> {} {}\n# ", i, counter[ i ], ( highestPos[ i ] == maxRank ) ? -1 : highestPos[ i ]) );
 
-   f_printf( fp, (char *)"\n#\n#Hits in Range:\n#" );
+   f_printf( fp, "\n#\n#Hits in Range:\n#" );
    for ( int i = 0, j = 1; i < 6; i++ )
      {
-      f_printf( fp, (char *)" [%d, %d] --> %d\n#", 1, j, hitsInRange[ i ] );
+      f_printf( fp, std::format(" [{}, {}] --> {}\n#", 1, j, hitsInRange[ i ]) );
       j *= 10;
      }
 
-   f_printf( fp, (char *)"\n# good peaks under %d A: count = %d highest rank = %d min RMSD = %f\n# ", rmsdGood, numberOfGoodPeaks, highestRank + 1, mrmsd );
+   f_printf( fp, std::format("\n# good peaks under {} A: count = {} highest rank = {} min RMSD = {:f}\n# ", rmsdGood, numberOfGoodPeaks, highestRank + 1, mrmsd) );
 
-   f_printf( fp, (char *)"\n# best peak: rmsd = %f rank = %d score = %lf ", mrmsd, rank, ( double ) mv / functionScaleFactor );
+   f_printf( fp, std::format("\n# best peak: rmsd = {:f} rank = {} score = {:f} ", mrmsd, rank, ( double ) mv / functionScaleFactor) );
 
    if ( breakDownScores )
       fprintf( fp, (char *)"realScore = < skin-skin = %lf core-core = %lf skin-core = %lf >, unrealScore = < skin-skin = %lf core-core = %lf skin-core = %lf >, elecScore = %lf, hbondScore = %lf, hydrophobicityScore = %lf, simpleComplementarityScore = %lf, vdWPotential = %lf, nClashes = %d, pGsol = %lf, pGsolH = %lf, delDispE = %lf ",
@@ -2939,8 +2939,8 @@ void printUntransformedScore( FILE *fp, PARAMS *pr )
   int nclashes, mnclashes, r, f, c;
   Matrix transformation;
 
-  f_printf( fp, (char *)"\n# grid spacing = %f angstrom\n# ", 1.0 / ( ( double ) scale_B * curTopValues->getGridSize( ) ) );
-  f_printf( fp, (char *)"\n# score scale down factor = %lf\n# ", functionScaleFactor );
+  f_printf( fp, std::format("\n# grid spacing = {:f} angstrom\n# ", 1.0 / ( ( double ) scale_B * curTopValues->getGridSize( ) )) );
+  f_printf( fp, std::format("\n# score scale down factor = {:f}\n# ", functionScaleFactor) );
 
   fprintf( fp, (char *)"\n# START UNTRANSFORMED SCORE" );
 
@@ -4056,6 +4056,7 @@ static void *startApplyRotationsThread( void *v )
     	     	   pr->smallElectrostaticsKernel,
  		   pr->smoothSkin, pr->smoothingFunction, pr->localTopValues,
 		   pr->functionScaleFactor, pr );
+   return nullptr;
 }
 
 void printInputParamters( PARAMS_IN *pr, FILE* fp )
@@ -4461,6 +4462,7 @@ static void *startApplyFiltersThread( void *v )
    FILTER_PARAMS *pr = ( FILTER_PARAMS * ) v;
 
    applyFilters( pr );
+   return nullptr;
 }
 
 
@@ -4470,8 +4472,8 @@ void filterPoses( PARAMS *params, TopValues *globalIn, TopValues *globalOut,
 {
    PARAMS_IN *pr = ( PARAMS_IN * ) params->pri;
    int numThreads = pr->numThreads;
-   FILTER_PARAMS prT[ numThreads ];
-   pthread_t p[ numThreads ];
+   std::vector<FILTER_PARAMS> prT( numThreads );
+   std::vector<pthread_t> p( numThreads );
 
    ValuePosition3D sol;
 
@@ -5311,7 +5313,7 @@ void markCluster( int x, int y, int z, double *markedPeaks, int numFreq, double 
       {
        for ( int yy = ly, dxy = dx + ( y - ly ) * ( y - ly ); yy <= hy; yy++ )
          {
-          int dxy = dx + ( y - yy ) * ( y - yy );
+          dxy = dx + ( y - yy ) * ( y - yy );
 
           for ( int zz = lz, dxyz = dxy + ( z - lz ) * ( z - lz ); zz <= hz; zz++ )
              {
@@ -5368,7 +5370,7 @@ int getClusterValue( int x, int y, int z, double *markedPeaks, int numFreq, doub
       {
        for ( int yy = ly, dxy = dx + ( y - ly ) * ( y - ly ); yy <= hy; yy++ )
          {
-          int dxy = dx + ( y - yy ) * ( y - yy );
+          dxy = dx + ( y - yy ) * ( y - yy );
 
           for ( int zz = lz, dxyz = dxy + ( z - lz ) * ( z - lz ); zz <= hz; zz++ )
              {
@@ -5536,7 +5538,7 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
 	break;
       }
 
-      string temp(str);
+      std::string temp(str);
 
       if(temp.compare("ATOM")==0 || temp.compare("HETATM")==0){
 	numStaticAtoms++;
@@ -5567,7 +5569,7 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
 	break;
       }
 
-      string temp(str);
+      std::string temp(str);
       int atomNum;
       char atomName[50];
       char resName[50];
@@ -6061,16 +6063,13 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
   double hydrophobicity_imag_magnitude = sqrt( hydroPhilicPhilicWeight );
 
   // results
-  TopValues *localTopValues[ numThreads ];
+  std::vector<TopValues *> localTopValues( numThreads, nullptr );
   TopValues *globalTopValues = 0;
 
   TopValues *funnel = 0;
   int *peakList;
 
   double mainStartTime = getTime();
-
-  for ( int i = 0; i < numThreads; i++ )
-    localTopValues[ i ] = 0;
 
 //  double numFreq3 = numFreq*numFreq*numFreq;
   FFTW_complex* centerFrequenciesA = (FFTW_complex*)FFTW_malloc( sizeof(FFTW_complex)*numFreq3 ) ;
@@ -6106,42 +6105,42 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
 
   FFTW_complex* ourMoreFrequenciesA;
 
-  FFTW_complex* centerFrequenciesB[ numThreads ];
-  FFTW_complex* centerFrequenciesProduct[ numThreads ];
-  FFTW_complex* sparseProfile[ numThreads ];
+  std::vector<FFTW_complex*> centerFrequenciesB( numThreads );
+  std::vector<FFTW_complex*> centerFrequenciesProduct( numThreads );
+  std::vector<FFTW_complex*> sparseProfile( numThreads );
 
-  FFTW_complex* sparseShapeProfile[ numThreads ];
+  std::vector<FFTW_complex*> sparseShapeProfile( numThreads );
 
-  FFTW_complex* centerElecFrequenciesB[ numThreads ];
-  FFTW_complex* centerFrequenciesElecProduct[ numThreads ];
-  FFTW_complex* sparseElecProfile[ numThreads ];
+  std::vector<FFTW_complex*> centerElecFrequenciesB( numThreads );
+  std::vector<FFTW_complex*> centerFrequenciesElecProduct( numThreads );
+  std::vector<FFTW_complex*> sparseElecProfile( numThreads );
 
-  FFTW_complex* sparseHbondProfile[ numThreads ];
-  FFTW_complex* sparseHydrophobicityProfile[ numThreads ];
-  FFTW_complex* sparseHydrophobicityTwoProfile[ numThreads ];
-  FFTW_complex* sparseSimpleComplementarityProfile[ numThreads ];
+  std::vector<FFTW_complex*> sparseHbondProfile( numThreads );
+  std::vector<FFTW_complex*> sparseHydrophobicityProfile( numThreads );
+  std::vector<FFTW_complex*> sparseHydrophobicityTwoProfile( numThreads );
+  std::vector<FFTW_complex*> sparseSimpleComplementarityProfile( numThreads );
 
-  FFTW_complex* freqHat[ numThreads ];
+  std::vector<FFTW_complex*> freqHat( numThreads );
 
-  FFTW_complex* ourMoreFrequencies[ numThreads ];
-  FFTW_complex* ourMoreFrequenciesOut[ numThreads ];
+  std::vector<FFTW_complex*> ourMoreFrequencies( numThreads );
+  std::vector<FFTW_complex*> ourMoreFrequenciesOut( numThreads );
 
-  FFTW_complex* elecGridB[ numThreads ];
+  std::vector<FFTW_complex*> elecGridB( numThreads );
 
-  FFTW_plan freqPlan[ numThreads ];
+  std::vector<FFTW_plan> freqPlan( numThreads );
   sparse3DFFT_plan sparseFreqPlanBackward;
-  FFTW_plan elecFreqPlan[ numThreads ];
+  std::vector<FFTW_plan> elecFreqPlan( numThreads );
 
-  FFTW_plan freqHatPlan[ numThreads ];
+  std::vector<FFTW_plan> freqHatPlan( numThreads );
 
-  FFTW_plan moreFreqPlan[ numThreads ];
+  std::vector<FFTW_plan> moreFreqPlan( numThreads );
   sparse3DFFT_plan sparseFreqPlanForward;
   FFTW_plan moreFreqPlanA;
 
-  FFTW_plan moreElecFreqPlan[ numThreads ];
+  std::vector<FFTW_plan> moreElecFreqPlan( numThreads );
   FFTW_plan moreElecFreqPlanA;
 
-  double *sortedPeaks[ numThreads ];
+  std::vector<double *> sortedPeaks( numThreads );
 
   // static molecule
   double *xkAOrig = pr->xkAOrig;
@@ -6162,8 +6161,8 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
   double *ykBOrig = pr->ykBOrig;
   double *zkBOrig = pr->zkBOrig;
   int numCentersB = pr->numCentersB;
-  double *xkB[ numThreads ], *ykB[ numThreads ], *zkB[ numThreads ];
-  float *rkB[ numThreads ];
+  std::vector<double *> xkB( numThreads ), ykB( numThreads ), zkB( numThreads );
+  std::vector<float *> rkB( numThreads );
   char *typeB = pr->typeB;
   char *hbondTypeB = pr->hbondTypeB;
   float *chargesB = pr->chargesB;
@@ -6328,7 +6327,7 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
      peakList = new int[ 2 * numberOfPositions ];
     }
 
-  SmoothingFunction* smoothingFunction[ numThreads ];
+  std::vector<SmoothingFunction*> smoothingFunction( numThreads );
 
   double n = ( int ) ( alpha * numFreq );
   int alphaM = ( int ) n;
@@ -6437,9 +6436,9 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
 
   FFTW_complex *centerFrequenciesA_01 = 0, *centerFrequenciesA_10 = 0, *centerFrequenciesA_11 = 0;
 
-  FFTW_complex* sparseProfile_01[ numThreads ];
-  FFTW_complex* sparseProfile_10[ numThreads ];
-  FFTW_complex* sparseProfile_11[ numThreads ];
+  std::vector<FFTW_complex*> sparseProfile_01( numThreads );
+  std::vector<FFTW_complex*> sparseProfile_10( numThreads );
+  std::vector<FFTW_complex*> sparseProfile_11( numThreads );
 
   if ( breakDownScores )
     {
@@ -6927,8 +6926,8 @@ int dockingMain( PARAMS_IN *pr, bool scoreUntransformed )
 
 
 
-	PARAMS prT[ numThreads ];
-	pthread_t p[ numThreads ];
+	std::vector<PARAMS> prT( numThreads );
+	std::vector<pthread_t> p( numThreads );
 
         initRotationServer( numberOfRotations, numThreads );
 

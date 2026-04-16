@@ -1,17 +1,26 @@
-cmake_minimum_required (VERSION 2.6)
-project (F2Dock)
+cmake_minimum_required(VERSION 3.16)
+project(F2Dock VERSION 2.1.0 LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Global Variables
-if(CMAKE_HOST_UNIX)
-  # standard setup
-  set (CMAKE_CXX_FLAGS "$ENV{CPPFLAGS} -I='/User/andre/F2Dock-refactored/inc/' -O2")
-  set (CMAKE_LD_FLAGS "$ENV{LDFLAGS}")
-  
-  # Debugging and profiling friendly flags:
-  #set (CMAKE_CXX_FLAGS "$ENV{CPPFLAGS} -pg")
-  #set (CMAKE_LD_FLAGS "$ENV{LDFLAGS} -pg")
-endif(CMAKE_HOST_UNIX)
+if(MSVC)
+  include_directories(${CMAKE_SOURCE_DIR}/inc)
+  add_compile_options(/W3 /EHsc)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX -D_USE_MATH_DEFINES)
+  # POSIX strcasecmp is _stricmp on MSVC
+  add_definitions(-Dstrcasecmp=_stricmp -Dstrncasecmp=_strnicmp)
+else()
+  set(CMAKE_CXX_FLAGS "$ENV{CPPFLAGS} -I${CMAKE_SOURCE_DIR}/inc -O2")
+  set(CMAKE_LD_FLAGS "$ENV{LDFLAGS}")
+endif()
 
+find_package(Threads REQUIRED)
+if(WIN32)
+  find_package(PThreads4W REQUIRED)
+endif()
 
 # CMake Modules
 SET(CMAKE_MODULE_PATH
@@ -32,4 +41,44 @@ IF(APPLE)
 ADD_DEFINITIONS(-DMACOS_X)
 ENDIF(APPLE)
 
+# ── Version header ──
+configure_file(
+  "${CMAKE_SOURCE_DIR}/inc/f2dock/Version.h.in"
+  "${CMAKE_BINARY_DIR}/inc/f2dock/Version.h"
+  @ONLY)
+include_directories("${CMAKE_BINARY_DIR}/inc")
+
 add_subdirectory (src)
+
+# ── Testing ──
+option(F2DOCK_BUILD_TESTS "Build unit tests" ON)
+if(F2DOCK_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests/unit)
+endif()
+
+# ── Install targets ──
+install(TARGETS F2Dock GB-Rerank FilterOutput F2DockServer
+        RUNTIME DESTINATION bin)
+
+# Install data files needed at runtime
+install(FILES
+  deg04.matrix deg06.matrix deg08.matrix deg10.matrix
+  deg12.matrix deg20.matrix
+  DESTINATION share/F2Dock/data)
+
+# ── CPack configuration ──
+set(CPACK_PACKAGE_NAME "F2Dock")
+set(CPACK_PACKAGE_VENDOR "CVC, The University of Texas at Austin")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Fast Fourier protein-protein docking")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/INSTALL")
+
+# DEB-specific
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CVC Lab <bajaj@cs.utexas.edu>")
+set(CPACK_DEBIAN_PACKAGE_SECTION "science")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-3")
+
+include(CPack)

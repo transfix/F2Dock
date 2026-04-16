@@ -139,7 +139,7 @@ fastLJ::fastLJ( int numStaticAtoms, double *stAtomsXYZ, char *stAtomsType, int n
 
    if ( nThreads < 1 )
      {
-       printError( (char *)"Invalid number of threads ( %d )!", nThreads );
+       printError( std::format("Invalid number of threads ( {} )!", nThreads) );
        nThreads = 1;
      }
    
@@ -159,7 +159,7 @@ fastLJ::fastLJ( int numStaticAtoms, double *stAtomsXYZ, char *stAtomsType, int n
 
        if ( movingAtoms[ i ] == NULL )
          {
-          printError( (char *)"Failed to allocate memory for atoms!" );
+          printError( "Failed to allocate memory for atoms!" );
           freeMemory( );
           exit( 1 );
          }
@@ -177,7 +177,7 @@ fastLJ::fastLJ( char *staticAtomsFile, char *movingAtomsFile, int nThreads, bool
 
    if ( nThreads < 1 )
      {
-       printError( (char *)"Invalid number of threads ( %d )!", nThreads );
+       printError( std::format("Invalid number of threads ( {} )!", nThreads) );
        nThreads = 1;
      }
    
@@ -197,7 +197,7 @@ fastLJ::fastLJ( char *staticAtomsFile, char *movingAtomsFile, int nThreads, bool
 
        if ( movingAtoms[ i ] == NULL )
          {
-          printError( (char *)"Failed to allocate memory for atoms!" );
+          printError( "Failed to allocate memory for atoms!" );
           freeMemory( );
           exit( 1 );
          }
@@ -233,7 +233,7 @@ fastLJ::fastLJ( char *paramFile )
 
        if ( movingAtoms[ i ] == NULL )
          {
-          printError( (char *)"Failed to allocate memory for atoms!" );
+          printError( "Failed to allocate memory for atoms!" );
           freeMemory( );
           exit( 1 );
          }
@@ -257,7 +257,7 @@ bool fastLJ::setMinRadius( double minRad )
 {
    if ( minRad < 0 )
      {
-      printError( (char *)"minRadius must be a non-negative real number!" );
+      printError( "minRadius must be a non-negative real number!" );
       return false;     
      }
      
@@ -284,7 +284,7 @@ bool fastLJ::setMaxLeafSize( int maxLfSize )
 {
    if ( maxLfSize <= 0 )
      {
-      printError( (char *)"maxLeafSize must be a positive integer!" );
+      printError( "maxLeafSize must be a positive integer!" );
       return false;     
      }
      
@@ -311,7 +311,7 @@ bool fastLJ::setMinInterAtomDist( double minAtomDist )
 {
    if ( minAtomDist <= 0 )
      {
-      printError( (char *)"minInterAtomDist must be a positive real number!" );
+      printError( "minInterAtomDist must be a positive real number!" );
       return false;     
      }
      
@@ -335,7 +335,7 @@ bool fastLJ::setEpsilon( double eps )
 {
    if ( eps < 0 )
      {
-      printError( (char *)"epsilon must be a non-negative real number!" );
+      printError( "epsilon must be a non-negative real number!" );
       return false;     
      }
      
@@ -427,7 +427,7 @@ bool fastLJ::getParamsFromFile( char *paramFile, char **staticAtomsFile, char **
 
   if ( fp == NULL )
     {
-      printError( (char *)"Failed to open parameter file %s!", paramFile );
+      printError( std::format("Failed to open parameter file {}!", paramFile) );
       return false;
     }
 
@@ -442,53 +442,53 @@ bool fastLJ::getParamsFromFile( char *paramFile, char **staticAtomsFile, char **
       else if ( !strcasecmp( key, "numThreads" ) )
              {
                int v = atoi( val );               
-               if ( v < 1 ) printError( (char *)"%s must be a positive integer!", key );
+               if ( v < 1 ) printError( std::format("{} must be a positive integer!", key) );
                else numThreads = v;  
              }
       else if ( !strcasecmp( key, "epsilonLJ" ) )
              {
                double v = atof( val );
                
-               if ( v < 0 ) printError( (char *)"%s must be a non-negative float!", key );
+               if ( v < 0 ) printError( std::format("{} must be a non-negative float!", key) );
                else setEpsilon( v );                 
              }
       else if ( !strcasecmp( key, "minRadius" ) )
              {
                double v = atof( val );
                
-               if ( v < 0 ) printError( (char *)"%s must be a non-negative float!", key );
+               if ( v < 0 ) printError( std::format("{} must be a non-negative float!", key) );
                else setMinRadius( v );                 
              }
       else if ( !strcasecmp( key, "maxLeafSize" ) )
              {
                int v = atoi( val );               
-               if ( v < 1 ) printError( (char *)"%s must be a positive integer!", key );
+               if ( v < 1 ) printError( std::format("{} must be a positive integer!", key) );
                else setMaxLeafSize( v );
              }
       else if ( !strcasecmp( key, "minInterAtomDist" ) )
              {
                double v = atof( val );
                
-               if ( v <= 0 ) printError( (char *)"%s must be a positive float!", key );
+               if ( v <= 0 ) printError( std::format("{} must be a positive float!", key) );
                else setMinInterAtomDist( v );
              }
       else if ( !strcasecmp( key, "useSSE" ) ) 
              {
 	       if ( !strcasecmp( val, "true" ) ) useSSE( true );
 	       else if ( !strcasecmp( val, "false" ) ) useSSE( false );
-	            else printError( (char *)"%s must be a Boolean value!", key );
+	            else printError( std::format("{} must be a Boolean value!", key) );
 	     }             
       else if ( !strcasecmp( key, "vdWEqmRadScale" ) ) 
              {
 	       double v = atof( val );
-	       if ( v <= 0 ) printError( (char *)"%s must be a positive real value!", key );
+	       if ( v <= 0 ) printError( std::format("{} must be a positive real value!", key) );
 	       else vdWEqmRadScale = v;
   	     }
       else if ( !strcasecmp( key, "printStatus" ) ) 
              {
 	       if ( !strcasecmp( val, "true" ) ) setPrintStatus( true );
 	       else if ( !strcasecmp( val, "false" ) ) setPrintStatus( false );
-	            else printError( (char *)"%s must be a Boolean value!", key );
+	            else printError( std::format("{} must be a Boolean value!", key) );
 	     }             
     }
 
@@ -496,7 +496,7 @@ bool fastLJ::getParamsFromFile( char *paramFile, char **staticAtomsFile, char **
     
   if ( ( ( *staticAtomsFile ) == NULL ) || ( ( *movingAtomsFile ) == NULL ) )
     { 
-      printError( (char *)"Missing PDB/PQR file name for the %s molecule!", ( ( *staticAtomsFile ) == NULL ) ? "static" : "moving" );
+      printError( std::format("Missing PDB/PQR file name for the {} molecule!", ( ( *staticAtomsFile ) == NULL ) ? "static" : "moving") );
       freeMem( ( *staticAtomsFile ) );
       freeMem( ( *movingAtomsFile ) );
       return false;
@@ -518,7 +518,7 @@ bool fastLJ::readAtomsFromPQR( char *atomsFile, int *numAtoms, ATOM **atms )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open PQR file (%s)!", atomsFile );
+      printError( std::format("Failed to open PQR file ({})!", atomsFile) );
       return false;
      }
    
@@ -559,7 +559,7 @@ bool fastLJ::readAtomsFromPQR( char *atomsFile, int *numAtoms, ATOM **atms )
           atms[ i ] = ( ATOM * ) malloc( numAtoms[ i ] * sizeof( ATOM ) );
           if ( atms[ i ] == NULL )
             {
-              printError( (char *)"Failed to allocate memory for atoms!" );
+              printError( "Failed to allocate memory for atoms!" );
               fclose( fp );
               return false;
             }
@@ -641,7 +641,7 @@ bool fastLJ::readAtomsFromPDB( char *atomsFile, int *numAtoms, ATOM **atms )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open PDB file (%s)!", atomsFile );
+      printError( std::format("Failed to open PDB file ({})!", atomsFile) );
       return false;
      }
    
@@ -678,7 +678,7 @@ bool fastLJ::readAtomsFromPDB( char *atomsFile, int *numAtoms, ATOM **atms )
           atms[ i ] = ( ATOM * ) malloc( numAtoms[ i ] * sizeof( ATOM ) );
           if ( atms[ i ] == NULL )
             {
-              printError( (char *)"Failed to allocate memory for atoms!" );
+              printError( "Failed to allocate memory for atoms!" );
               fclose( fp );
               return false;
             }
@@ -751,7 +751,7 @@ bool fastLJ::readAtomsFromFile( char *atomsFile, int *numAtoms, ATOM **atms )
      return readAtomsFromPQR( atomsFile, numAtoms, atms );
    else  
      {
-      printError( (char *)"Unknown file type (%s)!", atomsFile );
+      printError( std::format("Unknown file type ({})!", atomsFile) );
       return false;
      }
 }
@@ -765,7 +765,7 @@ bool fastLJ::copyAtomsFromArray( int numAtomsSrc, double *atmsSrcXYZ, char *atms
    
    if ( numAtomsSrc <= 0 )
      {
-      printError( (char *)"No atoms to copy!" );
+      printError( "No atoms to copy!" );
       return false;
      }
 
@@ -791,7 +791,7 @@ bool fastLJ::copyAtomsFromArray( int numAtomsSrc, double *atmsSrcXYZ, char *atms
           atmsDest[ i ] = ( ATOM * ) malloc( numAtomsDest[ i ] * sizeof( ATOM ) );
           if ( atmsDest[ i ] == NULL )
             {
-              printError( (char *)"Failed to allocate memory for atoms!" );
+              printError( "Failed to allocate memory for atoms!" );
               return false;
             }
         }  
@@ -1093,7 +1093,7 @@ bool fastLJ::buildStaticAtomsOctree( void )
    
          if ( atomsT[ k ] == NULL )
            {
-            printError( (char *)"Failed to allocate temporary memory for static atoms!" );
+            printError( "Failed to allocate temporary memory for static atoms!" );
             if ( !staticAtomsOctreeBuilt ) exit( 1 );
             return false;
            }
@@ -1119,7 +1119,7 @@ bool fastLJ::buildStaticAtomsOctree( void )
 
    if ( atomsOctreeT == NULL )
      {
-      printError( (char *)"Unable to %s static atoms octree - memory allocation failed!", ( staticAtomsOctreeBuilt ) ? "rebuild" : "build" );
+      printError( std::format("Unable to {} static atoms octree - memory allocation failed!", ( staticAtomsOctreeBuilt ) ? "rebuild" : "build") );
       if ( !staticAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -1163,7 +1163,7 @@ bool fastLJ::buildMovingAtomsOctree( void )
    
          if ( atomsT[ k ] == NULL )
            {
-            printError( (char *)"Failed to allocate temporary memory for moving atoms!" );
+            printError( "Failed to allocate temporary memory for moving atoms!" );
             if ( !movingAtomsOctreeBuilt ) exit( 1 );
             return false;
            }
@@ -1196,7 +1196,7 @@ bool fastLJ::buildMovingAtomsOctree( void )
 
    if ( atomsOctreeT == NULL )
      {
-      printError( (char *)"Unable to %s moving atoms octree - memory allocation failed!", ( movingAtomsOctreeBuilt ) ? "rebuild" : "build" );
+      printError( std::format("Unable to {} moving atoms octree - memory allocation failed!", ( movingAtomsOctreeBuilt ) ? "rebuild" : "build") );
       if ( !movingAtomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -1239,6 +1239,8 @@ bool fastLJ::buildOctrees( void )
    minRadiusUsed = minRadius;
    maxLeafSizeUsed = maxLeafSize;
    minInterAtomDistUsed = minInterAtomDist; 
+
+   return true;
 }
 
 
@@ -1297,7 +1299,7 @@ void fastLJ::approximatePotential( int threadID, double *transMat, int nodeS, in
    
    if ( /*( d2 > 4 * sumRad2 ) && */( d2 > ( sumRad2 / ( epsilon * epsilon ) ) ) ) farEnough = true;
    
-   register double pot = 0;
+   double pot = 0;
    
    if ( farEnough ) 
       {
@@ -1488,7 +1490,7 @@ void fastLJ::computePotentialNaively( int threadID, double *transMat, double *LJ
       
    double minD2 = minInterAtomDist * minInterAtomDist;
    
-   register double pot = 0;   
+   double pot = 0;   
    
    for ( int k = 0; k < numAtomType; k++ )
      for ( int l = 0; l < numAtomType; l++ )  

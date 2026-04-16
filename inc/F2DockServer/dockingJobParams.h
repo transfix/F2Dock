@@ -23,7 +23,6 @@
 
 #include <string>
 
-using namespace std;
 
 enum {  LINUX, 
 	PRISM2
@@ -61,69 +60,69 @@ typedef struct
 	int jobType;
 
 	bool isReceptorPDBAvailable;
-	string receptorPDBName;
+	std::string receptorPDBName;
 
 	bool isReceptorPQRAvailable;
-	string receptorPQRName;
+	std::string receptorPQRName;
 
 	bool isReceptorF2dAvailable;
-	string receptorF2dName;
+	std::string receptorF2dName;
 
 	bool isReceptorRAWNAvailable;
-	string receptorRAWNName;
+	std::string receptorRAWNName;
 
 	bool isReceptorQuadAvailable;
-	string receptorQuadName;
+	std::string receptorQuadName;
 
 	bool isLigandPDBAvailable;
-	string ligandPDBName;
+	std::string ligandPDBName;
 
 	bool isLigandPQRAvailable;
-	string ligandPQRName;
+	std::string ligandPQRName;
 
 	bool isLigandF2dAvailable;
-	string ligandF2dName;
+	std::string ligandF2dName;
 
 	bool isLigandRAWNAvailable;
-	string ligandRAWNName;
+	std::string ligandRAWNName;
 
 	bool isLigandQuadAvailable;
-	string ligandQuadName;
+	std::string ligandQuadName;
 
 	bool isRMSDAvailable;	
-	string rmsdFileName;
+	std::string rmsdFileName;
 
-	string receptorXYZName;
-	string ligandXYZName;
+	std::string receptorXYZName;
+	std::string ligandXYZName;
 
-	string receptorRAWName;
-	string ligandRAWName;
+	std::string receptorRAWName;
+	std::string ligandRAWName;
 
-	string receptorIRAWName;
-	string ligandIRAWName;
+	std::string receptorIRAWName;
+	std::string ligandIRAWName;
 
 	bool isDockingInputAvailable;
-	string dockingInputFileName;
+	std::string dockingInputFileName;
 
 	bool isRerankingInputAvailable;
-	string rerankingInputFileName;
+	std::string rerankingInputFileName;
 
 	bool isF2dGenInputAvailable;
-	string f2dGenInputFileName;
+	std::string f2dGenInputFileName;
 
 	bool isQuadGenInputAvailable;
-	string quadGenInputFileName;
+	std::string quadGenInputFileName;
 
 	bool isDockingOutputAvailable;
-	string dockingOutputFileName;
+	std::string dockingOutputFileName;
 
 	bool isRerankingOutputAvailable;
-	string rerankingOutputFileName;
+	std::string rerankingOutputFileName;
 
 	bool performRerank;
 	bool storeIntermediateFiles;
 
-	string scriptFileName;
+	std::string scriptFileName;
 
 	bool isLocal;
 	int platform;

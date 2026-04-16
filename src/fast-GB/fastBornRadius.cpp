@@ -51,7 +51,7 @@ bool fastBornRadius::allocateAtomsSubtreeRootsArray( int nThreads )
    
    if ( atomsSubtreeRoots == NULL )
      {
-      printError( (char *)"Failed to allocate memory!" );
+      printError( "Failed to allocate memory!" );
       return false;
      }
      
@@ -195,7 +195,7 @@ bool fastBornRadius::setMinRadius( double minRad )
 {
    if ( minRad < 0 )
      {
-      printError( (char *)"minRadius must be a non-negative real number!" );
+      printError( "minRadius must be a non-negative real number!" );
       return false;     
      }
      
@@ -211,7 +211,7 @@ bool fastBornRadius::setMaxLeafSize( int maxLfSize )
 {
    if ( maxLfSize <= 0 )
      {
-      printError( (char *)"maxLeafSize must be a positive integer!" );
+      printError( "maxLeafSize must be a positive integer!" );
       return false;     
      }
      
@@ -227,7 +227,7 @@ bool fastBornRadius::setEpsilon( double eps )
 {
    if ( eps < 0 )
      {
-      printError( (char *)"epsilon must be a non-negative real number!" );
+      printError( "epsilon must be a non-negative real number!" );
       return false;     
      }
      
@@ -243,7 +243,7 @@ bool fastBornRadius::setMaxBornRadius( double maxBornRad )
 {
    if ( maxBornRad <= 0 )
      {
-      printError( (char *)"maxBornRadius must be a positive real number!" );
+      printError( "maxBornRadius must be a positive real number!" );
       return false;     
      }
      
@@ -260,7 +260,7 @@ bool fastBornRadius::setNumThreads( int nThreads )
 {
    if ( nThreads < 1 )
      {
-      printError( (char *)"numThreads must be a positive integer!" );
+      printError( "numThreads must be a positive integer!" );
       return false;     
      }
      
@@ -344,7 +344,7 @@ bool fastBornRadius::readQPoints( char *qPtsFile )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open quadrature points file (%s)!", qPtsFile );
+      printError( std::format("Failed to open quadrature points file ({})!", qPtsFile) );
       return false;
      }
    
@@ -359,7 +359,7 @@ bool fastBornRadius::readQPoints( char *qPtsFile )
    
    if ( qPoints == NULL )
      {
-      printError( (char *)"Failed to allocate memory for quadrature points!" );
+      printError( "Failed to allocate memory for quadrature points!" );
       return false;
      }
      
@@ -367,7 +367,7 @@ bool fastBornRadius::readQPoints( char *qPtsFile )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open quadrature points file (%s)!", qPtsFile );
+      printError( std::format("Failed to open quadrature points file ({})!", qPtsFile) );
       return false;
      }
 
@@ -375,7 +375,7 @@ bool fastBornRadius::readQPoints( char *qPtsFile )
      {          
       if ( fscanf( fp, (char *)"%lf %lf %lf %lf %lf %lf %lf", &qPt.x, &qPt.y, &qPt.z, &qPt.nx, &qPt.ny, &qPt.nz, &qPt.w ) != 7 )
         {
-         printError( (char *)"Failed to read the quadrature points file (%s)!", qPtsFile );
+         printError( std::format("Failed to read the quadrature points file ({})!", qPtsFile) );
          return false;
         }
          
@@ -403,7 +403,7 @@ bool fastBornRadius::copyQPointsFromArray( int numQPoints, double *qPts )
    
    if ( numQPoints <= 0 )
      {
-      printError( (char *)"No quadrature points to copy!" );
+      printError( "No quadrature points to copy!" );
       return false;
      }
    
@@ -412,7 +412,7 @@ bool fastBornRadius::copyQPointsFromArray( int numQPoints, double *qPts )
    
    if ( qPoints == NULL )
      {
-      printError( (char *)"Failed to allocate memory for quadrature points!" );
+      printError( "Failed to allocate memory for quadrature points!" );
       return false;
      }
 
@@ -451,7 +451,7 @@ bool fastBornRadius::readAtomsFromPQR( char *atomsFile )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open PQR file (%s)!", atomsFile );
+      printError( std::format("Failed to open PQR file ({})!", atomsFile) );
       return false;
      }
    
@@ -472,7 +472,7 @@ bool fastBornRadius::readAtomsFromPQR( char *atomsFile )
    
    if ( atoms == NULL )
      {
-      printError( (char *)"Failed to allocate memory for atoms!" );
+      printError( "Failed to allocate memory for atoms!" );
       return false;
      }
      
@@ -480,7 +480,7 @@ bool fastBornRadius::readAtomsFromPQR( char *atomsFile )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open PQR file (%s)!", atomsFile );
+      printError( std::format("Failed to open PQR file ({})!", atomsFile) );
       return false;
      }
 
@@ -572,7 +572,7 @@ bool fastBornRadius::readAtoms( char *atomsFile )
      return readAtomsFromPQR( atomsFile );
    else  
      {
-      printError( (char *)"Unknown file type (%s)!", atomsFile );
+      printError( std::format("Unknown file type ({})!", atomsFile) );
       return false;
      }
 }
@@ -586,7 +586,7 @@ bool fastBornRadius::copyAtomsFromArray( int numAtoms, double *atms )
    
    if ( numAtoms <= 0 )
      {
-      printError( (char *)"No atoms to copy!" );
+      printError( "No atoms to copy!" );
       return false;
      }
    
@@ -595,7 +595,7 @@ bool fastBornRadius::copyAtomsFromArray( int numAtoms, double *atms )
    
    if ( atoms == NULL )
      {
-      printError( (char *)"Failed to allocate memory for atoms!" );
+      printError( "Failed to allocate memory for atoms!" );
       return false;
      }
 
@@ -865,7 +865,7 @@ bool fastBornRadius::buildQPointsOctree( void )
    
    if ( qPointsT == NULL )
      {
-      printError( (char *)"Failed to allocate temporary memory for quadrature points!" );
+      printError( "Failed to allocate temporary memory for quadrature points!" );
       if ( !qPointsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -880,7 +880,7 @@ bool fastBornRadius::buildQPointsOctree( void )
    
    if ( qPointsOctreeT == NULL )
      {
-      printError( (char *)"Unable to %s quadrature points octree - memory allocation failed!", ( qPointsOctreeBuilt ) ? (char *)"rebuild" : (char *)"build" );
+      printError( std::format("Unable to {} quadrature points octree - memory allocation failed!", ( qPointsOctreeBuilt ) ? "rebuild" : "build") );
       if ( !qPointsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -1094,7 +1094,7 @@ bool fastBornRadius::buildAtomsOctree( void )
    
    if ( atomsT == NULL )
      {
-      printError( (char *)"Failed to allocate temporary memory for atoms!" );
+      printError( "Failed to allocate temporary memory for atoms!" );
       if ( !atomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -1108,7 +1108,7 @@ bool fastBornRadius::buildAtomsOctree( void )
 
    if ( atomsOctreeT == NULL )
      {
-      printError( (char *)"Unable to %s atoms octree - memory allocation failed!", ( atomsOctreeBuilt ) ? (char *)"rebuild" : (char *)"build" );
+      printError( std::format("Unable to {} atoms octree - memory allocation failed!", ( atomsOctreeBuilt ) ? "rebuild" : "build") );
       if ( !atomsOctreeBuilt ) exit( 1 );
       return false;
      }
@@ -1138,6 +1138,8 @@ bool fastBornRadius::buildOctrees( void )
    if ( ( minRadius != minRadiusUsed ) || ( maxLeafSize != maxLeafSizeUsed ) || ( !atomsOctreeBuilt ) ) buildAtomsOctree( );
    minRadiusUsed = minRadius;
    maxLeafSizeUsed = maxLeafSize;
+
+   return true;
 }
 
 
@@ -1335,7 +1337,7 @@ bool fastBornRadius::computeBornRadii( void )
       {
        initSubtreeRootServer( );
              
-       pthread_t p[ numThreads ];           
+       std::vector<pthread_t> p( numThreads );           
        
        for ( int i = 0; i < numThreads; i++ )
           pthread_create( &p[ i ], NULL, approximateIntegralsThread, ( void * ) this );
@@ -1437,7 +1439,7 @@ bool fastBornRadius::getQPoints( int *numQPoints, double **qPts )
 
    if ( *qPts == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return false;
      }
         
@@ -1474,7 +1476,7 @@ bool fastBornRadius::getAtomsPQR( int *numAtoms, double **atomsPQR )
 
    if ( *atomsPQR == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return false;
      }
         
@@ -1510,7 +1512,7 @@ bool fastBornRadius::getAtomsPQRR( int *numAtoms, double **atomsPQRR, bool getNa
 
    if ( *atomsPQRR == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return false;
      }
         
@@ -1551,13 +1553,13 @@ double *fastBornRadius::getBornRadii( void )
    
    if ( priorComputationCleared ) 
      {
-      printError( (char *)"Need to (re)compute Born radii first!" );
+      printError( "Need to (re)compute Born radii first!" );
       return NULL;
      } 
      
    if ( epsilon != epsilonUsed ) 
      {
-      printError( (char *)"Born radii for epsilon = %lf have not yet been computed!", epsilon );
+      printError( std::format("Born radii for epsilon = {:f} have not yet been computed!", epsilon) );
       return NULL;
      } 
 
@@ -1567,7 +1569,7 @@ double *fastBornRadius::getBornRadii( void )
 
    if ( BornR == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return NULL;
      }
         
@@ -1597,7 +1599,7 @@ double *fastBornRadius::getNaiveBornRadii( void )
 
    if ( naiveBornR == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return NULL;
      }
         
@@ -1621,13 +1623,13 @@ double *fastBornRadius::getIntegrals( void )
 
    if ( priorComputationCleared ) 
      {
-      printError( (char *)"Need to (re)compute integrals first!" );
+      printError( "Need to (re)compute integrals first!" );
       return NULL;
      } 
 
    if ( epsilon != epsilonUsed ) 
      {
-      printError( (char *)"Integrals for relative error %lf have not yet been computed!", epsilon );
+      printError( std::format("Integrals for relative error {:f} have not yet been computed!", epsilon) );
       return NULL;
      } 
      
@@ -1637,7 +1639,7 @@ double *fastBornRadius::getIntegrals( void )
 
    if ( integrals == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return NULL;
      }
         
@@ -1688,7 +1690,7 @@ bool fastBornRadius::writeBornRadiiToFile( char *outFile )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to create output file (%s)!", outFile );
+      printError( std::format("Failed to create output file ({})!", outFile) );
       return false;
      }
      
@@ -1711,13 +1713,13 @@ bool fastBornRadius::writePQRRFile( char *outFile )
 {
    if ( priorComputationCleared ) 
      {
-      printError( (char *)"Need to (re)compute Born radii first!" );
+      printError( "Need to (re)compute Born radii first!" );
       return false;
      } 
      
    if ( epsilon != epsilonUsed ) 
      {
-      printError( (char *)"Born radii for epsilon = %lf have not yet been computed!", epsilon );
+      printError( std::format("Born radii for epsilon = {:f} have not yet been computed!", epsilon) );
       return false;
      } 
 
@@ -1731,7 +1733,7 @@ bool fastBornRadius::writePQRRFile( char *outFile )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to create output file (%s)!", outFile );
+      printError( std::format("Failed to create output file ({})!", outFile) );
       return false;
      }
      
@@ -1778,7 +1780,7 @@ bool fastBornRadius::writeFastAndNaiveBornRadiiToFile( char *outFile )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to create output file (%s)!", outFile );
+      printError( std::format("Failed to create output file ({})!", outFile) );
       return false;
      }
 
@@ -1837,7 +1839,7 @@ bool fastBornRadius::writeIntegralsToFile( char *outFile )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to create output file (%s)!", outFile );
+      printError( std::format("Failed to create output file ({})!", outFile) );
       return false;
      }
 

@@ -31,7 +31,6 @@
 //#include "grid.h"
 //#include "Point.h"
 //#include <arrangement_2d.h>
-using namespace std;
 
 #define INITHASHSIZE 51
 
@@ -81,7 +80,7 @@ struct planeID {
 
 struct gridcell {
   cellID ID;
-  vector<Point*> balls;
+  std::vector<Point*> balls;
   gridcell(int a, int b, int c) {
     ID.x = a;
     ID.y = b;
@@ -161,6 +160,7 @@ class PG {
 	DIM = divisionsize;
     else
 	DIM = 3.5;
+    TRANSLATE = 0.0;
     rmax = 1.5;
     cells = 0;
     lines = 0;
@@ -171,7 +171,7 @@ class PG {
     initTime = 0;
   }
 
-  PG(vector<Point *> *alist, double divisionsize, int inithashsize = INITHASHSIZE);
+  PG(std::vector<Point *> *alist, double divisionsize, int inithashsize = INITHASHSIZE);
 
   void boundingbox(double &mnx, double &mny, double &mnz, double &mxx, double &mxy, double &mxz)
   {
@@ -184,13 +184,13 @@ class PG {
   }
 
   /* Supported Queries*/
-  vector<Point*> range(Point *, double);
+  std::vector<Point*> range(Point *, double);
   bool pointsWithinRange(Point *q, double delta); 
   int countPointsWithinRange(Point *q, double delta);
-//  vector<Point*> *findintersections(Point *, double);
-// vector<Point*> *findintersection(Point * a, double d) {return findintersections(a,d);}
-//  vector<Point*> *findintersection(Point * a) {return findintersections(a,0.0);}
-//  vector<Point*> intersect(Point, float);
+//  std::vector<Point*> *findintersections(Point *, double);
+// std::vector<Point*> *findintersection(Point * a, double d) {return findintersections(a,d);}
+//  std::vector<Point*> *findintersection(Point * a) {return findintersections(a,0.0);}
+//  std::vector<Point*> intersect(Point, float);
 //  bool exposed(Point*);
 //  void surface(void);
 //  void checkInsertion(FILE *fp);
@@ -231,7 +231,7 @@ class PG {
   
   /* Supported updates*/
   void addPoint(Point *a);
-  void addPoints(vector<Point *> *alist)
+  void addPoints(std::vector<Point *> *alist)
   {
 	int i, size;
 	size = alist->size();
@@ -239,7 +239,7 @@ class PG {
 		addPoint(alist->at(i));
   }
   void removePoint(Point *a);
-//  void removePoints(vector<Point *> *alist);
+//  void removePoints(std::vector<Point *> *alist);
   //void move(Point, Point, float);
 };
 #endif

@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
+cmake_minimum_required(VERSION 3.16)
 
 FILE(GLOB SOURCE_FILES *.cpp)
 FILE(GLOB INCLUDE_FILES ../../inc/XmlRPC/*.[Hh])
@@ -24,7 +24,6 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES ".*BSD")
 
 ADD_LIBRARY (XmlRPC STATIC ${SOURCE_FILES} ${INCLUDE_FILES})
 
-#Windows requires wsock32
 if(WIN32)
-  target_link_libraries(XmlRPC wsock32)
-endif(WIN32)
+  target_link_libraries(XmlRPC ws2_32)
+endif()

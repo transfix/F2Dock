@@ -1,0 +1,46 @@
+# Build directories
+build/
+bin/
+lib/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+**/Makefile
+
+# SVN metadata
+.svn/
+**/.svn/
+
+# Editor swap files
+*.swp
+*.swo
+*~
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.lib
+*.exe
+*.bin
+*.out
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Project-specific generated files
+fftw-rank.txt
+svnext.txt
+paths.ini
+
+# Backup files
+*.old
+*.back
+*.bak
+*.orig
+build-asan/

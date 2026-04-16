@@ -34,6 +34,20 @@
 
 #define SSE_APPROX_MATH_H
 
+/* Architecture check: SSE intrinsics are x86/x64 only. */
+#if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
+  #define F2DOCK_HAS_SSE 1
+#else
+  #define F2DOCK_HAS_SSE 0
+#endif
+
+/* On MSVC x64, MMX intrinsics are not available — force SSE2 path. */
+#if defined(_M_X64) && !defined(USE_SSE2)
+  #define USE_SSE2
+#endif
+
+#if F2DOCK_HAS_SSE
+
 #include <xmmintrin.h>
 
 /* yes I know, the top of this file is quite ugly */
@@ -79,8 +93,8 @@ _PS_CONST_TYPE(min_norm_pos, int, 0x00800000);
 _PS_CONST_TYPE(mant_mask, int, 0x7f800000);
 _PS_CONST_TYPE(inv_mant_mask, int, ~0x7f800000);
 
-_PS_CONST_TYPE(sign_mask, int, 0x80000000);
-_PS_CONST_TYPE(inv_sign_mask, int, ~0x80000000);
+_PS_CONST_TYPE(sign_mask, int, (int)0x80000000);
+_PS_CONST_TYPE(inv_sign_mask, int, (int)~0x80000000);
 
 _PI32_CONST(1, 1);
 _PI32_CONST(inv1, ~1);
@@ -189,5 +203,29 @@ _PS_CONST(cephes_exp_p4, 1.6666665459E-1);
 _PS_CONST(cephes_exp_p5, 5.0000001201E-1);
 
 v4sf exp_ps(v4sf x);
+
+#else /* !F2DOCK_HAS_SSE — scalar fallback for non-x86 (e.g. ARM64) */
+
+#include <cmath>
+
+/* Provide scalar wrappers so callers compile without changes.
+   Performance-critical code should use platform-native SIMD on ARM. */
+struct v4sf_scalar {
+    float f[4];
+};
+typedef v4sf_scalar v4sf;
+
+inline v4sf exp_ps(v4sf x) {
+    v4sf r;
+    for (int i = 0; i < 4; ++i) r.f[i] = std::exp(x.f[i]);
+    return r;
+}
+inline v4sf log_ps(v4sf x) {
+    v4sf r;
+    for (int i = 0; i < 4; ++i) r.f[i] = std::log(x.f[i]);
+    return r;
+}
+
+#endif /* F2DOCK_HAS_SSE */
 
 #endif

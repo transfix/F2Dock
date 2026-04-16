@@ -27,6 +27,7 @@
 #endif
 
 #include <string.h>
+#include <vector>
 
 #include "RAWIV.h"
 
@@ -141,8 +142,12 @@ int writeGrid( FFTW_complex *scGrid, FFTW_DATA_TYPE *elecGrid, int n, double xCe
      } 
    
    int l = strlen( fileName );
-   
-   char fileNameSCRe2[ l + 15 ], fileNameSCIm2[ l + 15 ], fileNameElecRe2[ l + 15 ];
+   size_t bufLen = static_cast<size_t>(l) + 15;
+
+   std::vector<char> bufSCRe(bufLen), bufSCIm(bufLen), bufElecRe(bufLen);
+   char *fileNameSCRe2 = bufSCRe.data();
+   char *fileNameSCIm2 = bufSCIm.data();
+   char *fileNameElecRe2 = bufElecRe.data();
    
    strcpy( fileNameSCRe2, fileName );   
    strcpy( fileNameSCIm2, fileName );   

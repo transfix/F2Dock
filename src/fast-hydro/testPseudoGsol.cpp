@@ -38,7 +38,7 @@ bool readAtoms( char *atomsFile, int *nAtoms, double **atoms )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open atoms file (%s)!", atomsFile );
+      printError( std::format("Failed to open atoms file ({})!", atomsFile) );
       return false;
      }
    
@@ -53,7 +53,7 @@ bool readAtoms( char *atomsFile, int *nAtoms, double **atoms )
    
    if ( *atoms == NULL )
      {
-      printError( (char *)"Failed to allocate memory for atoms!" );
+      printError( "Failed to allocate memory for atoms!" );
       return false;
      }
      
@@ -61,7 +61,7 @@ bool readAtoms( char *atomsFile, int *nAtoms, double **atoms )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open atoms file (%s)!", atomsFile );
+      printError( std::format("Failed to open atoms file ({})!", atomsFile) );
       return false;
      }
 
@@ -69,7 +69,7 @@ bool readAtoms( char *atomsFile, int *nAtoms, double **atoms )
      {          
       if ( fscanf( fp, (char *)"%lf %lf %lf %lf %lf", &x, &y, &z, &r, &h ) != 5 )
         {
-         printError( (char *)"Failed to read the atoms file (%s)!", atomsFile );
+         printError( std::format("Failed to read the atoms file ({})!", atomsFile) );
          return false;
         }
       
@@ -90,7 +90,7 @@ int main( int argc, char *argv[ ] )
 {
   if ( argc < 4 )
     {
-      printError( (char *)"Input files not specified ( #1: parameter file, #2: static atoms file, #3: moving atoms file )!" );
+      printError( "Input files not specified ( #1: parameter file, #2: static atoms file, #3: moving atoms file )!" );
       return 1;
     }
     

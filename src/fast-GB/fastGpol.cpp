@@ -34,7 +34,7 @@ bool fastGpol::setMinRadius( double minRadius )
 {
    if ( minRadius < 0 )
      {
-      printError( (char *)"minRadius must be a non-negative real number!" );
+      printError( "minRadius must be a non-negative real number!" );
       return false;     
      }
      
@@ -50,7 +50,7 @@ bool fastGpol::setMaxLeafSize( int maxLfSize )
 {
    if ( maxLfSize <= 0 )
      {
-      printError( (char *)"maxLeafSize must be a positive integer!" );
+      printError( "maxLeafSize must be a positive integer!" );
       return false;     
      }
      
@@ -66,7 +66,7 @@ bool fastGpol::setEpsilon( double eps )
 {
    if ( eps < 0 )
      {
-      printError( (char *)"epsilon must be a non-negative real number!" );
+      printError( "epsilon must be a non-negative real number!" );
       return false;     
      }
      
@@ -82,7 +82,7 @@ bool fastGpol::setNumThreads( int nThreads )
 {
    if ( nThreads < 1 )
      {
-      printError( (char *)"numThreads must be a positive integer!" );
+      printError( "numThreads must be a positive integer!" );
       return false;     
      }
 
@@ -98,7 +98,7 @@ bool fastGpol::setIonDielectric( double e_ion )
 {
    if ( e_ion < 0 )
      {
-       printError( (char *)"Ion dielectric must be a positive float!" );
+       printError( "Ion dielectric must be a positive float!" );
        return false;     
      }
 
@@ -114,7 +114,7 @@ bool fastGpol::setSolventDielectric( double e_sol )
 {
    if ( e_sol < 0 )
      {
-       printError( (char *)"Solvent dielectric must be a positive float!" );
+       printError( "Solvent dielectric must be a positive float!" );
        return false;     
      }
 
@@ -261,20 +261,20 @@ bool fastGpol::readFromPQRRFile( char *fname )
    
    if ( fp == NULL )
      {
-      printError( (char *)"Failed to open input file %s!", fname );
+      printError( std::format("Failed to open input file {}!", fname) );
       return false;
      }
      
    if ( fscanf( fp, (char *)"%d", &numAtoms ) != 1 )
      {
-      printError( (char *)"Failed to read input file %s!", fname );
+      printError( std::format("Failed to read input file {}!", fname) );
       fclose( fp );
       return false;
      }      
 
    if ( numAtoms <= 0 )
      {
-      printError( (char *)"Invalid number of atoms (%d)!", numAtoms );
+      printError( std::format("Invalid number of atoms ({})!", numAtoms) );
       fclose( fp );
       return false;
      }      
@@ -283,7 +283,7 @@ bool fastGpol::readFromPQRRFile( char *fname )
    
    if ( atoms == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       fclose( fp );
       return false;
      }
@@ -306,7 +306,7 @@ bool fastGpol::readFromPQRRFile( char *fname )
 
    if ( i < numAtoms )
      {
-      printError( (char *)"Not enough data in input file %s (expected %d, found %d)!", fname, numAtoms, i );
+      printError( std::format("Not enough data in input file {} (expected {}, found {})!", fname, numAtoms, i) );
       numAtoms = 0;
       fclose( fp );
       return false;      
@@ -330,7 +330,7 @@ bool fastGpol::readFromPQRRArray( int nAtoms, double *pqrR )
 
    if ( nAtoms <= 0 )
      {
-      printError( (char *)"Invalid number of atoms (%d)!", nAtoms );
+      printError( std::format("Invalid number of atoms ({})!", nAtoms) );
       return false;
      }      
      
@@ -340,7 +340,7 @@ bool fastGpol::readFromPQRRArray( int nAtoms, double *pqrR )
    
    if ( atoms == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return false;
      }
 
@@ -382,7 +382,7 @@ bool fastGpol::initDataStructures( void )
    approxR = ( double * ) malloc( ( maxGroupR + 1 ) * sizeof( double ) );
    if ( approxR == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return false;
      }
      
@@ -394,7 +394,7 @@ bool fastGpol::initDataStructures( void )
 
    if ( atomsT == NULL )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return false;
      }
      
@@ -409,7 +409,7 @@ bool fastGpol::initDataStructures( void )
 
    if ( ( octree == NULL ) || ( qSum == NULL ) )
      {
-      printError( (char *)"Memory allocation failed!" );
+      printError( "Memory allocation failed!" );
       return false;
      }
 
@@ -1083,8 +1083,8 @@ void fastGpol::computeFastGpol( double *Gpol )
          }
      }
 
-   PARAMS prT[ numThreads ];
-   pthread_t p[ numThreads ];           
+   std::vector<PARAMS> prT( numThreads );
+   std::vector<pthread_t> p( numThreads );           
 
    initJobServer( leafJobs, nonLeafJobs );
 

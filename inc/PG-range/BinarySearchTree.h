@@ -27,8 +27,6 @@
 #include <iostream>
 #include "dsexceptions.h"
 
-using namespace std;
-
 // Binary node and forward declaration because g++ does
 // not understand nested classes.
 template <class Comparable>
@@ -208,7 +206,7 @@ class BinarySearchTree
 			    if( t != NULL )
 			    {
 				printTree( t->left );
-				cout << t->element << endl;
+				std::cout << t->element << std::endl;
 				printTree( t->right );
 			    }
 			}
@@ -228,7 +226,7 @@ class BinarySearchTree
 
 			/*Takes a sorted list, and builds a balanced BST out of it*/
 
-			void MakeBalanced(vector<Comparable> &sorted, int left, int right) {
+			void MakeBalanced(std::vector<Comparable> &sorted, int left, int right) {
 			  if(left <= right) {
 			    if(left == right) {
 			      insert(sorted[left],root);
@@ -245,7 +243,7 @@ class BinarySearchTree
 
 			/*merges 2 sorted lists and puts result in 3rd list*/
 			
-			void mergeSortedLists(vector<Comparable>& t1, vector<Comparable>& t2, vector <Comparable>& merged)
+			void mergeSortedLists(std::vector<Comparable>& t1, std::vector<Comparable>& t2, std::vector<Comparable>& merged)
 			{
 			  int len = (int)t1.size() + (int)t2.size();
 			  merged.resize(len);
@@ -273,7 +271,7 @@ class BinarySearchTree
 			}
 
 			/*traverses the tree rooted at 't' in inorder and stores the sorted list in the given vector*/
-			void Inorder(vector <Comparable> &inorder_vector, const BinaryNode<Comparable> *t)
+			void Inorder(std::vector <Comparable> &inorder_vector, const BinaryNode<Comparable> *t)
 			{
 				if(t== NULL) return;
 				Inorder(inorder_vector, t->left);
@@ -363,7 +361,7 @@ class BinarySearchTree
 			void printTree( ) const
 			{
 			  if( isEmpty( ) ) 
-			      cout << "Empty tree" << endl;
+			      std::cout << "Empty tree" << std::endl;
 			    else
 				printTree( root );
 			}
@@ -466,7 +464,7 @@ class BinarySearchTree
 
 		    	/*Split a BST*/
 			BinarySearchTree<Comparable>* split(BinarySearchTree<Comparable>* that) {
-			  vector<Comparable> inorder_bst;
+			  std::vector<Comparable> inorder_bst;
 			  Inorder(inorder_bst, root);
 			  
 			  int low = 0;
@@ -483,13 +481,13 @@ class BinarySearchTree
 			/*Merge two binary search tree and merged tree is stored in this; the other tree remains unaltered*/
 			void merge(BinarySearchTree<Comparable>* T1) {
 			  
-			  vector <Comparable> inorder_bst1;
-			  vector <Comparable> inorder_bst2;
+			  std::vector <Comparable> inorder_bst1;
+			  std::vector <Comparable> inorder_bst2;
 			  
 			  Inorder(inorder_bst1, root);
 			  Inorder(inorder_bst2, T1->root);
 
-			  vector <Comparable> inorder_merged;
+			  std::vector <Comparable> inorder_merged;
 
 			  mergeSortedLists(inorder_bst1,inorder_bst2,inorder_merged);
 			  makeEmpty();

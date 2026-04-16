@@ -28,7 +28,6 @@
 #include "1D-IntegerRange.h"
 #include <cmath>
 
-using namespace std;
 
 class atom;
 
@@ -75,7 +74,7 @@ struct planeID {
 
 struct gridcell {
   cellID ID;
-  vector<atom*> balls;
+  std::vector<atom*> balls;
   gridcell(int a, int b, int c) {
     ID.x = a;
     ID.y = b;

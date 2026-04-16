@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
+cmake_minimum_required(VERSION 3.16)
 
 
 FILE(GLOB SOURCE_FILES *.cpp)
@@ -31,12 +31,15 @@ SET(F2DOCK_LINK_LIBS
   vol
   fft-utils
   misc-ident
-#  ${FFTW_LIB}
-  fftw3
-  c
-  m
-  pthread
+  ${FFTW_LIB}
+  Threads::Threads
 )
+if(UNIX)
+  list(APPEND F2DOCK_LINK_LIBS c m)
+endif()
+if(WIN32)
+  list(APPEND F2DOCK_LINK_LIBS PThreads4W::PThreads4W)
+endif()
 
 if(HAVE_LIBMOL)
 SET(F2DOCK_LINK_LIBS  ${F2DOCK_LINK_LIBS} 

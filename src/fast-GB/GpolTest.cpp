@@ -117,7 +117,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
 
   if ( fp == NULL )
     {
-      printError( (char *)"Failed to open parameter file %s!", paramFile );
+      printError( std::format("Failed to open parameter file {}!", paramFile) );
       return false;
     }
 
@@ -141,7 +141,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 1 )
                  {
-                   printError( (char *)"%s must be a positive integer!", key );
+                   printError( std::format("{} must be a positive integer!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -154,7 +154,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 1 )
                  {
-                   printError( (char *)"%s must be a positive integer!", key );
+                   printError( std::format("{} must be a positive integer!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -167,7 +167,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 0 )
                  {
-                   printError( (char *)"%s must be a non-negative float!", key );
+                   printError( std::format("{} must be a non-negative float!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -180,7 +180,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
                
                if ( v < 0 )
                  {
-                   printError( (char *)"%s must be a non-negative float!", key );
+                   printError( std::format("{} must be a non-negative float!", key) );
                    fclose( fp );
                    return false;
                  }
@@ -193,7 +193,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
 	       else if ( !strcasecmp( val, (char *)"false" ) ) p->useApproxMath = false;
 	            else  
 	              {
-		        printError( (char *)"%s must be a Boolean value!", key );
+		        printError( std::format("{} must be a Boolean value!", key) );
 		        fclose( fp );
 		        return false;
 	              }	    
@@ -204,7 +204,7 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
 	       else if ( !strcasecmp( val, (char *)"false" ) ) p->printStatus = false;
 	            else  
 	              {
-		        printError( (char *)"%s must be a Boolean value!", key );
+		        printError( std::format("{} must be a Boolean value!", key) );
 		        fclose( fp );
 		        return false;
 	              }	    
@@ -215,13 +215,13 @@ bool getParamsFromFile( PARAMS_IN *p, char *paramFile )
     
   if ( p->pqrFile == NULL )  
     { 
-      printError( (char *)"Missing PQR file!" );
+      printError( "Missing PQR file!" );
       return false;
     }
 
   if ( p->quadFile == NULL )  
     { 
-      printError( (char *)"Missing QUAD file!" );
+      printError( "Missing QUAD file!" );
       return false;
     }
         
@@ -234,7 +234,7 @@ int main( int argc, char *argv[ ] )
 {
   if ( argc < 2 )
     {
-      printError( (char *)"Input text file not specified!" );
+      printError( "Input text file not specified!" );
       return 1;
     }
      

@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
+cmake_minimum_required(VERSION 3.16)
 
 
 FILE(GLOB SOURCE_FILES *.cpp)
@@ -23,7 +23,7 @@ SET(LIBMOL_LINK_LIBS
   libmol
   fft-utils
   fftw3
-  pthread
+  Threads::Threads
 )
 
 #ADD_EXECUTABLE (test test.cpp)

@@ -24,7 +24,11 @@
 #include "PG.h"
 #include <cmath>
 #include <time.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#else
+#include <sys/timeb.h>
+#endif
 
 using namespace std;
 
@@ -34,6 +38,7 @@ double gtod_sec = 0.0E0;
 
 double gtod_timer()
 {
+#ifndef _WIN32
    struct timeval tv;
    struct timezone Tzp;
    double sec;
@@ -45,6 +50,14 @@ double gtod_timer()
    sec = (double)tv.tv_sec - gtod_sec;
 
    return sec + 1.0E-06*(double)tv.tv_usec;
+#else
+   struct _timeb tb;
+   _ftime(&tb);
+   if(gtod_sec == 0.0E0)
+      gtod_sec = (double)tb.time;
+   double sec = (double)tb.time - gtod_sec;
+   return sec + 1.0E-03*(double)tb.millitm;
+#endif
 }
 
 
@@ -67,16 +80,16 @@ vector<Point*> PG::range(Point *q, double delta)
   
   vector<Point*> result;
   
-  vector<tuple<line*> >  temp1;
-  vector<tuple<gridcell*> >  temp2, S0, S1;
-  vector<tuple<gridcell*> >::iterator start2, end2; 
+  vector<RangeTuple<line*> >  temp1;
+  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
+  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
   
   
 
   int tts;
 
 
-  vector<tuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
   rangeCount++;
 
   if(S2.empty())
@@ -150,14 +163,14 @@ bool PG::pointsWithinRange(Point *q, double delta)
 
   int i,j,k,size,size1,size2,m;
   
-  vector<tuple<line*> >  temp1;
-  vector<tuple<gridcell*> >  temp2, S0, S1;
-  vector<tuple<gridcell*> >::iterator start2, end2; 
+  vector<RangeTuple<line*> >  temp1;
+  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
+  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
   
   int tts;
 
 
-  vector<tuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
   rangeCount++;
 
   if(S2.empty())
@@ -230,13 +243,13 @@ int PG::countPointsWithinRange(Point *q, double delta)
 
   int i,j,k,size,size1,size2,m;
   
-  vector<tuple<line*> >  temp1;
-  vector<tuple<gridcell*> >  temp2, S0, S1;
-  vector<tuple<gridcell*> >::iterator start2, end2; 
+  vector<RangeTuple<line*> >  temp1;
+  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
+  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
   
   int tts;
 
-  vector<tuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
   rangeCount++;
 
   if(S2.empty())
@@ -311,7 +324,7 @@ void PG::addPoint(Point *a)
   int cz = (int)center.z/DIM;
   int cy = (int)center.y/DIM;
   int cx = (int)center.x/DIM;
-  tuple<plane*> temp;
+  RangeTuple<plane*> temp;
   plane* p;
   line* l;
   gridcell* c;
@@ -319,35 +332,35 @@ void PG::addPoint(Point *a)
 //  if(rmax<radius)
 //	rmax = radius;
 
-  vector<tuple<plane*> > P = g.RR.report(cz,cz);
+  vector<RangeTuple<plane*> > P = g.RR.report(cz,cz);
   
   if(P.empty()) 
   {
     planes++;
     p = new plane(cz);
-    temp = tuple<plane*>(cz, p);
+    temp = RangeTuple<plane*>(cz, p);
     P.push_back(temp);
     g.RR.insert(cz, p);
   }
   
-  vector<tuple<line*> > L = P[0].ptr->RR.report(cy,cy);
+  vector<RangeTuple<line*> > L = P[0].ptr->RR.report(cy,cy);
   
   if(L.empty()) 
   {
     lines++;
     l = new line(cy, cz); 
-    tuple<line*> temp1(cy, l);
+    RangeTuple<line*> temp1(cy, l);
     L.push_back(temp1);
     P[0].ptr->RR.insert(cy, l); //same here
   }
   
-  vector<tuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
+  vector<RangeTuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
   
   if(C.empty()) 
   {
     cells++;
     c = new gridcell(cx, cy, cz); //and here
-    tuple<gridcell*> temp2(cx, c);
+    RangeTuple<gridcell*> temp2(cx, c);
     C.push_back(temp2);
     L[0].ptr->RR.insert(cx, c); //and here
   }
@@ -376,33 +389,34 @@ cout<<"Inside removeatom"<<endl;
   int cy = (int)center.y/DIM;
   int cx = (int)center.x/DIM;
   
-  vector<tuple<plane*> > P = g.RR.report(cz,cz);
+  vector<RangeTuple<plane*> > P = g.RR.report(cz,cz);
   if(P.empty()) {
     cout<<"Atom does not exist"<<endl;
     return;
   }
 
-  vector<tuple<line*> > L = P[0].ptr->RR.report(cy,cy);
+  vector<RangeTuple<line*> > L = P[0].ptr->RR.report(cy,cy);
   if(L.empty()) {
     cout<<"Atom does not exist"<<endl;
     return;
   }
 
-  vector<tuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
+  vector<RangeTuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
   if(C.empty()) {
     cout<<"Atom does not exist"<<endl;
     return;
   }
 
-  int index;
+  int index = -1;
   for(int i=0; i<(int)(C[0].ptr->balls).size(); i++) 
   {
-    if(center.x == C[0].ptr->balls[i]->x && center.y == C[0].ptr->balls[i]->y && center.z == C[0].ptr->balls[i]->z) 
+    if(a->x == C[0].ptr->balls[i]->x && a->y == C[0].ptr->balls[i]->y && a->z == C[0].ptr->balls[i]->z) 
     {
       index = i;
       break;
     }
   }
+  if(index < 0) return;
   C[0].ptr->balls[index] = C[0].ptr->balls[C[0].ptr->balls.size()-1];
   C[0].ptr->balls.pop_back();
   
