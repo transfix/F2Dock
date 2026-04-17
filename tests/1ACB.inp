@@ -1,16 +1,15 @@
+staticMolecule tests/1ACB_R_U_1.7.f2d
+movingMolecule tests/1ACB_L_U.f2d
+staticMoleculePQR tests/1ACB_R_U.pqr
+movingMoleculePQR tests/1ACB_L_U.pqr
+staticMoleculeQUAD tests/1ACB_R_U.quad
+movingMoleculeQUAD tests/1ACB_L_U.quad
+rmsdAtoms tests/1ACB_rmsd_backbone_unbound_10.0.txt
+outFile tests/1ACB_out.txt
 
-staticMolecule /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/tests/1ACB_R_U_1.7.f2d
-movingMolecule /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/tests/1ACB_L_U.f2d
-staticMoleculePQR /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/tests/1ACB_R_U.pqr
-movingMoleculePQR /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/tests/1ACB_L_U.pqr
-staticMoleculeQUAD /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/tests/1ACB_R_U.quad
-movingMoleculeQUAD /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/tests/1ACB_L_U.quad
-rmsdAtoms /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/tests/1ACB_rmsd_backbone_unbound_10.0.txt
-outFile /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/tests/1ACB_out.txt
-
-rotFile /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/deg15.mtx
+rotFile deg15.mtx
 numRot 100000
-effGridFile /net/neutron/workspace/muhibur/scratch/F2Dock-refactored/fftw-rank.txt
+effGridFile fftw-rank.txt
 
 complexType E
 numSolutions 20000

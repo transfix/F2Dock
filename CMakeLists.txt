@@ -58,7 +58,11 @@ if(F2DOCK_BUILD_TESTS)
 endif()
 
 # ── Install targets ──
-install(TARGETS F2Dock GB-Rerank FilterOutput F2DockServer
+set(_F2DOCK_INSTALL_TARGETS F2Dock GB-Rerank FilterOutput)
+if(NOT WIN32)
+  list(APPEND _F2DOCK_INSTALL_TARGETS F2DockServer)
+endif()
+install(TARGETS ${_F2DOCK_INSTALL_TARGETS}
         RUNTIME DESTINATION bin)
 
 # Install data files needed at runtime
@@ -66,6 +70,20 @@ install(FILES
   deg04.matrix deg06.matrix deg08.matrix deg10.matrix
   deg12.matrix deg20.matrix
   DESTINATION share/F2Dock/data)
+
+# Install documentation and examples
+install(FILES README.md DESTINATION .)
+install(FILES
+  tests/1A2K.inp tests/1ACB.inp tests/1AHW.inp tests/1JZD.inp
+  DESTINATION share/F2Dock/examples)
+install(DIRECTORY tests/
+  DESTINATION share/F2Dock/examples
+  FILES_MATCHING
+    PATTERN "*.f2d"
+    PATTERN "*.pqr"
+    PATTERN "*.quad"
+    PATTERN "*.txt"
+    PATTERN "unit" EXCLUDE)
 
 # ── CPack configuration ──
 set(CPACK_PACKAGE_NAME "F2Dock")

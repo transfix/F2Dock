@@ -40,13 +40,62 @@ Executables are placed in `build/bin/`.
 ### Run
 
 ```
-F2Dock --help
 F2Dock parameterFile
 F2Dock -score parameterFile
 GB-Rerank parameterFile
 ```
 
-See the [doc/params/](doc/params/) directory for parameter file documentation.
+## Usage example
+
+F2Dock reads a plain-text parameter file that lists the input molecules and scoring options.  Four example parameter files and their associated test data are included in `tests/`.
+
+Run docking on the 1ACB enzyme–inhibitor complex from the repository root:
+
+```bash
+build/bin/F2Dock tests/1ACB.inp
+```
+
+The parameter file `tests/1ACB.inp` looks like:
+
+```
+staticMolecule   tests/1ACB_R_U_1.7.f2d
+movingMolecule   tests/1ACB_L_U.f2d
+staticMoleculePQR  tests/1ACB_R_U.pqr
+movingMoleculePQR  tests/1ACB_L_U.pqr
+staticMoleculeQUAD tests/1ACB_R_U.quad
+movingMoleculeQUAD tests/1ACB_L_U.quad
+rmsdAtoms        tests/1ACB_rmsd_backbone_unbound_10.0.txt
+outFile          tests/1ACB_out.txt
+
+rotFile          deg15.mtx
+numRot           100000
+effGridFile      fftw-rank.txt
+
+complexType      E
+numSolutions     20000
+rerank           true
+numRerank        2000
+breakDownScores  true
+numThreads       4
+```
+
+### Key parameters
+
+| Parameter | Description |
+|---|---|
+| `staticMolecule` / `movingMolecule` | F2D structure files for receptor and ligand |
+| `staticMoleculePQR` / `movingMoleculePQR` | PQR charge/radius files |
+| `staticMoleculeQUAD` / `movingMoleculeQUAD` | Surface quadrature point files |
+| `rotFile` | Euler angle rotation set (e.g. `deg15.mtx`) |
+| `numRot` | Number of rotations to sample |
+| `effGridFile` | Machine-specific FFT grid sizes for best performance |
+| `complexType` | `A` (antibody–antigen), `E` (enzyme–inhibitor), `G` (other), `U` (auto-detect) |
+| `numSolutions` | Max docking poses to output |
+| `rerank` / `numRerank` | Enable GB-Rerank rescoring and number of top poses to rescore |
+| `outFile` | Output file for ranked docking poses |
+| `numThreads` | Number of CPU threads |
+
+All file paths are relative to the current working directory.  See [doc/params/](doc/params/) for the full parameter reference.
 
 ## Windows
 

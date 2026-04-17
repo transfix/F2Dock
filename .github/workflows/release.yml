@@ -57,6 +57,10 @@ jobs:
           done
           tar -czf "F2Dock-linux-x86_64.tar.gz" -C staging F2Dock
 
+      # Copy README into staging for the .deb as well
+      - name: Copy docs into install
+        run: cp README.md staging/F2Dock/
+
       # .deb package via CPack
       - name: Build .deb package
         run: |
@@ -112,6 +116,7 @@ jobs:
           done
 
           # Create the DMG
+          cp README.md staging/F2Dock.app/Contents/Resources/
           hdiutil create -volname F2Dock \
             -srcfolder staging/F2Dock.app \
             -ov -format UDZO \
@@ -153,6 +158,8 @@ jobs:
           # Bundle vcpkg runtime DLLs alongside the executables
           cp "$VCPKG_INSTALLATION_ROOT"/installed/x64-windows/bin/*.dll \
              staging/F2Dock/bin/ 2>/dev/null || true
+
+          cp README.md staging/F2Dock/
 
           cd staging
           7z a -tzip ../F2Dock-windows-x64.zip F2Dock/
