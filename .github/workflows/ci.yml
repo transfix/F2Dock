@@ -61,7 +61,8 @@ jobs:
             libfftw3-dev \
             libboost-all-dev \
             libhdf5-dev \
-            libgsl-dev
+            libgsl-dev \
+            libcgal-dev
           # Coverage tools
           if [ "${{ matrix.coverage }}" = "true" ]; then
             sudo apt-get install -y --no-install-recommends lcov
@@ -77,7 +78,8 @@ jobs:
             fftw \
             boost \
             hdf5 \
-            gsl
+            gsl \
+            cgal
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$(brew --prefix boost)" >> $GITHUB_ENV
 
@@ -100,7 +102,7 @@ jobs:
             boost-multi-array:x64-windows boost-optional:x64-windows \
             boost-smart-ptr:x64-windows boost-tuple:x64-windows \
             boost-utility:x64-windows \
-            hdf5:x64-windows gsl:x64-windows
+            hdf5:x64-windows gsl:x64-windows cgal:x64-windows
 
       # ── Configure (Unix) ──
       - name: Configure (Unix)
