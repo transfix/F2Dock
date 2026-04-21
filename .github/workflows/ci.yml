@@ -58,7 +58,10 @@ jobs:
             build-essential \
             cmake \
             ninja-build \
-            libfftw3-dev
+            libfftw3-dev \
+            libboost-all-dev \
+            libhdf5-dev \
+            libgsl-dev
           # Coverage tools
           if [ "${{ matrix.coverage }}" = "true" ]; then
             sudo apt-get install -y --no-install-recommends lcov
@@ -71,14 +74,33 @@ jobs:
           brew install \
             cmake \
             ninja \
-            fftw
+            fftw \
+            boost \
+            hdf5 \
+            gsl
+          echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix boost)" >> $GITHUB_ENV
 
       # ── Windows dependencies (vcpkg) ──
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          vcpkg install fftw3:x64-windows pthreads:x64-windows
+          vcpkg install fftw3:x64-windows pthreads:x64-windows \
+            boost-thread:x64-windows boost-date-time:x64-windows \
+            boost-regex:x64-windows boost-filesystem:x64-windows \
+            boost-system:x64-windows boost-chrono:x64-windows \
+            boost-program-options:x64-windows boost-signals2:x64-windows \
+            boost-format:x64-windows boost-property-tree:x64-windows \
+            boost-algorithm:x64-windows boost-asio:x64-windows \
+            boost-any:x64-windows boost-array:x64-windows \
+            boost-dynamic-bitset:x64-windows boost-exception:x64-windows \
+            boost-foreach:x64-windows boost-function:x64-windows \
+            boost-lambda:x64-windows boost-lexical-cast:x64-windows \
+            boost-multi-array:x64-windows boost-optional:x64-windows \
+            boost-smart-ptr:x64-windows boost-tuple:x64-windows \
+            boost-utility:x64-windows \
+            hdf5:x64-windows gsl:x64-windows
 
       # ── Configure (Unix) ──
       - name: Configure (Unix)
@@ -165,13 +187,11 @@ jobs:
           echo "All 4 executables built successfully"
 
       # ── Verify executables (Windows) ──
-      # F2DockServer is not built on Windows (requires XmlRPC/pthreads
-      # configuration that is only wired up for Unix in src/CMakeLists.txt).
       - name: Verify executables exist (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $exes = @("F2Dock.exe", "GB-Rerank.exe", "FilterOutput.exe")
+          $exes = @("F2Dock.exe", "GB-Rerank.exe", "FilterOutput.exe", "F2DockServer.exe")
           foreach ($exe in $exes) {
             $path = "build/bin/${{ matrix.build_type }}/$exe"
             if (-not (Test-Path $path)) {
@@ -183,7 +203,7 @@ jobs:
             }
             Write-Host "Found: $path"
           }
-          Write-Host "All 3 Windows executables built successfully"
+          Write-Host "All 4 Windows executables built successfully"
 
       # ── Upload build artifacts ──
       - name: Upload build artifact
