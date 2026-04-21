@@ -41,6 +41,24 @@ IF(APPLE)
 ADD_DEFINITIONS(-DMACOS_X)
 ENDIF(APPLE)
 
+# ── libcvc dependency (provides cvc::xmlrpc for F2DockServer) ──
+# Only needed on Unix-like platforms where F2DockServer is built.
+if(NOT WIN32)
+  include(FetchContent)
+  # Disable libcvc sub-features we don't need
+  set(CVC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(CVC_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
+  set(CVC_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
+  set(CVC_BUILD_VOLROVER3 OFF CACHE BOOL "" FORCE)
+  set(CVC_USING_XMLRPC ON CACHE BOOL "" FORCE)
+  FetchContent_Declare(
+    libcvc
+    GIT_REPOSITORY https://github.com/transfix/libcvc.git
+    GIT_TAG        29c703c1e21268f3cedc56ae186163600162a089 # add-github-ci-cd
+  )
+  FetchContent_MakeAvailable(libcvc)
+endif()
+
 # ── Version header ──
 configure_file(
   "${CMAKE_SOURCE_DIR}/inc/f2dock/Version.h.in"

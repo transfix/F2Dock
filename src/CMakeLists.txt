@@ -24,7 +24,7 @@ ADD_SUBDIRECTORY (f2dock)
 ADD_SUBDIRECTORY (GB-rerank)
 
 if(NOT WIN32)
-  ADD_SUBDIRECTORY (XmlRPC)
+  # XmlRPC is now provided by libcvc as cvc::xmlrpc (see top-level CMakeLists.txt)
   ADD_SUBDIRECTORY (F2DockServer)
 endif()
 ADD_SUBDIRECTORY (PostFiltering)
