@@ -35,6 +35,12 @@ SetupFFTW()
 #output 
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
+# Modern CMake / MSVC: set per-config output dirs so that static libraries (.lib)
+# built by FetchContent-pulled libcvc (e.g. cvc::xmlrpc) land in the same
+# lib/<config>/ folder the legacy LIBRARY_OUTPUT_PATH pointed at.
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 mark_as_advanced(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
 IF(APPLE)
@@ -52,7 +58,7 @@ set(CVC_USING_XMLRPC ON CACHE BOOL "" FORCE)
 FetchContent_Declare(
   libcvc
   GIT_REPOSITORY https://github.com/transfix/libcvc.git
-  GIT_TAG        39919bc523b613d5ed1838f2e63345a328cb29d2 # add-github-ci-cd
+  GIT_TAG        98a19c000704dbaee2573f7ed0de38cb2035b503 # add-github-ci-cd
 )
 FetchContent_MakeAvailable(libcvc)
 
