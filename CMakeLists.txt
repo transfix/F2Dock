@@ -32,35 +32,30 @@ include( SetupFFTW )
 
 SetupFFTW()
 
+if(NOT WIN32)
+  include(FetchContent)
+  # Lean on libcvc for XML-RPC support used by F2DockServer.
+  set(CVC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(CVC_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
+  set(CVC_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
+  set(CVC_BUILD_VOLROVER3 OFF CACHE BOOL "" FORCE)
+  set(CVC_USING_XMLRPC ON CACHE BOOL "" FORCE)
+  FetchContent_Declare(
+    libcvc
+    GIT_REPOSITORY https://github.com/transfix/libcvc.git
+    GIT_TAG        972afd8552b4755356e572f9b4ffc33d4366cda9 # v3.1.0
+  )
+  FetchContent_MakeAvailable(libcvc)
+endif()
+
 #output 
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
-# Modern CMake / MSVC: set per-config output dirs so that static libraries (.lib)
-# built by FetchContent-pulled libcvc (e.g. cvc::xmlrpc) land in the same
-# lib/<config>/ folder the legacy LIBRARY_OUTPUT_PATH pointed at.
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 mark_as_advanced(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
 IF(APPLE)
 ADD_DEFINITIONS(-DMACOS_X)
 ENDIF(APPLE)
-
-# ── libcvc dependency (provides cvc::xmlrpc for F2DockServer) ──
-include(FetchContent)
-# Disable libcvc sub-features we don't need
-set(CVC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(CVC_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
-set(CVC_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
-set(CVC_BUILD_VOLROVER3 OFF CACHE BOOL "" FORCE)
-set(CVC_USING_XMLRPC ON CACHE BOOL "" FORCE)
-FetchContent_Declare(
-  libcvc
-  GIT_REPOSITORY https://github.com/transfix/libcvc.git
-  GIT_TAG        699fcd4c7567d58b0cda724a4c9147d7237fc8ab # add-github-ci-cd
-)
-FetchContent_MakeAvailable(libcvc)
 
 # ── Version header ──
 configure_file(
@@ -78,8 +73,16 @@ if(F2DOCK_BUILD_TESTS)
   add_subdirectory(tests/unit)
 endif()
 
+option(F2DOCK_BUILD_INTEGRATION_TESTS "Build long-running integration tests" OFF)
+if(F2DOCK_BUILD_TESTS AND F2DOCK_BUILD_INTEGRATION_TESTS)
+  add_subdirectory(tests/integration)
+endif()
+
 # ── Install targets ──
-set(_F2DOCK_INSTALL_TARGETS F2Dock GB-Rerank FilterOutput F2DockServer)
+set(_F2DOCK_INSTALL_TARGETS F2Dock GB-Rerank FilterOutput)
+if(NOT WIN32)
+  list(APPEND _F2DOCK_INSTALL_TARGETS F2DockServer)
+endif()
 install(TARGETS ${_F2DOCK_INSTALL_TARGETS}
         RUNTIME DESTINATION bin)
 

@@ -108,11 +108,16 @@ jobs:
       - name: Configure (Unix)
         if: runner.os != 'Windows'
         run: |
+          integration_tests=OFF
+          if [ "${{ runner.os }}" = "Linux" ] && [ "${{ matrix.build_type }}" = "Debug" ]; then
+            integration_tests=ON
+          fi
           cmake_args=(
             -B build
             -G Ninja
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
+            -DF2DOCK_BUILD_INTEGRATION_TESTS=${integration_tests}
           )
           if [ "${{ matrix.coverage }}" = "true" ]; then
             # F2Dock's CMakeLists.txt overwrites CMAKE_CXX_FLAGS via set(),
@@ -131,6 +136,7 @@ jobs:
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DF2DOCK_BUILD_INTEGRATION_TESTS=OFF \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
 
       # ── Build ──
@@ -138,9 +144,14 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
       # ── Test ──
-      - name: Run tests
+      - name: Run unit tests
         working-directory: build
-        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 4
+        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 4 -LE integration
+
+      - name: Run integration tests (Linux Debug)
+        if: runner.os == 'Linux' && matrix.build_type == 'Debug'
+        working-directory: build
+        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 1 -L integration
 
       # ── Coverage (Linux Debug only) ──
       - name: Generate coverage report
@@ -193,7 +204,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $exes = @("F2Dock.exe", "GB-Rerank.exe", "FilterOutput.exe", "F2DockServer.exe")
+          $exes = @("F2Dock.exe", "GB-Rerank.exe", "FilterOutput.exe")
           foreach ($exe in $exes) {
             $path = "build/bin/${{ matrix.build_type }}/$exe"
             if (-not (Test-Path $path)) {
@@ -205,7 +216,7 @@ jobs:
             }
             Write-Host "Found: $path"
           }
-          Write-Host "All 4 Windows executables built successfully"
+          Write-Host "All 3 Windows executables built successfully"
 
       # ── Upload build artifacts ──
       - name: Upload build artifact

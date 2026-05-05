@@ -47,7 +47,13 @@ int skipWhiteSpaces( char *buf, int i )
 int countLines(char *filename)
 {
   FILE* fp = fopen( filename, "r" );
-  int i=0;
+  if ( fp == NULL )
+    {
+      printf( "Error: Failed to open file %s!\n", filename );
+      return -1;
+    }
+
+  int i = 0;
   char s[ 2000 ];
 
   while ( fgets( s, 1999, fp ) != NULL )
@@ -56,7 +62,7 @@ int countLines(char *filename)
       if ( s[ j ] != '#' ) i++;
     }
 
-  fclose(fp);
+  fclose( fp );
   return i;
 }
 
@@ -592,51 +598,95 @@ bool readRMSDRef(char *filename, PARAMS_IN *p)
 // number of atoms used for RMSD
 // i x y z for each atom used for RMSD calculation
 {
-  int numberAtomsTotal, numberAtomsRMSD;
+  int numberAtomsTotal = 0, numberAtomsRMSD = 0;
   FILE* fp = fopen( filename, "r" );
   char s[ 2000 ];  // buffer to read lines
-  char *val;
-  char sep[] = " ";
 
-  if (  fp== NULL ) {
-    printf( "Error: Failed to open parameter file %s!\n", filename);
-    return false;
-  }
+  if ( fp == NULL )
+    {
+      printf( "Error: Failed to open parameter file %s!\n", filename );
+      return false;
+    }
 
   // skip leading comments
-  while ( fgets( s, 1999, fp ) != NULL ) {
-    if (s[0]=='#') continue;
-    break;
-  }
+  while ( fgets( s, 1999, fp ) != NULL )
+    {
+      if ( s[ 0 ] == '#' ) continue;
+      break;
+    }
 
-  sscanf( s, "%d", &numberAtomsTotal);
-  fgets( s, 1999, fp );
-  sscanf( s, "%d", &numberAtomsRMSD);
+  if ( sscanf( s, "%d", &numberAtomsTotal ) != 1 )
+    {
+      printf( "Error: bad RMSD ref file header in %s!\n", filename );
+      fclose( fp );
+      return false;
+    }
 
-  if (numberAtomsTotal != p->numCentersB) {
-    printf( "Error: bad RMSD ref file: %s expected %d got %d!\n",
-	    filename, p->numCentersB, numberAtomsTotal);
-    return false;
-  }
+  if ( fgets( s, 1999, fp ) == NULL || sscanf( s, "%d", &numberAtomsRMSD ) != 1 )
+    {
+      printf( "Error: bad RMSD atom-count line in %s!\n", filename );
+      fclose( fp );
+      return false;
+    }
+
+  if ( numberAtomsTotal != p->numCentersB )
+    {
+      printf( "Error: bad RMSD ref file: %s expected %d got %d!\n",
+              filename, p->numCentersB, numberAtomsTotal );
+      fclose( fp );
+      return false;
+    }
+
+  if ( numberAtomsRMSD <= 0 )
+    {
+      printf( "Error: RMSD atom count must be positive in %s!\n", filename );
+      fclose( fp );
+      return false;
+    }
 
   float *xRef = new float[ numberAtomsRMSD ];
   float *yRef = new float[ numberAtomsRMSD ];
   float *zRef = new float[ numberAtomsRMSD ];
   int *atNums = new int[ numberAtomsRMSD ];
 
-cout<<"reached here "<<numberAtomsRMSD<<endl;
-
   // read the index X Y Z values
-  int i =0;
-  while ( fgets( s, 1999, fp ) != NULL ) {
-cout<<i<<endl;
-    atNums[i] = atoi(strtok(s, sep));  // atom index
-    xRef[i] = (float)atof(strtok(NULL, sep)); // X coordinate
-    yRef[i] = (float)atof(strtok(NULL, sep)); // y coordinate
-    zRef[i] = (float)atof(strtok(NULL, sep)); // z coordinate
-cout<<" "<<atNums[i]<<" "<<xRef[i]<<" "<<yRef[i]<<" "<<zRef[i]<<endl;
-    i++;
-  }
+  int i = 0;
+  while ( fgets( s, 1999, fp ) != NULL )
+    {
+      if ( s[ 0 ] == '#' ) continue;
+
+      int atomIndex = 0;
+      float xCoord = 0.0f, yCoord = 0.0f, zCoord = 0.0f;
+      if ( sscanf( s, "%d %f %f %f", &atomIndex, &xCoord, &yCoord, &zCoord ) != 4 )
+        {
+          continue;
+        }
+
+      if ( i >= numberAtomsRMSD )
+        {
+          printf( "Warning: extra RMSD rows detected in %s, ignoring trailing rows.\n", filename );
+          break;
+        }
+
+      atNums[ i ] = atomIndex;
+      xRef[ i ] = xCoord;
+      yRef[ i ] = yCoord;
+      zRef[ i ] = zCoord;
+      i++;
+    }
+
+  fclose( fp );
+
+  if ( i != numberAtomsRMSD )
+    {
+      printf( "Error: RMSD file %s expected %d rows but parsed %d rows!\n",
+              filename, numberAtomsRMSD, i );
+      delete[] xRef;
+      delete[] yRef;
+      delete[] zRef;
+      delete[] atNums;
+      return false;
+    }
 
   p->nbRMSDAtoms = numberAtomsRMSD;
   p->xRef = xRef;
@@ -650,6 +700,11 @@ cout<<" "<<atNums[i]<<" "<<xRef[i]<<" "<<yRef[i]<<" "<<zRef[i]<<endl;
 bool readEffGridFile( char *effGridFile, PARAMS_IN *pr )
 {
   int numLines = countLines( effGridFile );
+  if ( numLines <= 0 )
+    {
+      printf( "Error: Invalid or empty efficient grid file %s!\n", effGridFile );
+      return false;
+    }
 
   pr->efficientGridSizes = new int[ numLines ];
 

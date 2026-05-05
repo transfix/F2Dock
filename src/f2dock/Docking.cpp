@@ -1003,7 +1003,7 @@ bool build_fks_bak( char *type, int numCenters, double *xk, double *yk, double *
             if ( num_I == num_I_prev ) bw2 *= 2;
             else
                {
-                printf( "bandwidth = %lf, imag_magnitude = %lf, #atoms = %d\n", sqrt( bw2 ), imag_magnitude, num_I_prev - num_I, num_I );
+                printf( "bandwidth = %lf, imag_magnitude = %lf, #atoms = %d\n", sqrt( bw2 ), imag_magnitude, num_I_prev - num_I );
                 fflush( stdout );
                 bw2 = bandwidth * bandwidth;
                 imag_magnitude *= gradFactor;
@@ -4138,7 +4138,7 @@ void printInputParamters( PARAMS_IN *pr, FILE* fp )
 	fprintf( fp, (char *)"# \t vdWCutoffHigh = %lf\n", pr->vdWCutoffHigh );
 	fprintf( fp, (char *)"# \t vdWWellWidth = %lf\n", pr->vdWWellWidth );
 	fprintf( fp, (char *)"# \t vdWTolerance = %lf\n", pr->vdWTolerance );
-	fprintf( fp, (char *)"# \t compQuadVdW = %lf\n", pr->compQuadVdW );
+	fprintf( fp, (char *)"# \t compQuadVdW = %d\n", (int)pr->compQuadVdW );
 	fprintf( fp, (char *)"# \t vdWGridSize = %d\n", pr->vdWGridSize );
 	fprintf( fp, (char *)"# \t surfaceBasedVdW = %d\n", pr->surfaceBasedVdW );
 	fprintf( fp, (char *)"# \t applyClashFilter = %d\n", pr->applyClashFilter );
@@ -5068,7 +5068,7 @@ void createValidOutputMap( FFTW_complex *staticMol, int n, int minRadMovingMol, 
            }
 
       printf( "\nmaxRadMovingMol = %d", maxRadMovingMol );
-      printf( "\nExcluded ( outer band ): %lf \%\n", ( t * 100.0 ) / n3 );
+      printf( "\nExcluded ( outer band ): %lf %%\n", ( t * 100.0 ) / n3 );
 
 //      for ( int c = 0; c < n3; c++ )
 //          mMol[ c ][ 0 ] = mMol[ c ][ 1 ] = 0.0;
@@ -5542,7 +5542,7 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
 
       if(temp.compare("ATOM")==0 || temp.compare("HETATM")==0){
 	numStaticAtoms++;
-	fgets(str, 1999, fp);
+	fgets(str, (int)sizeof(str), fp);
       }
     }
     fclose(fp);
@@ -5575,7 +5575,7 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
       char resName[50];
 
       if(temp.compare("ATOM")==0 || temp.compare("HETATM")==0){
-	if(fscanf(fp,"%d %s %s %lf %lf %lf %lf %lf", &atomNum, &atomName, &resName, &x, &y, &z, &charge, &radius)==8){
+	if(fscanf(fp,"%d %49s %49s %lf %lf %lf %lf %lf", &atomNum, atomName, resName, &x, &y, &z, &charge, &radius)==8){
 	  staticAtoms[ j++ ] = x;
 	  staticAtoms[ j++ ] = y;
 	  staticAtoms[ j++ ] = z;
