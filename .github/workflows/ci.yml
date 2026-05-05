@@ -67,23 +67,29 @@ jobs:
           - os: ubuntu-latest
             build_type: Debug
             coverage: true
+            integration: true
           - os: ubuntu-latest
             build_type: Release
             coverage: false
+            integration: false
           # macOS
           - os: macos-latest
             build_type: Debug
             coverage: false
+            integration: true
           - os: macos-latest
             build_type: Release
             coverage: false
+            integration: false
           # Windows
           - os: windows-latest
             build_type: Debug
             coverage: false
+            integration: true
           - os: windows-latest
             build_type: Release
             coverage: false
+            integration: false
 
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} / ${{ matrix.build_type }}
@@ -154,7 +160,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           integration_tests=OFF
-          if [ "${{ runner.os }}" = "Linux" ] && [ "${{ matrix.build_type }}" = "Debug" ]; then
+          if [ "${{ matrix.integration }}" = "true" ]; then
             integration_tests=ON
           fi
           cmake_args=(
@@ -178,10 +184,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
+          integration_tests=OFF
+          if [ "${{ matrix.integration }}" = "true" ]; then
+            integration_tests=ON
+          fi
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
-            -DF2DOCK_BUILD_INTEGRATION_TESTS=OFF \
+            -DF2DOCK_BUILD_INTEGRATION_TESTS=${integration_tests} \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
 
       # ── Build ──
@@ -193,8 +203,8 @@ jobs:
         working-directory: build
         run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 4 -LE integration
 
-      - name: Run integration tests (Linux Debug)
-        if: runner.os == 'Linux' && matrix.build_type == 'Debug'
+      - name: Run integration tests
+        if: matrix.integration
         working-directory: build
         run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 1 -L integration
 
