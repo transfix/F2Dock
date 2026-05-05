@@ -169,7 +169,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $exes = @("F2Dock.exe", "GB-Rerank.exe", "F2DockServer.exe", "FilterOutput.exe")
+          $exes = @("F2Dock.exe", "GB-Rerank.exe", "FilterOutput.exe")
           foreach ($exe in $exes) {
             $path = "build/bin/${{ matrix.build_type }}/$exe"
             if (-not (Test-Path $path)) {
@@ -181,7 +181,7 @@ jobs:
             }
             Write-Host "Found: $path"
           }
-          Write-Host "All 4 executables built successfully"
+          Write-Host "All 3 Windows executables built successfully"
 
       # ── Upload build artifacts ──
       - name: Upload build artifact
