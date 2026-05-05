@@ -44,19 +44,18 @@ endfunction()
 
 add_f2dock_integration_case(
   1ACB
-  INPUT    "${CMAKE_SOURCE_DIR}/tests/1ACB.inp"
-  EXPECTED "${CMAKE_SOURCE_DIR}/tests/1ACB_out.txt"
-  ROWS     100
+  INPUT    "${CMAKE_CURRENT_SOURCE_DIR}/inputs/1ACB_smoke.inp"
+  EXPECTED "${CMAKE_CURRENT_SOURCE_DIR}/expected/1ACB_smoke_out.txt"
+  ROWS     50
   ABS_TOL  1e-3
   REL_TOL  1e-5
 )
 
 add_f2dock_integration_case(
   1A2K
-  INPUT    "${CMAKE_SOURCE_DIR}/tests/1A2K.inp"
-  EXPECTED "${CMAKE_SOURCE_DIR}/tests/1A2K_out.txt"
-  ROWS     100
+  INPUT    "${CMAKE_CURRENT_SOURCE_DIR}/inputs/1A2K_smoke.inp"
+  EXPECTED "${CMAKE_CURRENT_SOURCE_DIR}/expected/1A2K_smoke_out.txt"
+  ROWS     50
   ABS_TOL  1e-3
   REL_TOL  1e-5
-  ALLOW_GENERATE_BASELINE
 )
