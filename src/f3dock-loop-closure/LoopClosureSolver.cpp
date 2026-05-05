@@ -20,15 +20,15 @@ enum AtomIndex {
   kC3 = 8,
 };
 
-Point3 subtract(const Point3& a, const Point3& b) {
+Point3 subtract(const Point3 &a, const Point3 &b) {
   return {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
 }
 
-double dot(const Point3& a, const Point3& b) {
+double dot(const Point3 &a, const Point3 &b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-Point3 cross(const Point3& a, const Point3& b) {
+Point3 cross(const Point3 &a, const Point3 &b) {
   return {
       a[1] * b[2] - a[2] * b[1],
       a[2] * b[0] - a[0] * b[2],
@@ -36,15 +36,13 @@ Point3 cross(const Point3& a, const Point3& b) {
   };
 }
 
-double norm(const Point3& v) {
-  return std::sqrt(dot(v, v));
-}
+double norm(const Point3 &v) { return std::sqrt(dot(v, v)); }
 
-double bondLength(const Point3& a, const Point3& b) {
+double bondLength(const Point3 &a, const Point3 &b) {
   return norm(subtract(a, b));
 }
 
-double bondAngle(const Point3& a, const Point3& b, const Point3& c) {
+double bondAngle(const Point3 &a, const Point3 &b, const Point3 &c) {
   const Point3 u = subtract(a, b);
   const Point3 v = subtract(c, b);
   const double nu = norm(u);
@@ -62,7 +60,8 @@ double bondAngle(const Point3& a, const Point3& b, const Point3& c) {
   return std::acos(cos_theta);
 }
 
-double torsion(const Point3& p1, const Point3& p2, const Point3& p3, const Point3& p4) {
+double torsion(const Point3 &p1, const Point3 &p2, const Point3 &p3,
+               const Point3 &p4) {
   const Point3 b1 = subtract(p2, p1);
   const Point3 b2 = subtract(p3, p2);
   const Point3 b3 = subtract(p4, p3);
@@ -82,16 +81,17 @@ double torsion(const Point3& p1, const Point3& p2, const Point3& p3, const Point
   return std::atan2(y, x);
 }
 
-void pointToArray(const Point3& p, double out[3]) {
+void pointToArray(const Point3 &p, double out[3]) {
   out[0] = p[0];
   out[1] = p[1];
   out[2] = p[2];
 }
 
-}  // namespace
+} // namespace
 
-bool LoopClosureSolver::solve(const LoopClosureInput& input, std::vector<Backbone9>& solutions) const {
-  const Backbone9& bb = input.backbone;
+bool LoopClosureSolver::solve(const LoopClosureInput &input,
+                              std::vector<Backbone9> &solutions) const {
+  const Backbone9 &bb = input.backbone;
 
   double b_len[6];
   b_len[0] = bondLength(bb[kCA1], bb[kC1]);
@@ -127,7 +127,8 @@ bool LoopClosureSolver::solve(const LoopClosureInput& input, std::vector<Backbon
 
   tripep_closure closure;
   closure.initialize_loop_closure(b_len, b_ang, t_ang);
-  closure.solve_3pep_poly(r_n1, r_a1, r_a3, r_c3, r_soln_n, r_soln_a, r_soln_c, &n_soln);
+  closure.solve_3pep_poly(r_n1, r_a1, r_a3, r_c3, r_soln_n, r_soln_a, r_soln_c,
+                          &n_soln);
 
   solutions.clear();
   for (int i = 0; i < n_soln; ++i) {
@@ -147,5 +148,5 @@ bool LoopClosureSolver::solve(const LoopClosureInput& input, std::vector<Backbon
   return !solutions.empty();
 }
 
-}  // namespace loop_closure
-}  // namespace f3dock
+} // namespace loop_closure
+} // namespace f3dock

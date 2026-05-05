@@ -23,14 +23,15 @@ struct LoopClosureInput {
 };
 
 class LoopClosureSolver {
- public:
+public:
   static constexpr int kMaxSolutions = 16;
 
   // Returns true if at least one valid closure is found.
-  bool solve(const LoopClosureInput& input, std::vector<Backbone9>& solutions) const;
+  bool solve(const LoopClosureInput &input,
+             std::vector<Backbone9> &solutions) const;
 };
 
-}  // namespace loop_closure
-}  // namespace f3dock
+} // namespace loop_closure
+} // namespace f3dock
 
 #endif

@@ -3,117 +3,112 @@
 
 #include <stdio.h>
 
-/* Modified version of the code downloaded 
- * from http://www.acm.org/pubs/tog/GraphicsGems/gems/Sturm/ 
+/* Modified version of the code downloaded
+ * from http://www.acm.org/pubs/tog/GraphicsGems/gems/Sturm/
  * Modified by Chaok Seok 2003.
  * Modified by Nathan Clement 2017.
  *
  * Using Sturm Sequences to Bracket Real Roots of Polynomial Equations
  * by D.G. Hook and P.R. McAree
  * from "Graphics Gems", Academic Press, 1990
-*/
+ */
 
 #define PRINT_LEVEL 0
-#define	MAX_ORDER 16
-#define MAXPOW 32		
-#define	SMALL_ENOUGH 1.0e-18
+#define MAX_ORDER 16
+#define MAXPOW 32
+#define SMALL_ENOUGH 1.0e-18
 
 /*
  * structure type for representing a polynomial
  */
-typedef  	struct	p {
-  int	ord;
-  double	coef[MAX_ORDER+1];
+typedef struct p {
+  int ord;
+  double coef[MAX_ORDER + 1];
 } poly;
 
 double RELERROR;
 int MAXIT, MAX_ITER_SECANT;
 
-void initialize_sturm(double *tol_secant, int *max_iter_sturm, int *max_iter_secant);
+void initialize_sturm(double *tol_secant, int *max_iter_sturm,
+                      int *max_iter_secant);
 void solve_sturm(int *p_order, int *n_root, double *poly_coeffs, double *roots);
 double hyper_tan(double a, double x);
 static int modp(poly *u, poly *v, poly *r);
 int buildsturm(int ord, poly *sseq);
 int numroots(int np, poly *sseq, int *atneg, int *atpos);
 int numchanges(int np, poly *sseq, double a);
-void sbisect(int np, poly *sseq, double min, double max, int atmin, int atmax, double *roots);
+void sbisect(int np, poly *sseq, double min, double max, int atmin, int atmax,
+             double *roots);
 double evalpoly(int ord, double *coef, double x);
-int modrf(int ord, double *coef, double	a, double b, double *val);
-	
+int modrf(int ord, double *coef, double a, double b, double *val);
+
 /* set termination criteria for polynomial solver */
-void initialize_sturm(double *tol_secant, int *max_iter_sturm, int *max_iter_secant)
-{
+void initialize_sturm(double *tol_secant, int *max_iter_sturm,
+                      int *max_iter_secant) {
   RELERROR = *tol_secant;
   MAXIT = *max_iter_sturm;
   MAX_ITER_SECANT = *max_iter_secant;
 }
 
-void solve_sturm(int *p_order, int *n_root, double *poly_coeffs, double *roots)
-{
-  poly sseq[MAX_ORDER*2];
+void solve_sturm(int *p_order, int *n_root, double *poly_coeffs,
+                 double *roots) {
+  poly sseq[MAX_ORDER * 2];
   double min, max;
   int order, i, j, nroots, nchanges, np, atmin, atmax;
 
   order = *p_order;
 
-  for (i = order; i >= 0; i--) 
-    {
-      sseq[0].coef[i] = poly_coeffs[i];
-    }
+  for (i = order; i >= 0; i--) {
+    sseq[0].coef[i] = poly_coeffs[i];
+  }
 
-  if (PRINT_LEVEL > 0) 
-    {
-      for (i = order; i >= 0; i--) 
-	{
-	  printf("coefficients in Sturm solver\n");
-	  printf("%d %lf\n", i, sseq[0].coef[i]);
-	}
+  if (PRINT_LEVEL > 0) {
+    for (i = order; i >= 0; i--) {
+      printf("coefficients in Sturm solver\n");
+      printf("%d %lf\n", i, sseq[0].coef[i]);
     }
+  }
 
   /*
    * build the Sturm sequence
    */
   np = buildsturm(order, sseq);
-  
-  if (PRINT_LEVEL > 0) 
-    {
-      printf("Sturm sequence for:\n");
-      for (i = order; i >= 0; i--)
-	printf("%lf ", sseq[0].coef[i]);
-      printf("\n\n");
-      for (i = 0; i <= np; i++) 
-	{
-	  for (j = sseq[i].ord; j >= 0; j--)
-	    printf("%lf ", sseq[i].coef[j]);
-	  printf("\n");
-	}
+
+  if (PRINT_LEVEL > 0) {
+    printf("Sturm sequence for:\n");
+    for (i = order; i >= 0; i--)
+      printf("%lf ", sseq[0].coef[i]);
+    printf("\n\n");
+    for (i = 0; i <= np; i++) {
+      for (j = sseq[i].ord; j >= 0; j--)
+        printf("%lf ", sseq[i].coef[j]);
       printf("\n");
     }
+    printf("\n");
+  }
 
-  /* 
+  /*
    * get the number of real roots
    */
 
   nroots = numroots(np, sseq, &atmin, &atmax);
 
+  if (nroots == 0) {
+    // printf("solve: no real roots\n");
+    *n_root = nroots;
+    return;
+  }
 
-  if (nroots == 0) 
-    {
-      // printf("solve: no real roots\n");
-      *n_root = nroots;
-      return;
-    }
-
-  if (PRINT_LEVEL > 0) 
+  if (PRINT_LEVEL > 0)
     printf("Number of real roots: %d\n", nroots);
- 
+
   /*
    * calculate the bracket that the roots live in
    */
   min = -1.0;
   nchanges = numchanges(np, sseq, min);
 
-  for (i = 0; nchanges != atmin && i != MAXPOW; i++) { 
+  for (i = 0; nchanges != atmin && i != MAXPOW; i++) {
     min *= 10.0;
     nchanges = numchanges(np, sseq, min);
   }
@@ -125,11 +120,11 @@ void solve_sturm(int *p_order, int *n_root, double *poly_coeffs, double *roots)
 
   max = 1.0;
   nchanges = numchanges(np, sseq, max);
-  for (i = 0; nchanges != atmax && i != MAXPOW; i++) { 
+  for (i = 0; nchanges != atmax && i != MAXPOW; i++) {
     max *= 10.0;
     nchanges = numchanges(np, sseq, max);
   }
-  
+
   if (nchanges != atmax) {
     printf("solve: unable to bracket all positive roots\n");
     atmax = nchanges;
@@ -148,19 +143,17 @@ void solve_sturm(int *p_order, int *n_root, double *poly_coeffs, double *roots)
   /*
    * write out the roots...
    */
-  if (PRINT_LEVEL > 0) 
-    {
-      if (nroots == 1) {
-	printf("\n1 distinct real root at x = %f\n", roots[0]);
-      } else {
-	printf("\n%d distinct real roots for x: \n", nroots);
-	
-	for (i = 0; i != nroots; i++)
-	  {
-	    printf("%f\n", roots[i]);
-	  }
+  if (PRINT_LEVEL > 0) {
+    if (nroots == 1) {
+      printf("\n1 distinct real root at x = %f\n", roots[0]);
+    } else {
+      printf("\n%d distinct real roots for x: \n", nroots);
+
+      for (i = 0; i != nroots; i++) {
+        printf("%f\n", roots[i]);
       }
     }
+  }
 
   return;
 }
@@ -170,69 +163,61 @@ void solve_sturm(int *p_order, int *n_root, double *poly_coeffs, double *roots)
  *
  *	calculates the modulus of u(x) / v(x) leaving it in r, it
  *  returns 0 if r(x) is a constant.
- *  note: this function assumes the leading coefficient of v 
+ *  note: this function assumes the leading coefficient of v
  *	is 1 or -1
  */
 
-double hyper_tan(double a, double x)
-{
+double hyper_tan(double a, double x) {
   double exp_x1, exp_x2, ax;
 
-  ax = a*x;
-  if (ax > 100.0)
-    {
-      return(1.0);
-    }
-  else if (ax < -100.0)
-    {
-      return(-1.0);
-    }
-  else    
-    {
-      exp_x1 = exp(ax);
-      exp_x2 = exp(-ax);
-      return (exp_x1 - exp_x2)/(exp_x1 + exp_x2);
-    }
+  ax = a * x;
+  if (ax > 100.0) {
+    return (1.0);
+  } else if (ax < -100.0) {
+    return (-1.0);
+  } else {
+    exp_x1 = exp(ax);
+    exp_x2 = exp(-ax);
+    return (exp_x1 - exp_x2) / (exp_x1 + exp_x2);
+  }
 }
 
 static int modp(poly *u, poly *v, poly *r)
 //	poly *u, *v, *z;
 {
-	int		k, j;
-	double	*nr, *end, *uc;
+  int k, j;
+  double *nr, *end, *uc;
 
-	nr = r->coef;
-	end = &u->coef[u->ord];
+  nr = r->coef;
+  end = &u->coef[u->ord];
 
-	uc = u->coef;
-	while (uc <= end)
-			*nr++ = *uc++;
+  uc = u->coef;
+  while (uc <= end)
+    *nr++ = *uc++;
 
-	if (v->coef[v->ord] < 0.0) {
+  if (v->coef[v->ord] < 0.0) {
 
+    for (k = u->ord - v->ord - 1; k >= 0; k -= 2)
+      r->coef[k] = -r->coef[k];
 
-			for (k = u->ord - v->ord - 1; k >= 0; k -= 2)
-				r->coef[k] = -r->coef[k];
+    for (k = u->ord - v->ord; k >= 0; k--)
+      for (j = v->ord + k - 1; j >= k; j--)
+        r->coef[j] = -r->coef[j] - r->coef[v->ord + k] * v->coef[j - k];
+  } else {
+    for (k = u->ord - v->ord; k >= 0; k--)
+      for (j = v->ord + k - 1; j >= k; j--)
+        r->coef[j] -= r->coef[v->ord + k] * v->coef[j - k];
+  }
 
-			for (k = u->ord - v->ord; k >= 0; k--)
-				for (j = v->ord + k - 1; j >= k; j--)
-					r->coef[j] = -r->coef[j] - r->coef[v->ord + k]
-					* v->coef[j - k];
-	} else {
-			for (k = u->ord - v->ord; k >= 0; k--)
-				for (j = v->ord + k - 1; j >= k; j--)
-				r->coef[j] -= r->coef[v->ord + k] * v->coef[j - k];
-	}
+  k = v->ord - 1;
+  while (k >= 0 && fabs(r->coef[k]) < SMALL_ENOUGH) {
+    r->coef[k] = 0.0;
+    k--;
+  }
 
-	k = v->ord - 1;
-	while (k >= 0 && fabs(r->coef[k]) < SMALL_ENOUGH) {
-		r->coef[k] = 0.0;
-		k--;
-	}
+  r->ord = (k < 0) ? 0 : k;
 
-	r->ord = (k < 0) ? 0 : k;
-
-	return(r->ord);
+  return (r->ord);
 }
 
 /*
@@ -245,46 +230,44 @@ int buildsturm(int ord, poly *sseq)
 //	int	ord;
 //	poly	*sseq;
 {
-	int		i;
-	double	f, *fp, *fc;
-	poly	*sp;
+  int i;
+  double f, *fp, *fc;
+  poly *sp;
 
-	sseq[0].ord = ord;
-	sseq[1].ord = ord - 1;
+  sseq[0].ord = ord;
+  sseq[1].ord = ord - 1;
 
-	/*
-	 * calculate the derivative and normalise the leading
-	 * coefficient.
-	 */
-	f = fabs(sseq[0].coef[ord]*ord);
+  /*
+   * calculate the derivative and normalise the leading
+   * coefficient.
+   */
+  f = fabs(sseq[0].coef[ord] * ord);
 
-	fp = sseq[1].coef;
-	fc = sseq[0].coef + 1;
+  fp = sseq[1].coef;
+  fc = sseq[0].coef + 1;
 
-	for (i = 1; i <= ord; i++)
-	  {
-	    *fp++ = *fc++ * i / f;
-	  }
+  for (i = 1; i <= ord; i++) {
+    *fp++ = *fc++ * i / f;
+  }
 
+  /*
+   * construct the rest of the Sturm sequence
+   */
+  //	for (sp = sseq + 2; modp(sp - 2, sp - 1, sp); sp++) {
+  for (sp = sseq + 2; modp(sp - 2, sp - 1, sp); sp++) {
 
-	/*
-	 * construct the rest of the Sturm sequence
-	 */
-	//	for (sp = sseq + 2; modp(sp - 2, sp - 1, sp); sp++) {
-	for (sp = sseq + 2; modp(sp - 2, sp - 1, sp); sp++) {
+    /*
+     * reverse the sign and normalise
+     */
 
-	  /*
-	   * reverse the sign and normalise
-	   */
+    f = -fabs(sp->coef[sp->ord]);
+    for (fp = &sp->coef[sp->ord]; fp >= sp->coef; fp--)
+      *fp /= f;
+  }
 
-	  f = -fabs(sp->coef[sp->ord]);
-	  for (fp = &sp->coef[sp->ord]; fp >= sp->coef; fp--)
-		  *fp /= f;
-	}
+  sp->coef[0] = -sp->coef[0]; /* reverse the sign */
 
-	sp->coef[0] = -sp->coef[0];	/* reverse the sign */
-
-	return(sp - sseq);
+  return (sp - sseq);
 }
 
 /*
@@ -298,47 +281,46 @@ int numroots(int np, poly *sseq, int *atneg, int *atpos)
 //		poly	*sseq;
 //		int		*atneg, *atpos;
 {
-		int		atposinf, atneginf;
-		poly	*s;
-		double	f, lf;
+  int atposinf, atneginf;
+  poly *s;
+  double f, lf;
 
-		atposinf = atneginf = 0;
+  atposinf = atneginf = 0;
 
+  /*
+   * changes at positive infinity
+   */
+  lf = sseq[0].coef[sseq[0].ord];
 
-	/*
-	 * changes at positive infinity
-	 */
-	lf = sseq[0].coef[sseq[0].ord];
+  for (s = sseq + 1; s <= sseq + np; s++) {
+    f = s->coef[s->ord];
+    if (lf == 0.0 || lf * f < 0)
+      atposinf++;
+    lf = f;
+  }
 
-	for (s = sseq + 1; s <= sseq + np; s++) {
-			f = s->coef[s->ord];
-			if (lf == 0.0 || lf * f < 0)
-				atposinf++;
-		lf = f;
-	}
+  /*
+   * changes at negative infinity
+   */
+  if (sseq[0].ord & 1)
+    lf = -sseq[0].coef[sseq[0].ord];
+  else
+    lf = sseq[0].coef[sseq[0].ord];
 
-	/*
-	 * changes at negative infinity
-	 */
-	if (sseq[0].ord & 1)
-			lf = -sseq[0].coef[sseq[0].ord];
-	else
-			lf = sseq[0].coef[sseq[0].ord];
+  for (s = sseq + 1; s <= sseq + np; s++) {
+    if (s->ord & 1)
+      f = -s->coef[s->ord];
+    else
+      f = s->coef[s->ord];
+    if (lf == 0.0 || lf * f < 0)
+      atneginf++;
+    lf = f;
+  }
 
-	for (s = sseq + 1; s <= sseq + np; s++) {
-			if (s->ord & 1)
-				f = -s->coef[s->ord];
-			else
-				f = s->coef[s->ord];
-			if (lf == 0.0 || lf * f < 0)
-				atneginf++;
-			lf = f;
-	}
-
-	*atneg = atneginf;
-	*atpos = atposinf;
-	//	printf("atneginf, atposinf = %d %d\n", atneginf, atposinf);
-	return(atneginf - atposinf);
+  *atneg = atneginf;
+  *atpos = atposinf;
+  //	printf("atneginf, atposinf = %d %d\n", atneginf, atposinf);
+  return (atneginf - atposinf);
 }
 
 /*
@@ -353,24 +335,24 @@ int numchanges(int np, poly *sseq, double a)
 //	double	a;
 
 {
-	int		changes;
-	double	f, lf;
-	poly	*s;
+  int changes;
+  double f, lf;
+  poly *s;
 
-	changes = 0;
+  changes = 0;
 
-	lf = evalpoly(sseq[0].ord, sseq[0].coef, a);
+  lf = evalpoly(sseq[0].ord, sseq[0].coef, a);
 
-	for (s = sseq + 1; s <= sseq + np; s++) {
-			f = evalpoly(s->ord, s->coef, a);
-			if (lf == 0.0 || lf * f < 0)
-				changes++;
-			lf = f;
-//			printf("lf %lf %d \n", f, changes);
-	}
+  for (s = sseq + 1; s <= sseq + np; s++) {
+    f = evalpoly(s->ord, s->coef, a);
+    if (lf == 0.0 || lf * f < 0)
+      changes++;
+    lf = f;
+    //			printf("lf %lf %d \n", f, changes);
+  }
 
-	//	printf("%d \n", changes);
-	return(changes);
+  //	printf("%d \n", changes);
+  return (changes);
 }
 
 /*
@@ -380,105 +362,96 @@ int numchanges(int np, poly *sseq, double a)
  * described in sseq to isolate intervals in which roots occur,
  * the roots are returned in the roots array in order of magnitude.
  */
-void sbisect(int np, poly *sseq, double min, double max, int atmin, int atmax, double *roots)
+void sbisect(int np, poly *sseq, double min, double max, int atmin, int atmax,
+             double *roots)
 //	int	np;
 //	poly	*sseq;
 //	double	min, max;
 //	int		atmin, atmax;
 //	double	*roots;
 {
-  double	mid=0.;
-  int		n1 = 0, n2 = 0, its, atmid, nroot;
+  double mid = 0.;
+  int n1 = 0, n2 = 0, its, atmid, nroot;
 
-  if ((nroot = atmin - atmax) == 1) 
-    {
+  if ((nroot = atmin - atmax) == 1) {
 
-      /*
-       * first try a less expensive technique.
-       */
-      //      printf("min max %lf, %lf \n", min, max);
-      if (modrf(sseq->ord, sseq->coef, min, max, &roots[0]))
-	return;
-
-      //      printf("try hard way\n");
-      /*
-       * if we get here we have to evaluate the root the hard
-       * way by using the Sturm sequence.
-       */
-      for (its = 0; its < MAXIT; its++) 
-	{
-	  mid = (min + max) / 2;
-	  
-	  atmid = numchanges(np, sseq, mid);
-	  
-	  if (fabs(mid) > RELERROR) 
-	    {
-	      if (fabs((max - min) / mid) < RELERROR) 
-		{
-		  roots[0] = mid;
-		  return;
-		}
-	    } 
-	  else if (fabs(max - min) < RELERROR) 
-	    {
-	      roots[0] = mid;
-	      return;
-	    }
-	  
-	  if ((atmin - atmid) == 0)
-	    min = mid;
-	  else
-	    max = mid;
-	}
-      
-      if (its == MAXIT) 
-	{
-	  fprintf(stderr, "sbisect: overflow min %f max %f\
-					diff %e nroot %d n1 %d n2 %d\n",
-		  min, max, max - min, nroot, n1, n2);
-	  roots[0] = mid;
-	}
+    /*
+     * first try a less expensive technique.
+     */
+    //      printf("min max %lf, %lf \n", min, max);
+    if (modrf(sseq->ord, sseq->coef, min, max, &roots[0]))
       return;
+
+    //      printf("try hard way\n");
+    /*
+     * if we get here we have to evaluate the root the hard
+     * way by using the Sturm sequence.
+     */
+    for (its = 0; its < MAXIT; its++) {
+      mid = (min + max) / 2;
+
+      atmid = numchanges(np, sseq, mid);
+
+      if (fabs(mid) > RELERROR) {
+        if (fabs((max - min) / mid) < RELERROR) {
+          roots[0] = mid;
+          return;
+        }
+      } else if (fabs(max - min) < RELERROR) {
+        roots[0] = mid;
+        return;
+      }
+
+      if ((atmin - atmid) == 0)
+        min = mid;
+      else
+        max = mid;
     }
+
+    if (its == MAXIT) {
+      fprintf(stderr, "sbisect: overflow min %f max %f\
+					diff %e nroot %d n1 %d n2 %d\n",
+              min, max, max - min, nroot, n1, n2);
+      roots[0] = mid;
+    }
+    return;
+  }
 
   /*
    * more than one root in the interval, we have to bisect...
    */
 
-  for (its = 0; its < MAXIT; its++) 
-    {
+  for (its = 0; its < MAXIT; its++) {
 
-      mid = (min + max) / 2;
-      
-      atmid = numchanges(np, sseq, mid);
+    mid = (min + max) / 2;
 
-      n1 = atmin - atmid;
-      n2 = atmid - atmax;
+    atmid = numchanges(np, sseq, mid);
 
-      if (n1 != 0 && n2 != 0) 
-	{
-	  sbisect(np, sseq, min, mid, atmin, atmid, roots);
-	  sbisect(np, sseq, mid, max, atmid, atmax, &roots[n1]);
-	  break;
-	}
-      
-      if (n1 == 0)
-	min = mid;
-      else
-	max = mid;
+    n1 = atmin - atmid;
+    n2 = atmid - atmax;
+
+    if (n1 != 0 && n2 != 0) {
+      sbisect(np, sseq, min, mid, atmin, atmid, roots);
+      sbisect(np, sseq, mid, max, atmid, atmax, &roots[n1]);
+      break;
     }
 
-  if (its == MAXIT) 
-    {
-      /*
-      fprintf(stderr, "sbisect: roots too close together\n");
-      fprintf(stderr, "sbisect: overflow min %f max %f diff %e\
-				nroot %d n1 %d n2 %d\n",
-	      min, max, max - min, nroot, n1, n2);
-      */
-      for (n1 = atmax; n1 < atmin; n1++)
-	roots[n1 - atmax] = mid;
-    }
+    if (n1 == 0)
+      min = mid;
+    else
+      max = mid;
+  }
+
+  if (its == MAXIT) {
+    /*
+    fprintf(stderr, "sbisect: roots too close together\n");
+    fprintf(stderr, "sbisect: overflow min %f max %f diff %e\
+                              nroot %d n1 %d n2 %d\n",
+            min, max, max - min, nroot, n1, n2);
+    */
+    for (n1 = atmax; n1 < atmin; n1++)
+      roots[n1 - atmax] = mid;
+  }
 }
 
 /*
@@ -490,17 +463,16 @@ double evalpoly(int ord, double *coef, double x)
 //	int		ord;
 //	double	*coef, x;
 {
-	double	*fp, f;
+  double *fp, f;
 
-	fp = &coef[ord];
-	f = *fp;
+  fp = &coef[ord];
+  f = *fp;
 
-	for (fp--; fp >= coef; fp--)
-	f = x * f + *fp;
+  for (fp--; fp >= coef; fp--)
+    f = x * f + *fp;
 
-	return(f);
+  return (f);
 }
-
 
 /*
  * modrf
@@ -510,8 +482,7 @@ double evalpoly(int ord, double *coef, double x)
  * root is returned is returned in *val. The routine returns zero
  * if it can't converge.
  */
-int modrf(int ord, double *coef, double	a, double b, double *val)
-{
+int modrf(int ord, double *coef, double a, double b, double *val) {
   int its;
   double fa, fb, x, fx, lfx;
   double *fp, *scoef, *ecoef;
@@ -529,17 +500,18 @@ int modrf(int ord, double *coef, double	a, double b, double *val)
    * if there is no sign difference the method won't work
    */
   if (fa * fb > 0.0)
-    return(0);
+    return (0);
 
-  /*  commented out to avoid duplicate solutions when the bounds are close to the roots
+  /*  commented out to avoid duplicate solutions when the bounds are close to
+  the roots
 
-  if (fabs(fa) < RELERROR) 
+  if (fabs(fa) < RELERROR)
     {
       *val = a;
       return(1);
     }
-  
-  if (fabs(fb) < RELERROR) 
+
+  if (fabs(fb) < RELERROR)
     {
       *val = b;
       return(1);
@@ -548,55 +520,47 @@ int modrf(int ord, double *coef, double	a, double b, double *val)
 
   lfx = fa;
 
-  for (its = 0; its < MAX_ITER_SECANT; its++) 
-    {
-      x = (fb * a - fa * b) / (fb - fa);
+  for (its = 0; its < MAX_ITER_SECANT; its++) {
+    x = (fb * a - fa * b) / (fb - fa);
 
-      // constrain that x stays in the bounds
-      if (x < a || x > b)
-	x = 0.5 * (a+b);
+    // constrain that x stays in the bounds
+    if (x < a || x > b)
+      x = 0.5 * (a + b);
 
-      fx = *ecoef;
-      for (fp = ecoef - 1; fp >= scoef; fp--)
-	fx = x * fx + *fp;
+    fx = *ecoef;
+    for (fp = ecoef - 1; fp >= scoef; fp--)
+      fx = x * fx + *fp;
 
-      if (fabs(x) > RELERROR) 
-	{
-	  if (fabs(fx / x) < RELERROR) 
-	    {
-	      *val = x;
-	      //	      printf(" x, fx %lf %lf\n", x, fx);
-	      return(1);
-	    }
-	} 
-      else if (fabs(fx) < RELERROR) 
-	{
-	  *val = x;
-	  //	  printf(" x, fx %lf %lf\n", x, fx);
-	  return(1);
-	}
-
-      if ((fa * fx) < 0) 
-	{
-	  b = x;
-	  fb = fx;
-	  if ((lfx * fx) > 0)
-	    fa /= 2;
-	} 
-      else 
-	{
-	  a = x;
-	  fa = fx;
-	  if ((lfx * fx) > 0)
-	    fb /= 2;
-	}
-
-      lfx = fx;
+    if (fabs(x) > RELERROR) {
+      if (fabs(fx / x) < RELERROR) {
+        *val = x;
+        //	      printf(" x, fx %lf %lf\n", x, fx);
+        return (1);
+      }
+    } else if (fabs(fx) < RELERROR) {
+      *val = x;
+      //	  printf(" x, fx %lf %lf\n", x, fx);
+      return (1);
     }
 
-  //fprintf(stderr, "modrf overflow %f %f %f\n", a, b, fx);
+    if ((fa * fx) < 0) {
+      b = x;
+      fb = fx;
+      if ((lfx * fx) > 0)
+        fa /= 2;
+    } else {
+      a = x;
+      fa = fx;
+      if ((lfx * fx) > 0)
+        fb /= 2;
+    }
 
-  return(0);
+    lfx = fx;
+  }
+
+  // fprintf(stderr, "modrf overflow %f %f %f\n", a, b, fx);
+
+  return (0);
 }
 
 #endif // PROTEIN_FLEXIBILITY_LOOP_CLOSURE_STURM_H

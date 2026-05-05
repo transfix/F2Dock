@@ -40,10 +40,11 @@ TEST(F3DockLoopClosure, FindsSolutionsForKnownFragment) {
 
   EXPECT_TRUE(ok);
   EXPECT_FALSE(solutions.empty());
-  EXPECT_LE(static_cast<int>(solutions.size()), LoopClosureSolver::kMaxSolutions);
+  EXPECT_LE(static_cast<int>(solutions.size()),
+            LoopClosureSolver::kMaxSolutions);
 
-  for (const auto& sol : solutions) {
-    for (const auto& atom : sol) {
+  for (const auto &sol : solutions) {
+    for (const auto &atom : sol) {
       EXPECT_TRUE(std::isfinite(atom[0]));
       EXPECT_TRUE(std::isfinite(atom[1]));
       EXPECT_TRUE(std::isfinite(atom[2]));
@@ -67,4 +68,4 @@ TEST(F3DockLoopClosure, RejectsImpossibleClosureConstraints) {
   EXPECT_TRUE(solutions.empty());
 }
 
-}  // namespace
+} // namespace
