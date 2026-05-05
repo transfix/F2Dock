@@ -59,3 +59,18 @@ add_f2dock_integration_case(
   ABS_TOL  1e-3
   REL_TOL  1e-5
 )
+
+if(TARGET F2DockServer)
+  add_test(
+    NAME integration_F2DockServer
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_f2dock_server.py
+      --server-exe $<TARGET_FILE:F2DockServer>
+      --work-dir ${CMAKE_BINARY_DIR}/tests/integration/f2dockserver_smoke
+      --platform 0
+  )
+
+  set_tests_properties(integration_F2DockServer PROPERTIES
+    LABELS "integration"
+    TIMEOUT 120
+  )
+endif()
