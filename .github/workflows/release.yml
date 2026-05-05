@@ -15,6 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Compute artifact metadata
+        id: meta
+        run: |
+          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          ARCH=$(uname -m)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -55,7 +63,7 @@ jobs:
             sed -i "s/BINNAME/$name/" "$bin"
             chmod +x "$bin"
           done
-          tar -czf "F2Dock-linux-x86_64.tar.gz" -C staging F2Dock
+          tar -czf "F2Dock-${{ steps.meta.outputs.version }}-linux-${{ steps.meta.outputs.arch }}.tar.gz" -C staging F2Dock
 
       # Copy README into staging for the .deb as well
       - name: Copy docs into install
@@ -66,21 +74,29 @@ jobs:
         run: |
           cd build
           cpack -G DEB
-          cp *.deb ../
+          for f in *.deb; do cp "$f" "../F2Dock-${{ steps.meta.outputs.version }}-linux-${{ steps.meta.outputs.arch }}.deb"; done
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-packages
           path: |
-            F2Dock-linux-x86_64.tar.gz
-            *.deb
+            F2Dock-${{ steps.meta.outputs.version }}-linux-${{ steps.meta.outputs.arch }}.tar.gz
+            F2Dock-${{ steps.meta.outputs.version }}-linux-${{ steps.meta.outputs.arch }}.deb
 
   # ── macOS: .dmg ──
   macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Compute artifact metadata
+        id: meta
+        run: |
+          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          ARCH=$(uname -m)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies
         run: brew install cmake ninja fftw
@@ -117,22 +133,33 @@ jobs:
 
           # Create the DMG
           cp README.md staging/F2Dock.app/Contents/Resources/
+          ditto -c -k --keepParent staging/F2Dock.app "F2Dock-${{ steps.meta.outputs.version }}-macos-${{ steps.meta.outputs.arch }}.zip"
           hdiutil create -volname F2Dock \
             -srcfolder staging/F2Dock.app \
             -ov -format UDZO \
-            F2Dock-macOS-arm64.dmg
+            F2Dock-${{ steps.meta.outputs.version }}-macos-${{ steps.meta.outputs.arch }}.dmg
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-package
-          path: F2Dock-macOS-arm64.dmg
+          path: |
+            F2Dock-${{ steps.meta.outputs.version }}-macos-${{ steps.meta.outputs.arch }}.dmg
+            F2Dock-${{ steps.meta.outputs.version }}-macos-${{ steps.meta.outputs.arch }}.zip
 
   # ── Windows: .zip ──
   windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Compute artifact metadata
+        id: meta
+        shell: bash
+        run: |
+          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "arch=x64" >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies
         shell: bash
@@ -162,13 +189,13 @@ jobs:
           cp README.md staging/F2Dock/
 
           cd staging
-          7z a -tzip ../F2Dock-windows-x64.zip F2Dock/
+          7z a -tzip ../F2Dock-${{ steps.meta.outputs.version }}-windows-${{ steps.meta.outputs.arch }}.zip F2Dock/
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-package
-          path: F2Dock-windows-x64.zip
+          path: F2Dock-${{ steps.meta.outputs.version }}-windows-${{ steps.meta.outputs.arch }}.zip
 
   # ── Create GitHub Release ──
   release:
