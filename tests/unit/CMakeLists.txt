@@ -80,3 +80,10 @@ target_compile_definitions(test_value_position PRIVATE
   F2DOCK_TEST_DATA_DIR="${F2DOCK_TESTS_DATA}"
 )
 gtest_discover_tests(test_value_position)
+
+if(TARGET f3dock-loop-closure)
+  f2dock_add_test(test_f3dock_loop_closure
+    SOURCES test_f3dock_loop_closure.cpp
+    LIBS f3dock-loop-closure
+  )
+endif()

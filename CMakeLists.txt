@@ -32,6 +32,35 @@ include( SetupFFTW )
 
 SetupFFTW()
 
+option(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL "Build experimental features ported from F3Dock" ON)
+option(F2DOCK_ENABLE_F3DOCK_SCIENCE_STACK "Discover optional scientific dependencies for F3Dock ports" ON)
+
+if(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL)
+  add_library(f3dock_science_stack INTERFACE)
+  if(F2DOCK_ENABLE_F3DOCK_SCIENCE_STACK)
+    find_package(Eigen3 QUIET)
+    if(Eigen3_FOUND)
+      target_link_libraries(f3dock_science_stack INTERFACE Eigen3::Eigen)
+      target_compile_definitions(f3dock_science_stack INTERFACE F2DOCK_HAVE_EIGEN3=1)
+    endif()
+
+    find_package(LAPACK QUIET)
+    if(LAPACK_FOUND)
+      target_link_libraries(f3dock_science_stack INTERFACE LAPACK::LAPACK)
+      target_compile_definitions(f3dock_science_stack INTERFACE F2DOCK_HAVE_LAPACK=1)
+    endif()
+
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+      pkg_check_modules(NFFT QUIET IMPORTED_TARGET nfft3)
+      if(NFFT_FOUND)
+        target_link_libraries(f3dock_science_stack INTERFACE PkgConfig::NFFT)
+        target_compile_definitions(f3dock_science_stack INTERFACE F2DOCK_HAVE_NFFT=1)
+      endif()
+    endif()
+  endif()
+endif()
+
 if(NOT WIN32)
   include(FetchContent)
   # Lean on libcvc for XML-RPC support used by F2DockServer.
