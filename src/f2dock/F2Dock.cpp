@@ -47,11 +47,10 @@ int skipWhiteSpaces( char *buf, int i )
 int countLines(char *filename)
 {
   FILE* fp = fopen( filename, "r" );
-  if ( fp == NULL )
-    {
-      printf( "Error: Failed to open file %s!\n", filename );
-      return -1;
-    }
+  if (fp == NULL) {
+    printf("Error: Failed to open file %s!\n", filename);
+    return -1;
+  }
 
   int i = 0;
   char s[ 2000 ];
@@ -62,8 +61,8 @@ int countLines(char *filename)
       if ( s[ j ] != '#' ) i++;
     }
 
-  fclose( fp );
-  return i;
+    fclose(fp);
+    return i;
 }
 
 
@@ -600,49 +599,44 @@ bool readRMSDRef(char *filename, PARAMS_IN *p)
 {
   int numberAtomsTotal = 0, numberAtomsRMSD = 0;
   FILE* fp = fopen( filename, "r" );
-  char s[ 2000 ];  // buffer to read lines
+  char s[2000]; // buffer to read lines
 
-  if ( fp == NULL )
-    {
-      printf( "Error: Failed to open parameter file %s!\n", filename );
-      return false;
-    }
+  if (fp == NULL) {
+    printf("Error: Failed to open parameter file %s!\n", filename);
+    return false;
+  }
 
   // skip leading comments
-  while ( fgets( s, 1999, fp ) != NULL )
-    {
-      if ( s[ 0 ] == '#' ) continue;
-      break;
-    }
+  while (fgets(s, 1999, fp) != NULL) {
+    if (s[0] == '#')
+      continue;
+    break;
+  }
 
-  if ( sscanf( s, "%d", &numberAtomsTotal ) != 1 )
-    {
-      printf( "Error: bad RMSD ref file header in %s!\n", filename );
-      fclose( fp );
-      return false;
-    }
+  if (sscanf(s, "%d", &numberAtomsTotal) != 1) {
+    printf("Error: bad RMSD ref file header in %s!\n", filename);
+    fclose(fp);
+    return false;
+  }
 
-  if ( fgets( s, 1999, fp ) == NULL || sscanf( s, "%d", &numberAtomsRMSD ) != 1 )
-    {
-      printf( "Error: bad RMSD atom-count line in %s!\n", filename );
-      fclose( fp );
-      return false;
-    }
+  if (fgets(s, 1999, fp) == NULL || sscanf(s, "%d", &numberAtomsRMSD) != 1) {
+    printf("Error: bad RMSD atom-count line in %s!\n", filename);
+    fclose(fp);
+    return false;
+  }
 
-  if ( numberAtomsTotal != p->numCentersB )
-    {
-      printf( "Error: bad RMSD ref file: %s expected %d got %d!\n",
-              filename, p->numCentersB, numberAtomsTotal );
-      fclose( fp );
-      return false;
-    }
+  if (numberAtomsTotal != p->numCentersB) {
+    printf("Error: bad RMSD ref file: %s expected %d got %d!\n", filename,
+           p->numCentersB, numberAtomsTotal);
+    fclose(fp);
+    return false;
+  }
 
-  if ( numberAtomsRMSD <= 0 )
-    {
-      printf( "Error: RMSD atom count must be positive in %s!\n", filename );
-      fclose( fp );
-      return false;
-    }
+  if (numberAtomsRMSD <= 0) {
+    printf("Error: RMSD atom count must be positive in %s!\n", filename);
+    fclose(fp);
+    return false;
+  }
 
   float *xRef = new float[ numberAtomsRMSD ];
   float *yRef = new float[ numberAtomsRMSD ];
@@ -651,42 +645,41 @@ bool readRMSDRef(char *filename, PARAMS_IN *p)
 
   // read the index X Y Z values
   int i = 0;
-  while ( fgets( s, 1999, fp ) != NULL )
-    {
-      if ( s[ 0 ] == '#' ) continue;
+  while (fgets(s, 1999, fp) != NULL) {
+    if (s[0] == '#')
+      continue;
 
-      int atomIndex = 0;
-      float xCoord = 0.0f, yCoord = 0.0f, zCoord = 0.0f;
-      if ( sscanf( s, "%d %f %f %f", &atomIndex, &xCoord, &yCoord, &zCoord ) != 4 )
-        {
-          continue;
-        }
-
-      if ( i >= numberAtomsRMSD )
-        {
-          printf( "Warning: extra RMSD rows detected in %s, ignoring trailing rows.\n", filename );
-          break;
-        }
-
-      atNums[ i ] = atomIndex;
-      xRef[ i ] = xCoord;
-      yRef[ i ] = yCoord;
-      zRef[ i ] = zCoord;
-      i++;
+    int atomIndex = 0;
+    float xCoord = 0.0f, yCoord = 0.0f, zCoord = 0.0f;
+    if (sscanf(s, "%d %f %f %f", &atomIndex, &xCoord, &yCoord, &zCoord) != 4) {
+      continue;
     }
 
-  fclose( fp );
-
-  if ( i != numberAtomsRMSD )
-    {
-      printf( "Error: RMSD file %s expected %d rows but parsed %d rows!\n",
-              filename, numberAtomsRMSD, i );
-      delete[] xRef;
-      delete[] yRef;
-      delete[] zRef;
-      delete[] atNums;
-      return false;
+    if (i >= numberAtomsRMSD) {
+      printf(
+          "Warning: extra RMSD rows detected in %s, ignoring trailing rows.\n",
+          filename);
+      break;
     }
+
+    atNums[i] = atomIndex;
+    xRef[i] = xCoord;
+    yRef[i] = yCoord;
+    zRef[i] = zCoord;
+    i++;
+  }
+
+  fclose(fp);
+
+  if (i != numberAtomsRMSD) {
+    printf("Error: RMSD file %s expected %d rows but parsed %d rows!\n",
+           filename, numberAtomsRMSD, i);
+    delete[] xRef;
+    delete[] yRef;
+    delete[] zRef;
+    delete[] atNums;
+    return false;
+  }
 
   p->nbRMSDAtoms = numberAtomsRMSD;
   p->xRef = xRef;
@@ -700,11 +693,10 @@ bool readRMSDRef(char *filename, PARAMS_IN *p)
 bool readEffGridFile( char *effGridFile, PARAMS_IN *pr )
 {
   int numLines = countLines( effGridFile );
-  if ( numLines <= 0 )
-    {
-      printf( "Error: Invalid or empty efficient grid file %s!\n", effGridFile );
-      return false;
-    }
+  if (numLines <= 0) {
+    printf("Error: Invalid or empty efficient grid file %s!\n", effGridFile);
+    return false;
+  }
 
   pr->efficientGridSizes = new int[ numLines ];
 

@@ -115,6 +115,23 @@ cd build && ctest --output-on-failure
 
 89 unit tests cover the spatial index, scoring components, file parsers, and math utilities.
 
+## Formatting
+
+F2Dock CI enforces clang-format on changed lines.
+
+Use this before pushing:
+
+```bash
+git fetch origin
+git clang-format <base>
+```
+
+For example, if your PR targets `master`:
+
+```bash
+git clang-format origin/master
+```
+
 ## Install
 
 ```bash

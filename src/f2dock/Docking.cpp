@@ -1003,10 +1003,11 @@ bool build_fks_bak( char *type, int numCenters, double *xk, double *yk, double *
             if ( num_I == num_I_prev ) bw2 *= 2;
             else
                {
-                printf( "bandwidth = %lf, imag_magnitude = %lf, #atoms = %d\n", sqrt( bw2 ), imag_magnitude, num_I_prev - num_I );
-                fflush( stdout );
-                bw2 = bandwidth * bandwidth;
-                imag_magnitude *= gradFactor;
+              printf("bandwidth = %lf, imag_magnitude = %lf, #atoms = %d\n",
+                     sqrt(bw2), imag_magnitude, num_I_prev - num_I);
+              fflush(stdout);
+              bw2 = bandwidth * bandwidth;
+              imag_magnitude *= gradFactor;
                }
 	  }
 
@@ -4138,8 +4139,8 @@ void printInputParamters( PARAMS_IN *pr, FILE* fp )
 	fprintf( fp, (char *)"# \t vdWCutoffHigh = %lf\n", pr->vdWCutoffHigh );
 	fprintf( fp, (char *)"# \t vdWWellWidth = %lf\n", pr->vdWWellWidth );
 	fprintf( fp, (char *)"# \t vdWTolerance = %lf\n", pr->vdWTolerance );
-	fprintf( fp, (char *)"# \t compQuadVdW = %d\n", (int)pr->compQuadVdW );
-	fprintf( fp, (char *)"# \t vdWGridSize = %d\n", pr->vdWGridSize );
+        fprintf(fp, (char *)"# \t compQuadVdW = %d\n", (int)pr->compQuadVdW);
+        fprintf( fp, (char *)"# \t vdWGridSize = %d\n", pr->vdWGridSize );
 	fprintf( fp, (char *)"# \t surfaceBasedVdW = %d\n", pr->surfaceBasedVdW );
 	fprintf( fp, (char *)"# \t applyClashFilter = %d\n", pr->applyClashFilter );
 	fprintf( fp, (char *)"# \t eqmDistFrac = %lf\n", pr->eqmDistFrac );
@@ -5068,91 +5069,98 @@ void createValidOutputMap( FFTW_complex *staticMol, int n, int minRadMovingMol, 
            }
 
       printf( "\nmaxRadMovingMol = %d", maxRadMovingMol );
-      printf( "\nExcluded ( outer band ): %lf %%\n", ( t * 100.0 ) / n3 );
+      printf("\nExcluded ( outer band ): %lf %%\n", (t * 100.0) / n3);
 
-//      for ( int c = 0; c < n3; c++ )
-//          mMol[ c ][ 0 ] = mMol[ c ][ 1 ] = 0.0;
-//
-//      minRadMovingMol -= 2;
-//      if ( minRadMovingMol < 0 ) minRadMovingMol = 0;
-//
-//      int minRad2 = minRadMovingMol * minRadMovingMol;
-//      nl = nn;
-//      nr = nn + ( n & 1 );
-//
-//      if ( minRadMovingMol < nl )
-//        {
-//          nl = minRadMovingMol;
-//          if ( minRadMovingMol + 1 <= nr ) nr = minRadMovingMol + 1;
-//          else nr = minRadMovingMol;
-//        }
-//
-//      for ( int iz = -nl; iz < nr; iz++ )
-//        for ( int iy = -nl; iy < nr; iy++ )
-//          for ( int ix = -nl; ix < nr; ix++ )
-//            {
-//              double d2 = ( ix + ofs ) * ( ix + ofs ) + ( iy + ofs ) * ( iy + ofs ) + ( iz + ofs ) * ( iz + ofs );
-//
-//              if ( d2 <= minRad2 )
-//                 {
-//                   int c = ( iz + nn ) * n * n + ( iy + nn ) * n + ( ix + nn );
-//
-//                   mMol[ c ][ 0 ] = 1;
-//                 }
-//            }
-//
-//      FFTW_execute( mForwardPlan );
-//
-//      for ( int c = 0; c < n3; c++ )
-//	 {
-//	   smProd[ c ][ 0 ] = sMol[ c ][ 0 ] * mMol[ c ][ 0 ] - sMol[ c ][ 1 ] * mMol[ c ][ 1 ];
-//	   smProd[ c ][ 1 ] = sMol[ c ][ 0 ] * mMol[ c ][ 1 ] + sMol[ c ][ 1 ] * mMol[ c ][ 0 ];
-//	 }
-//
-//      FFTW_execute( smBackwardPlan );
-//
-//      t = 0;
-//      for ( int c = 0; c < n3; c++ )
-//         if ( smProd[ c ][ 0 ] > 0.5 * n3 )
-//           {
-//             validOutputMap[ c ] = 0;
-//             t++;
-//           }
-//
-//      printf( "\nminRadMovingMol = %d", minRadMovingMol );
-//      printf( "\nExcluded ( inner band ): %lf \%\n", ( t * 100.0 ) / n3 );
-//
-//      t = 0;
-//      for ( int z = 0, k = 0; z < n; z++ )
-//        {
-//          int iz = z;
-//          if ( iz > n / 2 ) iz -= n;
-//
-//          for ( int y = 0; y < n; y++ )
-//            {
-//              int iy = y;
-//              if ( iy > n / 2 ) iy -= n;
-//
-//              for ( int x = 0; x < n; x++, k++ )
-//                {
-//                  int ix = x;
-//                  if ( ix > n / 2 ) ix -= n;
-//
-//                  int ik = ( ( iz + ( n / 2 ) ) * n + ( iy + ( n / 2 ) ) ) * n + ( ix + ( n / 2 ) );
-//
-//                  if ( ( staticMol[ ik ][ 1 ] > eps ) || ( - staticMol[ ik ][ 1 ] > eps ) )
-//                    {
-//                     if ( validOutputMap[ k ] )
-//                       {
-//                         validOutputMap[ k ] = 0;
-//                         t++;
-//                       }
-//                    }
-//                }
-//            }
-//        }
-//
-//      if ( t > 0 ) printf( "\nExcluded ( core ): %lf \%\n", ( t * 100.0 ) / n3 );
+      //      for ( int c = 0; c < n3; c++ )
+      //          mMol[ c ][ 0 ] = mMol[ c ][ 1 ] = 0.0;
+      //
+      //      minRadMovingMol -= 2;
+      //      if ( minRadMovingMol < 0 ) minRadMovingMol = 0;
+      //
+      //      int minRad2 = minRadMovingMol * minRadMovingMol;
+      //      nl = nn;
+      //      nr = nn + ( n & 1 );
+      //
+      //      if ( minRadMovingMol < nl )
+      //        {
+      //          nl = minRadMovingMol;
+      //          if ( minRadMovingMol + 1 <= nr ) nr = minRadMovingMol + 1;
+      //          else nr = minRadMovingMol;
+      //        }
+      //
+      //      for ( int iz = -nl; iz < nr; iz++ )
+      //        for ( int iy = -nl; iy < nr; iy++ )
+      //          for ( int ix = -nl; ix < nr; ix++ )
+      //            {
+      //              double d2 = ( ix + ofs ) * ( ix + ofs ) + ( iy + ofs ) * (
+      //              iy + ofs ) + ( iz + ofs ) * ( iz + ofs );
+      //
+      //              if ( d2 <= minRad2 )
+      //                 {
+      //                   int c = ( iz + nn ) * n * n + ( iy + nn ) * n + ( ix
+      //                   + nn );
+      //
+      //                   mMol[ c ][ 0 ] = 1;
+      //                 }
+      //            }
+      //
+      //      FFTW_execute( mForwardPlan );
+      //
+      //      for ( int c = 0; c < n3; c++ )
+      //	 {
+      //	   smProd[ c ][ 0 ] = sMol[ c ][ 0 ] * mMol[ c ][ 0 ] - sMol[ c
+      //][ 1 ] * mMol[ c ][ 1 ]; 	   smProd[ c ][ 1 ] = sMol[ c ][ 0 ] * mMol[ c ][
+      //1 ] + sMol[ c ][ 1 ] * mMol[ c ][ 0 ];
+      //	 }
+      //
+      //      FFTW_execute( smBackwardPlan );
+      //
+      //      t = 0;
+      //      for ( int c = 0; c < n3; c++ )
+      //         if ( smProd[ c ][ 0 ] > 0.5 * n3 )
+      //           {
+      //             validOutputMap[ c ] = 0;
+      //             t++;
+      //           }
+      //
+      //      printf( "\nminRadMovingMol = %d", minRadMovingMol );
+      //      printf( "\nExcluded ( inner band ): %lf \%\n", ( t * 100.0 ) / n3
+      //      );
+      //
+      //      t = 0;
+      //      for ( int z = 0, k = 0; z < n; z++ )
+      //        {
+      //          int iz = z;
+      //          if ( iz > n / 2 ) iz -= n;
+      //
+      //          for ( int y = 0; y < n; y++ )
+      //            {
+      //              int iy = y;
+      //              if ( iy > n / 2 ) iy -= n;
+      //
+      //              for ( int x = 0; x < n; x++, k++ )
+      //                {
+      //                  int ix = x;
+      //                  if ( ix > n / 2 ) ix -= n;
+      //
+      //                  int ik = ( ( iz + ( n / 2 ) ) * n + ( iy + ( n / 2 ) )
+      //                  ) * n + ( ix + ( n / 2 ) );
+      //
+      //                  if ( ( staticMol[ ik ][ 1 ] > eps ) || ( - staticMol[
+      //                  ik ][ 1 ] > eps ) )
+      //                    {
+      //                     if ( validOutputMap[ k ] )
+      //                       {
+      //                         validOutputMap[ k ] = 0;
+      //                         t++;
+      //                       }
+      //                    }
+      //                }
+      //            }
+      //        }
+      //
+      //      if ( t > 0 ) printf( "\nExcluded ( core ): %lf \%\n", ( t * 100.0
+      //      ) / n3 );
 
       FFTW_destroy_plan( sForwardPlan );
       FFTW_destroy_plan( mForwardPlan );
@@ -5542,7 +5550,7 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
 
       if(temp.compare("ATOM")==0 || temp.compare("HETATM")==0){
 	numStaticAtoms++;
-	fgets(str, (int)sizeof(str), fp);
+        fgets(str, (int)sizeof(str), fp);
       }
     }
     fclose(fp);
@@ -5575,15 +5583,16 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
       char resName[50];
 
       if(temp.compare("ATOM")==0 || temp.compare("HETATM")==0){
-	if(fscanf(fp,"%d %49s %49s %lf %lf %lf %lf %lf", &atomNum, atomName, resName, &x, &y, &z, &charge, &radius)==8){
-	  staticAtoms[ j++ ] = x;
+        if (fscanf(fp, "%d %49s %49s %lf %lf %lf %lf %lf", &atomNum, atomName,
+                   resName, &x, &y, &z, &charge, &radius) == 8) {
+          staticAtoms[ j++ ] = x;
 	  staticAtoms[ j++ ] = y;
 	  staticAtoms[ j++ ] = z;
 
 	  staticAtoms[ j++ ] = charge;
 
 	  staticAtoms[ j++ ] = radius;
-	}
+        }
       }
     }
 

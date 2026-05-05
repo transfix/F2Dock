@@ -374,7 +374,7 @@ void fastLJ::setTransformationMatrix( double *transMat )
      {
        printf( "\nTransformation Matrix is set to:\n" );
        for ( int i = 0; i < 16; i++ )
-          printf( "%8.3lf%s", transMatrix[ i ], ( ( i + 1 ) % 4 ) ? "  " : "\n" );
+         printf("%8.3lf%s", transMatrix[i], ((i + 1) % 4) ? "  " : "\n");
        printf( "\n" );   
      }  
 }
