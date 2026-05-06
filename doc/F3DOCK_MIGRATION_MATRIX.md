@@ -29,3 +29,12 @@ This matrix captures a second-pass triage of F3Dock capabilities for incremental
 - Added stable wrapper API in `inc/f3dock/loop_closure/LoopClosureSolver.h`.
 - Added unit tests for feasible and infeasible closure constraints.
 - Added optional scientific stack discovery (`Eigen3`, `LAPACK`, `NFFT`).
+
+## Phase 2 Progress (current incremental port)
+
+- Added experimental `f3dock-icp` static library (point-to-point ICP prototype).
+- Imported `libicp` core components (`matrix`, `kdtree`, point-to-point ICP loop).
+- Added wrapper API in `inc/f3dock/icp/IcpAligner.h`.
+- Added deterministic unit tests for rigid alignment recovery and input validation.
+- Added experimental `f3dock-flex` scaffold for hinge/shear kinematics helpers.
+- Added deterministic unit tests for hinge rotation and planar shear behavior.
