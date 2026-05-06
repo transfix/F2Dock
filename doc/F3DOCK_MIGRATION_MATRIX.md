@@ -38,3 +38,5 @@ This matrix captures a second-pass triage of F3Dock capabilities for incremental
 - Added deterministic unit tests for rigid alignment recovery and input validation.
 - Added experimental `f3dock-flex` scaffold for hinge/shear kinematics helpers.
 - Added deterministic unit tests for hinge rotation and planar shear behavior.
+- Added experimental `f3dock-domain` scaffold for domain-graph transform composition.
+- Added deterministic unit tests for world-transform chaining and cycle rejection.

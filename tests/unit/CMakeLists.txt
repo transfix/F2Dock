@@ -101,3 +101,10 @@ if(TARGET f3dock-flex)
     LIBS f3dock-flex
   )
 endif()
+
+if(TARGET f3dock-domain)
+  f2dock_add_test(test_f3dock_domain
+    SOURCES test_f3dock_domain.cpp
+    LIBS f3dock-domain
+  )
+endif()
