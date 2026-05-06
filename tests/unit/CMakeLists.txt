@@ -87,3 +87,24 @@ if(TARGET f3dock-loop-closure)
     LIBS f3dock-loop-closure
   )
 endif()
+
+if(TARGET f3dock-icp)
+  f2dock_add_test(test_f3dock_icp
+    SOURCES test_f3dock_icp.cpp
+    LIBS f3dock-icp
+  )
+endif()
+
+if(TARGET f3dock-flex)
+  f2dock_add_test(test_f3dock_flex
+    SOURCES test_f3dock_flex.cpp
+    LIBS f3dock-flex
+  )
+endif()
+
+if(TARGET f3dock-domain)
+  f2dock_add_test(test_f3dock_domain
+    SOURCES test_f3dock_domain.cpp
+    LIBS f3dock-domain
+  )
+endif()
