@@ -18,9 +18,7 @@ Point3 add(const Point3 &a, const Point3 &b) {
   return {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
 }
 
-Point3 mul(const Point3 &a, double s) {
-  return {a[0] * s, a[1] * s, a[2] * s};
-}
+Point3 mul(const Point3 &a, double s) { return {a[0] * s, a[1] * s, a[2] * s}; }
 
 Point3 cross(const Point3 &a, const Point3 &b) {
   return {

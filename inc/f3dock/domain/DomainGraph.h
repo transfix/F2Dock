@@ -21,7 +21,7 @@ struct RigidTransform {
 };
 
 class DomainGraph {
- public:
+public:
   bool addDomain(int id);
 
   // Sets parent relationship and child-local transform (parent <- child).
@@ -30,7 +30,7 @@ class DomainGraph {
 
   bool worldTransform(int id, RigidTransform *out) const;
 
- private:
+private:
   struct Node {
     int id = -1;
     int parent_id = -1;

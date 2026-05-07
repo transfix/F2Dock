@@ -14,22 +14,14 @@ using f3dock::icp::Point3;
 
 std::vector<Point3> makeModelCloud() {
   return {
-      {0.0, 0.0, 0.0},
-      {1.0, 0.0, 0.0},
-      {0.0, 1.0, 0.0},
-      {0.0, 0.0, 1.0},
-      {1.0, 2.0, 3.0},
-      {-2.0, 1.0, 0.5},
-      {0.7, -1.2, 2.3},
-      {-1.8, -0.4, 1.1},
-      {2.5, -1.0, 0.2},
-      {1.2, 1.7, -0.8},
+      {0.0, 0.0, 0.0},  {1.0, 0.0, 0.0},  {0.0, 1.0, 0.0},  {0.0, 0.0, 1.0},
+      {1.0, 2.0, 3.0},  {-2.0, 1.0, 0.5}, {0.7, -1.2, 2.3}, {-1.8, -0.4, 1.1},
+      {2.5, -1.0, 0.2}, {1.2, 1.7, -0.8},
   };
 }
 
 Point3 applyTransform(const std::array<std::array<double, 3>, 3> &r,
-                      const Point3 &t,
-                      const Point3 &p) {
+                      const Point3 &t, const Point3 &p) {
   return {
       r[0][0] * p[0] + r[0][1] * p[1] + r[0][2] * p[2] + t[0],
       r[1][0] * p[0] + r[1][1] * p[1] + r[1][2] * p[2] + t[1],
@@ -92,7 +84,10 @@ TEST(F3DockIcp, AlignsRigidlyTransformedPointCloud) {
 
 TEST(F3DockIcp, RejectsTooFewPoints) {
   const std::vector<Point3> model = {
-      {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0},
+      {0.0, 0.0, 0.0},
+      {1.0, 0.0, 0.0},
+      {0.0, 1.0, 0.0},
+      {0.0, 0.0, 1.0},
   };
   const std::vector<Point3> moving = model;
 

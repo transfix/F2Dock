@@ -15,42 +15,41 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
 libicp; if not, write to the Free Software Foundation, Inc., 51 Franklin
-Street, Fifth Floor, Boston, MA 02110-1301, USA 
+Street, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
 #ifndef LIBICP_ICP_H
 #define LIBICP_ICP_H
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <vector>
 
-#include "libicp/matrix.h"
 #include "libicp/kdtree.h"
+#include "libicp/matrix.h"
 
 namespace libicp {
 
 class Icp {
 
 public:
-
   // constructor
   // input: M ....... pointer to first model point
   //        M_num ... number of model points
   //        dim   ... dimensionality of model points (2 or 3)
-  Icp (double *M,const int32_t M_num,const int32_t dim);
-  
+  Icp(double *M, const int32_t M_num, const int32_t dim);
+
   // deconstructor
-  virtual ~Icp ();
-  
+  virtual ~Icp();
+
   // set maximum number of iterations (1. stopping criterion)
-  void setMaxIterations   (int32_t val) { max_iter  = val; }
-  
+  void setMaxIterations(int32_t val) { max_iter = val; }
+
   // set minimum delta of rot/trans parameters (2. stopping criterion)
-  void setMinDeltaParam   (double  val) { min_delta = val; }
-  
+  void setMinDeltaParam(double val) { min_delta = val; }
+
   // fit template to model yielding R,t (M = R*T + t)
   // input:  T ....... pointer to first template point
   //         T_num ... number of template points
@@ -59,26 +58,29 @@ public:
   //         indist .. inlier distance (if <=0: use all points)
   // output: R ....... final rotation matrix
   //         t ....... final translation vector
-  void fit(double *T,const int32_t T_num,Matrix &R,Matrix &t,const double indist);
-  
+  void fit(double *T, const int32_t T_num, Matrix &R, Matrix &t,
+           const double indist);
+
 private:
-  
   // iterative fitting
-  void fitIterate(double *T,const int32_t T_num,Matrix &R,Matrix &t,const std::vector<int32_t> &active);
-  
+  void fitIterate(double *T, const int32_t T_num, Matrix &R, Matrix &t,
+                  const std::vector<int32_t> &active);
+
   // inherited classes need to overwrite these functions
-  virtual double               fitStep(double *T,const int32_t T_num,Matrix &R,Matrix &t,const std::vector<int32_t> &active) = 0;
-  virtual std::vector<int32_t> getInliers(double *T,const int32_t T_num,const Matrix &R,const Matrix &t,const double indist) = 0;
-  
+  virtual double fitStep(double *T, const int32_t T_num, Matrix &R, Matrix &t,
+                         const std::vector<int32_t> &active) = 0;
+  virtual std::vector<int32_t> getInliers(double *T, const int32_t T_num,
+                                          const Matrix &R, const Matrix &t,
+                                          const double indist) = 0;
+
 protected:
-  
   // kd tree of model points
-  kdtree::KDTree*     M_tree;
+  kdtree::KDTree *M_tree;
   kdtree::KDTreeArray M_data;
-  
-  int32_t dim;       // dimensionality of model + template data (2 or 3)
-  int32_t max_iter;  // max number of iterations
-  double  min_delta; // min parameter delta
+
+  int32_t dim;      // dimensionality of model + template data (2 or 3)
+  int32_t max_iter; // max number of iterations
+  double min_delta; // min parameter delta
 };
 
 } // namespace libicp
