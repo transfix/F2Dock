@@ -92,7 +92,7 @@ void tripep_closure::solve_3pep_poly(double r_n1[3], double r_a1[3],
   //  integer, parameter :: deg_pol = 16
   int deg_pol = 16;
   //  real(dp) :: poly_coeff(0:deg_pol), roots(max_soln)
-  double poly_coeff[deg_pol + 1], roots[max_soln];
+  double poly_coeff[16 + 1], roots[max_soln];
 
   //  call get_input_angles(n_soln, r_n1, r_a1, r_a3, r_c3)
   get_input_angles(n_soln, r_n1, r_a1, r_a3, r_c3);

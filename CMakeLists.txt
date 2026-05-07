@@ -46,7 +46,11 @@ if(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL)
 
     find_package(LAPACK QUIET)
     if(LAPACK_FOUND)
-      target_link_libraries(f3dock_science_stack INTERFACE LAPACK::LAPACK)
+      if(TARGET LAPACK::LAPACK)
+        target_link_libraries(f3dock_science_stack INTERFACE LAPACK::LAPACK)
+      elseif(LAPACK_LIBRARIES)
+        target_link_libraries(f3dock_science_stack INTERFACE ${LAPACK_LIBRARIES})
+      endif()
       target_compile_definitions(f3dock_science_stack INTERFACE F2DOCK_HAVE_LAPACK=1)
     endif()
 
