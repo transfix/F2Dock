@@ -21,16 +21,14 @@ struct ShearSpec {
 };
 
 class FlexKinematics {
- public:
+public:
   // Applies a rigid rotation around an arbitrary axis using Rodrigues formula.
   static bool applyHinge(const std::vector<Point3> &input,
-                         const HingeSpec &hinge,
-                         std::vector<Point3> *output);
+                         const HingeSpec &hinge, std::vector<Point3> *output);
 
   // Applies planar shear: p' = p + dot(p, n) * factor * d.
   static bool applyShear(const std::vector<Point3> &input,
-                         const ShearSpec &shear,
-                         std::vector<Point3> *output);
+                         const ShearSpec &shear, std::vector<Point3> *output);
 };
 
 } // namespace flex

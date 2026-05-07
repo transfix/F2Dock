@@ -2758,6 +2758,7 @@ void printIntermediateStats( FILE *fp,
                 (double)hydrop / functionScaleFactor,
                 (double)scomp / functionScaleFactor, vdw, nclashes, pgsol,
                 pgsolh, dispe);
+      } else {
         double riv = skinSkinWeight * rv_ss + coreCoreWeight * rv_cc +
                      skinCoreWeight * iv_sc;
         fprintf(fp,

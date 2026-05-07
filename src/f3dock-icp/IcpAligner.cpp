@@ -54,7 +54,8 @@ bool IcpAligner::alignPointToPoint(const std::vector<Point3> &model,
 
   libicp::Matrix rotation = libicp::Matrix::eye(3);
   libicp::Matrix translation(3, 1);
-  libicp::IcpPointToPoint icp(model_data.data(), static_cast<int32_t>(model.size()), 3);
+  libicp::IcpPointToPoint icp(model_data.data(),
+                              static_cast<int32_t>(model.size()), 3);
   icp.fit(moving_data.data(), static_cast<int32_t>(moving.size()), rotation,
           translation, inlier_distance);
 

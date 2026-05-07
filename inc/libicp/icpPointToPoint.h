@@ -15,7 +15,7 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
 libicp; if not, write to the Free Software Foundation, Inc., 51 Franklin
-Street, Fifth Floor, Boston, MA 02110-1301, USA 
+Street, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
 #ifndef LIBICP_ICP_POINT_TO_POINT_H
@@ -28,14 +28,16 @@ namespace libicp {
 class IcpPointToPoint : public Icp {
 
 public:
-
-  IcpPointToPoint (double *M,const int32_t M_num,const int32_t dim) : Icp(M,M_num,dim) {}
-  virtual ~IcpPointToPoint () {}
+  IcpPointToPoint(double *M, const int32_t M_num, const int32_t dim)
+      : Icp(M, M_num, dim) {}
+  virtual ~IcpPointToPoint() {}
 
 private:
-
-  double fitStep (double *T,const int32_t T_num,Matrix &R,Matrix &t,const std::vector<int32_t> &active);
-  std::vector<int32_t> getInliers (double *T,const int32_t T_num,const Matrix &R,const Matrix &t,const double indist);
+  double fitStep(double *T, const int32_t T_num, Matrix &R, Matrix &t,
+                 const std::vector<int32_t> &active);
+  std::vector<int32_t> getInliers(double *T, const int32_t T_num,
+                                  const Matrix &R, const Matrix &t,
+                                  const double indist);
 };
 
 } // namespace libicp
