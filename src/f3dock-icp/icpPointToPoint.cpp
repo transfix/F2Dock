@@ -60,7 +60,9 @@ double IcpPointToPoint::fitStep(double *T, const int32_t T_num, Matrix &R,
     double mut0 = 0.0, mut1 = 0.0;
 
     // establish correspondences
-#pragma omp parallel for private(i) default(none) shared(T,active,nact,p_m,p_t,r00,r01,r10,r11,t0,t1) reduction(+:mum0,mum1, mut0,mut1) // schedule (dynamic,2)
+#pragma omp parallel for private(i) default(none)                              \
+    shared(T, active, nact, p_m, p_t, r00, r01, r10, r11, t0, t1)              \
+    reduction(+ : mum0, mum1, mut0, mut1) // schedule (dynamic,2)
     for (i = 0; i < nact; i++) {
       // kd tree query + result
       std::vector<float> query(dim);
@@ -114,7 +116,10 @@ double IcpPointToPoint::fitStep(double *T, const int32_t T_num, Matrix &R,
     double mut0 = 0.0, mut1 = 0.0, mut2 = 0.0;
 
     // establish correspondences
-#pragma omp parallel for private(i) default(none) shared(T,active,nact,p_m,p_t,r00,r01,r02,r10,r11,r12,r20,r21,r22,t0,t1,t2) reduction(+:mum0,mum1,mum2, mut0,mut1,mut2) // schedule (dynamic,2)
+#pragma omp parallel for private(i) default(none)                              \
+    shared(T, active, nact, p_m, p_t, r00, r01, r02, r10, r11, r12, r20, r21,  \
+               r22, t0, t1, t2)                                                \
+    reduction(+ : mum0, mum1, mum2, mut0, mut1, mut2) // schedule (dynamic,2)
     for (i = 0; i < nact; i++) {
       // kd tree query + result
       std::vector<float> query(dim);

@@ -640,7 +640,7 @@ void KDTreeNode::process_terminal_node(SearchRecord &sr) {
       }
       if (early_exit)
         continue; // next iteration of mainloop
-    }             // end if rearrange.
+    } // end if rearrange.
 
     if (centeridx > 0) {
       // we are doing decorrelation interval
@@ -735,7 +735,7 @@ void KDTreeNode::process_terminal_node_fixedball(SearchRecord &sr) {
       }
       if (early_exit)
         continue; // next iteration of mainloop
-    }             // end if rearrange.
+    } // end if rearrange.
 
     if (centeridx > 0) {
       // we are doing decorrelation interval

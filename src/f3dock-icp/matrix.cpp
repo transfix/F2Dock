@@ -97,8 +97,8 @@ Matrix Matrix::getMat(int32_t i1, int32_t j1, int32_t i2, int32_t j2) {
     j2 = n - 1;
   if (i1 < 0 || i2 >= m || j1 < 0 || j2 >= n || i2 < i1 || j2 < j1) {
     cerr << "ERROR: Cannot get submatrix [" << i1 << ".." << i2 << "] x [" << j1
-         << ".." << j2 << "]"
-         << " of a (" << m << "x" << n << ") matrix." << endl;
+         << ".." << j2 << "]" << " of a (" << m << "x" << n << ") matrix."
+         << endl;
     exit(0);
   }
   Matrix M(i2 - i1 + 1, j2 - j1 + 1);
@@ -111,8 +111,8 @@ Matrix Matrix::getMat(int32_t i1, int32_t j1, int32_t i2, int32_t j2) {
 void Matrix::setMat(const Matrix &M, const int32_t i1, const int32_t j1) {
   if (i1 < 0 || j1 < 0 || i1 + M.m > m || j1 + M.n > n) {
     cerr << "ERROR: Cannot set submatrix [" << i1 << ".." << i1 + M.m - 1
-         << "] x [" << j1 << ".." << j1 + M.n - 1 << "]"
-         << " of a (" << m << "x" << n << ") matrix." << endl;
+         << "] x [" << j1 << ".." << j1 + M.n - 1 << "]" << " of a (" << m
+         << "x" << n << ") matrix." << endl;
     exit(0);
   }
   for (int32_t i = 0; i < M.m; i++)
