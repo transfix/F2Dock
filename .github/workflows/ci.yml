@@ -20,7 +20,7 @@ jobs:
       group: ci-${{ github.ref }}-format-check
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -102,7 +102,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -296,7 +296,7 @@ jobs:
       group: ci-${{ github.ref }}-package-linux
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Compute artifact metadata
         id: meta
@@ -379,7 +379,7 @@ jobs:
       group: ci-${{ github.ref }}-package-macos
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Compute artifact metadata
         id: meta
@@ -451,7 +451,7 @@ jobs:
       group: ci-${{ github.ref }}-package-windows
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Compute artifact metadata
         id: meta
