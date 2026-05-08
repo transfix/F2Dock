@@ -159,7 +159,7 @@ jobs:
             boost-multi-array:x64-windows boost-optional:x64-windows \
             boost-smart-ptr:x64-windows boost-tuple:x64-windows \
             boost-utility:x64-windows \
-            hdf5:x64-windows gsl:x64-windows cgal:x64-windows
+            "hdf5[cpp]:x64-windows" gsl:x64-windows cgal:x64-windows
 
       # ── Configure (Unix) ──
       - name: Configure (Unix)
@@ -480,7 +480,7 @@ jobs:
             boost-multi-array:x64-windows boost-optional:x64-windows \
             boost-smart-ptr:x64-windows boost-tuple:x64-windows \
             boost-utility:x64-windows \
-            hdf5:x64-windows gsl:x64-windows cgal:x64-windows
+            "hdf5[cpp]:x64-windows" gsl:x64-windows cgal:x64-windows
 
       - name: Configure
         shell: bash
