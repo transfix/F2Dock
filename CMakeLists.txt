@@ -80,8 +80,8 @@ include(FetchContent)
 # does NOT ship xmlrpc in its release artifacts, so today this always
 # falls through to strategy 3; once libcvc starts publishing
 # cvc::xmlrpc the prebuilt path activates automatically.
-set(LIBCVC_TAG     "v3.1.1" CACHE STRING "libcvc release tag to consume")
-set(LIBCVC_VERSION "3.1.1"  CACHE STRING "libcvc package version to look up")
+set(LIBCVC_TAG     "v3.2.0" CACHE STRING "libcvc release tag to consume")
+set(LIBCVC_VERSION "3.2.0"  CACHE STRING "libcvc package version to look up")
 set(LIBCVC_GIT_SHA "4af186a0641191b82ec3ea4799e81465c274c52c"
     CACHE STRING "libcvc commit SHA used when falling through to source build")
 option(LIBCVC_FORCE_SOURCE "Skip prebuilt libcvc and always build from source" OFF)
