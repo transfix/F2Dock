@@ -20,113 +20,99 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-
 #include <string>
 
+enum { LINUX, PRISM2 };
 
-enum {  LINUX, 
-	PRISM2
+enum {
+  RECEPTOR_PQR,
+  LIGAND_PQR,
+  RECEPTOR_F2D,
+  LIGAND_F2D,
+  RECEPTOR_RAWN,
+  LIGAND_RAWN,
+  RECEPTOR_QUAD,
+  LIGAND_QUAD,
+  DOCKING_OUT,
+  RERANKING_OUT
 };
 
-enum {  RECEPTOR_PQR, 
-	LIGAND_PQR,
-	RECEPTOR_F2D, 
-	LIGAND_F2D,
-	RECEPTOR_RAWN, 
-	LIGAND_RAWN,
-	RECEPTOR_QUAD, 
-	LIGAND_QUAD,
-	DOCKING_OUT,
-	RERANKING_OUT
-};
+enum { INIT, SUBMITTED, RUNNING, COMPLETED, AVAILABLE };
 
-enum { 	INIT,
-	SUBMITTED, 
-	RUNNING, 
-	COMPLETED, 
-	AVAILABLE
-};
+enum { DOCKING, RERANKING, F2DGEN, QUADGEN };
 
-enum { 	DOCKING, 
-	RERANKING, 
-	F2DGEN, 
-	QUADGEN
-};
+typedef struct {
+  int jobId;
+  int jobType;
 
+  bool isReceptorPDBAvailable;
+  std::string receptorPDBName;
 
-typedef struct
-{
-	int jobId;
-	int jobType;
+  bool isReceptorPQRAvailable;
+  std::string receptorPQRName;
 
-	bool isReceptorPDBAvailable;
-	std::string receptorPDBName;
+  bool isReceptorF2dAvailable;
+  std::string receptorF2dName;
 
-	bool isReceptorPQRAvailable;
-	std::string receptorPQRName;
+  bool isReceptorRAWNAvailable;
+  std::string receptorRAWNName;
 
-	bool isReceptorF2dAvailable;
-	std::string receptorF2dName;
+  bool isReceptorQuadAvailable;
+  std::string receptorQuadName;
 
-	bool isReceptorRAWNAvailable;
-	std::string receptorRAWNName;
+  bool isLigandPDBAvailable;
+  std::string ligandPDBName;
 
-	bool isReceptorQuadAvailable;
-	std::string receptorQuadName;
+  bool isLigandPQRAvailable;
+  std::string ligandPQRName;
 
-	bool isLigandPDBAvailable;
-	std::string ligandPDBName;
+  bool isLigandF2dAvailable;
+  std::string ligandF2dName;
 
-	bool isLigandPQRAvailable;
-	std::string ligandPQRName;
+  bool isLigandRAWNAvailable;
+  std::string ligandRAWNName;
 
-	bool isLigandF2dAvailable;
-	std::string ligandF2dName;
+  bool isLigandQuadAvailable;
+  std::string ligandQuadName;
 
-	bool isLigandRAWNAvailable;
-	std::string ligandRAWNName;
+  bool isRMSDAvailable;
+  std::string rmsdFileName;
 
-	bool isLigandQuadAvailable;
-	std::string ligandQuadName;
+  std::string receptorXYZName;
+  std::string ligandXYZName;
 
-	bool isRMSDAvailable;	
-	std::string rmsdFileName;
+  std::string receptorRAWName;
+  std::string ligandRAWName;
 
-	std::string receptorXYZName;
-	std::string ligandXYZName;
+  std::string receptorIRAWName;
+  std::string ligandIRAWName;
 
-	std::string receptorRAWName;
-	std::string ligandRAWName;
+  bool isDockingInputAvailable;
+  std::string dockingInputFileName;
 
-	std::string receptorIRAWName;
-	std::string ligandIRAWName;
+  bool isRerankingInputAvailable;
+  std::string rerankingInputFileName;
 
-	bool isDockingInputAvailable;
-	std::string dockingInputFileName;
+  bool isF2dGenInputAvailable;
+  std::string f2dGenInputFileName;
 
-	bool isRerankingInputAvailable;
-	std::string rerankingInputFileName;
+  bool isQuadGenInputAvailable;
+  std::string quadGenInputFileName;
 
-	bool isF2dGenInputAvailable;
-	std::string f2dGenInputFileName;
+  bool isDockingOutputAvailable;
+  std::string dockingOutputFileName;
 
-	bool isQuadGenInputAvailable;
-	std::string quadGenInputFileName;
+  bool isRerankingOutputAvailable;
+  std::string rerankingOutputFileName;
 
-	bool isDockingOutputAvailable;
-	std::string dockingOutputFileName;
+  bool performRerank;
+  bool storeIntermediateFiles;
 
-	bool isRerankingOutputAvailable;
-	std::string rerankingOutputFileName;
+  std::string scriptFileName;
 
-	bool performRerank;
-	bool storeIntermediateFiles;
+  bool isLocal;
+  int platform;
 
-	std::string scriptFileName;
-
-	bool isLocal;
-	int platform;
-
-	double f2dDim;
-	double quadDim;
-}DockingJobParams;
+  double f2dDim;
+  double quadDim;
+} DockingJobParams;

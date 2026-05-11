@@ -20,14 +20,12 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef INC_GRID_H
 #define INC_GRID_H
 #include "atom.h"
 #include <vector>
 #include "1D-IntegerRange.h"
 #include <cmath>
-
 
 class atom;
 
@@ -41,20 +39,17 @@ struct Point {
     y = b;
     z = c;
   }
-  bool operator==(const Point& p) {
-    return (x==p.x && y==p.y && z==p.z);
-  }
- 
-  float distsq(Point a, Point b) {
-  float res;
-  double dx, dy, dz;
-  dx = a.x - b.x;
-  dy = a.y - b.y;
-  dz = a.z - b.z;  
-  res = dx*dx + dy*dy + dz*dz;
-  return res;
-}
+  bool operator==(const Point &p) { return (x == p.x && y == p.y && z == p.z); }
 
+  float distsq(Point a, Point b) {
+    float res;
+    double dx, dy, dz;
+    dx = a.x - b.x;
+    dy = a.y - b.y;
+    dz = a.z - b.z;
+    res = dx * dx + dy * dy + dz * dz;
+    return res;
+  }
 };
 
 struct cellID {
@@ -74,7 +69,7 @@ struct planeID {
 
 struct gridcell {
   cellID ID;
-  std::vector<atom*> balls;
+  std::vector<atom *> balls;
   gridcell(int a, int b, int c) {
     ID.x = a;
     ID.y = b;
@@ -84,7 +79,7 @@ struct gridcell {
 
 struct line {
   lineID ID;
-  IntegerRange<gridcell*> RR;
+  IntegerRange<gridcell *> RR;
   line(int b, int c) {
     ID.y = b;
     ID.z = c;
@@ -93,15 +88,15 @@ struct line {
 
 struct plane {
   planeID ID;
-  IntegerRange<line*> RR;
+  IntegerRange<line *> RR;
   plane(int c) {
     ID.z = c;
-    RR = IntegerRange<line*>();
+    RR = IntegerRange<line *>();
   }
 };
 
 struct grid {
-  IntegerRange<plane*> RR;
-//  ball* surface_root_ptr;
+  IntegerRange<plane *> RR;
+  //  ball* surface_root_ptr;
 };
 #endif

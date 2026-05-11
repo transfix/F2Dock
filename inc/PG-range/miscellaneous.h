@@ -20,28 +20,33 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef MISC_H
 #define MISC_H
 #include <vector>
 
-int binSearch(int key, const std::vector<int>& x, int low, int high) {
-  if(high < low) return -1;
+int binSearch(int key, const std::vector<int> &x, int low, int high) {
+  if (high < low)
+    return -1;
   int mid;
-  while(true) {
-  mid = (low+high)/2;
-  if(x[mid] == key) return mid;
+  while (true) {
+    mid = (low + high) / 2;
+    if (x[mid] == key)
+      return mid;
 
-  else if(low == high) return -1;
+    else if (low == high)
+      return -1;
 
-  else if(low == mid) low = high;
+    else if (low == mid)
+      low = high;
 
-  else if(x[mid] > key) high = mid;
-  else low = mid;
+    else if (x[mid] > key)
+      high = mid;
+    else
+      low = mid;
   }
- /* for(int i=low;i<=high;i++)
-  	if(x[i]==key)
-		return i;
-  return -1;*/
+  /* for(int i=low;i<=high;i++)
+         if(x[i]==key)
+                 return i;
+   return -1;*/
 }
 #endif

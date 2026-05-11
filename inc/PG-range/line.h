@@ -20,18 +20,17 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef INC_LINE_H
 #define INC_LINE_H
 #include "cell.h"
 #include "1D-IntegerRange.h"
-//#include "ddriver.h"
+// #include "ddriver.h"
 
 struct gridcell;
 
 struct line {
   lineID ID;
-  IntegerRange<gridcell*> RR;
+  IntegerRange<gridcell *> RR;
   line(int b, int c) {
     ID.y = b;
     ID.z = c;

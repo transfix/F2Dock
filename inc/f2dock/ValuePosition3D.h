@@ -20,30 +20,28 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-
 #ifndef CCV_VALUE_POSITION_3D_H
 #define CCV_VALUE_POSITION_3D_H
 
-class ValuePosition3D
-{
- public:
-  
+class ValuePosition3D {
+public:
   ValuePosition3D();
   virtual ~ValuePosition3D();
 
-  ValuePosition3D& operator=(const ValuePosition3D& copy);
-  ValuePosition3D& set(const ValuePosition3D& copy);
+  ValuePosition3D &operator=(const ValuePosition3D &copy);
+  ValuePosition3D &set(const ValuePosition3D &copy);
 
   void reset(void);
 
   double m_Value;
   double m_SkinSkinRealValue, m_CoreCoreRealValue, m_SkinCoreRealValue;
-  double m_SkinSkinImaginaryValue, m_CoreCoreImaginaryValue, m_SkinCoreImaginaryValue;
-  double m_RealValue;  
+  double m_SkinSkinImaginaryValue, m_CoreCoreImaginaryValue,
+      m_SkinCoreImaginaryValue;
+  double m_RealValue;
   double m_ImaginaryValue;
   double m_elecValue;
-  double m_hbondValue;  
-  double m_hydrophobicityValue;  
+  double m_hbondValue;
+  double m_hydrophobicityValue;
   double m_vdWPotential;
   double m_simpComp;
   double m_pGsol;
@@ -54,7 +52,7 @@ class ValuePosition3D
   int m_origRank, m_rerankerRank;
   int m_nClashes;
   int m_RotationIndex;
-  int m_FineRotationIndex;  
+  int m_FineRotationIndex;
   int m_ConformationIndex;
   double m_Translation[3];
 };

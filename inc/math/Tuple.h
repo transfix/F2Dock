@@ -1,8 +1,9 @@
 /*
   Copyright 2011 The University of Texas at Austin
 
-        Authors: Rezaul Alam Chowdhury <shaikat@cs.utexas.edu>, Vinay Siddavanahalli <skvinay@cs.utexas.edu>
-        Advisor: Chandrajit Bajaj <bajaj@cs.utexas.edu>
+        Authors: Rezaul Alam Chowdhury <shaikat@cs.utexas.edu>, Vinay
+  Siddavanahalli <skvinay@cs.utexas.edu> Advisor: Chandrajit Bajaj
+  <bajaj@cs.utexas.edu>
 
   This file is part of F2Dock.
 
@@ -28,29 +29,27 @@
 
 namespace CCVOpenGLMath {
 
-class Tuple  
-{
+class Tuple {
 public:
-	Tuple(float x, float y, float z, float w);
-	Tuple();
-	virtual ~Tuple();
-	Tuple(const Tuple& copy);
-	Tuple& operator=(const Tuple& copy);
+  Tuple(float x, float y, float z, float w);
+  Tuple();
+  virtual ~Tuple();
+  Tuple(const Tuple &copy);
+  Tuple &operator=(const Tuple &copy);
 
-	void print() const;
+  void print() const;
 
-	Tuple& set(float x, float y, float z, float w);
-	Tuple& set(float* array);
-	Tuple& set(const Tuple& copy);
-	
-	float& operator[](unsigned int i);
-	const float& operator[](unsigned int i) const;
+  Tuple &set(float x, float y, float z, float w);
+  Tuple &set(float *array);
+  Tuple &set(const Tuple &copy);
+
+  float &operator[](unsigned int i);
+  const float &operator[](unsigned int i) const;
 
 protected:
-	float p[4];
-
+  float p[4];
 };
 
-};
+}; // namespace CCVOpenGLMath
 
 #endif // !defined(AFX_TUPLE_H__5AD4C604_B71A_4924_941A_15A0955C4E4E__INCLUDED_)

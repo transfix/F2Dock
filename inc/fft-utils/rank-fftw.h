@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if ! defined(__APPLE__)
+#if !defined(__APPLE__)
 #include <malloc.h>
 #endif
 
@@ -23,25 +23,25 @@
 #define WISDOM_IMPORT_FILE_OPEN_FAILED -8
 
 #ifndef MIN_SIZE
-   #define MIN_SIZE 2
+#define MIN_SIZE 2
 #endif
 
 #ifndef MAX_SIZE
-   #define MAX_SIZE 256
+#define MAX_SIZE 256
 #endif
 
 #ifndef IN_PLACE
-   #define IN_PLACE true
+#define IN_PLACE true
 #endif
 
 #ifndef MAX_ITER
-   #define MAX_ITER 3
+#define MAX_ITER 3
 #endif
 
 #ifndef WISDOM_FILE
-   #define WISDOM_FILE "wisdom.txt"
+#define WISDOM_FILE "wisdom.txt"
 #endif
 
-int computeEffGrid( int minSize, int maxSize );
+int computeEffGrid(int minSize, int maxSize);
 
 #endif /* RANKFFTW_H_ */

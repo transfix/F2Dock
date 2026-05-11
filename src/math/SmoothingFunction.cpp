@@ -1,8 +1,9 @@
 /*
   Copyright 2011 The University of Texas at Austin
 
-        Authors: Rezaul Alam Chowdhury <shaikat@cs.utexas.edu>, Vinay Siddavanahalli <skvinay@cs.utexas.edu>
-        Advisor: Chandrajit Bajaj <bajaj@cs.utexas.edu>
+        Authors: Rezaul Alam Chowdhury <shaikat@cs.utexas.edu>, Vinay
+  Siddavanahalli <skvinay@cs.utexas.edu> Advisor: Chandrajit Bajaj
+  <bajaj@cs.utexas.edu>
 
   This file is part of F2Dock.
 
@@ -31,29 +32,27 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-SmoothingFunction::SmoothingFunction(double _alpha, int _m, int _n, int _N)
-{
-	alpha = _alpha;
-	m = _m;
-	n = _n ;
-	N = _N;
+SmoothingFunction::SmoothingFunction(double _alpha, int _m, int _n, int _N) {
+  alpha = _alpha;
+  m = _m;
+  n = _n;
+  N = _N;
 
-	m_Phi = 0;
-	m_PhiHat = 0;
-	m_PhiLength = _N * ( _m + 1 );
-	m_PhiHatLength = _n;
+  m_Phi = 0;
+  m_PhiHat = 0;
+  m_PhiLength = _N * (_m + 1);
+  m_PhiHatLength = _n;
 
-	m_Initialized = false;
+  m_Initialized = false;
 }
 
-SmoothingFunction::~SmoothingFunction()
-{
-	if( m_Phi )
-	{
-		delete [] m_Phi; m_Phi = 0;
-	}
-	if( m_PhiHat )
-	{
-		delete [] m_PhiHat; m_PhiHat = 0;
-	}
+SmoothingFunction::~SmoothingFunction() {
+  if (m_Phi) {
+    delete[] m_Phi;
+    m_Phi = 0;
+  }
+  if (m_PhiHat) {
+    delete[] m_PhiHat;
+    m_PhiHat = 0;
+  }
 }

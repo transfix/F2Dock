@@ -4,7 +4,7 @@
  *
  * The following statement of license applies *only* to this header file,
  * and *not* to the other files distributed with FFTW or derived therefrom:
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -55,19 +55,19 @@
 #include <stdio.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif /* __cplusplus */
 
 /* If <complex.h> is included, use the C99 complex type.  Otherwise
    define a type bit-compatible with C99 complex */
-#if !defined(FFTW_NO_Complex) && defined(_Complex_I) && defined(complex) && defined(I)
-#  define FFTW_DEFINE_COMPLEX(R, C) typedef R _Complex C
+#if !defined(FFTW_NO_Complex) && defined(_Complex_I) && defined(complex) &&    \
+    defined(I)
+#define FFTW_DEFINE_COMPLEX(R, C) typedef R _Complex C
 #else
-#  define FFTW_DEFINE_COMPLEX(R, C) typedef R C[2]
+#define FFTW_DEFINE_COMPLEX(R, C) typedef R C[2]
 #endif
 
-#define FFTW_CONCAT(prefix, name) prefix ## name
+#define FFTW_CONCAT(prefix, name) prefix##name
 #define FFTW_MANGLE_DOUBLE(name) FFTW_CONCAT(fftw_, name)
 #define FFTW_MANGLE_FLOAT(name) FFTW_CONCAT(fftwf_, name)
 #define FFTW_MANGLE_LONG_DOUBLE(name) FFTW_CONCAT(fftwl_, name)
@@ -80,212 +80,192 @@ extern "C"
    command-line flag.  This is not necessary under MinGW/Cygwin, where
    libtool does the imports/exports automatically. */
 #if defined(FFTW_DLL) && (defined(_WIN32) || defined(__WIN32__))
-   /* annoying Windows syntax for shared-library declarations */
-#  if defined(COMPILING_FFTW) /* defined in api.h when compiling FFTW */
-#    define FFTW_EXTERN extern __declspec(dllexport) 
-#  else /* user is calling FFTW; import symbol */
-#    define FFTW_EXTERN extern __declspec(dllimport) 
-#  endif
+/* annoying Windows syntax for shared-library declarations */
+#if defined(COMPILING_FFTW) /* defined in api.h when compiling FFTW */
+#define FFTW_EXTERN extern __declspec(dllexport)
+#else /* user is calling FFTW; import symbol */
+#define FFTW_EXTERN extern __declspec(dllimport)
+#endif
 #else
-#  define FFTW_EXTERN extern
+#define FFTW_EXTERN extern
 #endif
 
 enum fftw_r2r_kind_do_not_use_me {
-     FFTW_R2HC=0, FFTW_HC2R=1, FFTW_DHT=2,
-     FFTW_REDFT00=3, FFTW_REDFT01=4, FFTW_REDFT10=5, FFTW_REDFT11=6,
-     FFTW_RODFT00=7, FFTW_RODFT01=8, FFTW_RODFT10=9, FFTW_RODFT11=10
+  FFTW_R2HC = 0,
+  FFTW_HC2R = 1,
+  FFTW_DHT = 2,
+  FFTW_REDFT00 = 3,
+  FFTW_REDFT01 = 4,
+  FFTW_REDFT10 = 5,
+  FFTW_REDFT11 = 6,
+  FFTW_RODFT00 = 7,
+  FFTW_RODFT01 = 8,
+  FFTW_RODFT10 = 9,
+  FFTW_RODFT11 = 10
 };
 
 struct fftw_iodim_do_not_use_me {
-     int n;                     /* dimension size */
-     int is;			/* input stride */
-     int os;			/* output stride */
+  int n;  /* dimension size */
+  int is; /* input stride */
+  int os; /* output stride */
 };
 
 /*
   huge second-order macro that defines prototypes for all API
   functions.  We expand this macro for each supported precision
- 
+
   X: name-mangling macro
   R: real data type
   C: complex data type
 */
 
-#define FFTW_DEFINE_API(X, R, C)					   \
-									   \
-FFTW_DEFINE_COMPLEX(R, C);						   \
-									   \
-typedef struct X(plan_s) *X(plan);					   \
-									   \
-typedef struct fftw_iodim_do_not_use_me X(iodim);			   \
-									   \
-typedef enum fftw_r2r_kind_do_not_use_me X(r2r_kind);			   \
-									   \
-FFTW_EXTERN void X(execute)(const X(plan) p);				   \
-									   \
-FFTW_EXTERN X(plan) X(plan_dft)(int rank, const int *n,			   \
-		    C *in, C *out, int sign, unsigned flags);		   \
-									   \
-FFTW_EXTERN X(plan) X(plan_dft_1d)(int n, C *in, C *out, int sign,	   \
-		       unsigned flags);					   \
-FFTW_EXTERN X(plan) X(plan_dft_2d)(int nx, int ny,			   \
-		       C *in, C *out, int sign, unsigned flags);	   \
-FFTW_EXTERN X(plan) X(plan_dft_3d)(int nx, int ny, int nz,		   \
-		       C *in, C *out, int sign, unsigned flags);	   \
-									   \
-FFTW_EXTERN X(plan) X(plan_many_dft)(int rank, const int *n,		   \
-                         int howmany,					   \
-                         C *in, const int *inembed,			   \
-                         int istride, int idist,			   \
-                         C *out, const int *onembed,			   \
-                         int ostride, int odist,			   \
-                         int sign, unsigned flags);			   \
-									   \
-FFTW_EXTERN X(plan) X(plan_guru_dft)(int rank, const X(iodim) *dims,	   \
-			 int howmany_rank,				   \
-			 const X(iodim) *howmany_dims,			   \
-			 C *in, C *out,					   \
-			 int sign, unsigned flags);			   \
-FFTW_EXTERN X(plan) X(plan_guru_split_dft)(int rank, const X(iodim) *dims, \
-			 int howmany_rank,				   \
-			 const X(iodim) *howmany_dims,			   \
-			 R *ri, R *ii, R *ro, R *io,			   \
-			 unsigned flags);				   \
-									   \
-FFTW_EXTERN void X(execute_dft)(const X(plan) p, C *in, C *out);	   \
-FFTW_EXTERN void X(execute_split_dft)(const X(plan) p, R *ri, R *ii,	   \
-                                      R *ro, R *io);			   \
-									   \
-FFTW_EXTERN X(plan) X(plan_many_dft_r2c)(int rank, const int *n,	   \
-                             int howmany,				   \
-                             R *in, const int *inembed,			   \
-                             int istride, int idist,			   \
-                             C *out, const int *onembed,		   \
-                             int ostride, int odist,			   \
-                             unsigned flags);				   \
-									   \
-FFTW_EXTERN X(plan) X(plan_dft_r2c)(int rank, const int *n,		   \
-                        R *in, C *out, unsigned flags);			   \
-									   \
-FFTW_EXTERN X(plan) X(plan_dft_r2c_1d)(int n,R *in,C *out,unsigned flags); \
-FFTW_EXTERN X(plan) X(plan_dft_r2c_2d)(int nx, int ny,			   \
-			   R *in, C *out, unsigned flags);		   \
-FFTW_EXTERN X(plan) X(plan_dft_r2c_3d)(int nx, int ny,			   \
-			   int nz,					   \
-			   R *in, C *out, unsigned flags);		   \
-									   \
-									   \
-FFTW_EXTERN X(plan) X(plan_many_dft_c2r)(int rank, const int *n,	   \
-			     int howmany,				   \
-			     C *in, const int *inembed,			   \
-			     int istride, int idist,			   \
-			     R *out, const int *onembed,		   \
-			     int ostride, int odist,			   \
-			     unsigned flags);				   \
-									   \
-FFTW_EXTERN X(plan) X(plan_dft_c2r)(int rank, const int *n,		   \
-                        C *in, R *out, unsigned flags);			   \
-									   \
-FFTW_EXTERN X(plan) X(plan_dft_c2r_1d)(int n,C *in,R *out,unsigned flags); \
-FFTW_EXTERN X(plan) X(plan_dft_c2r_2d)(int nx, int ny,			   \
-			   C *in, R *out, unsigned flags);		   \
-FFTW_EXTERN X(plan) X(plan_dft_c2r_3d)(int nx, int ny,			   \
-			   int nz,					   \
-			   C *in, R *out, unsigned flags);		   \
-									   \
-FFTW_EXTERN X(plan) X(plan_guru_dft_r2c)(int rank, const X(iodim) *dims,   \
-			     int howmany_rank,				   \
-			     const X(iodim) *howmany_dims,		   \
-			     R *in, C *out,				   \
-			     unsigned flags);				   \
-FFTW_EXTERN X(plan) X(plan_guru_dft_c2r)(int rank, const X(iodim) *dims,   \
-			     int howmany_rank,				   \
-			     const X(iodim) *howmany_dims,		   \
-			     C *in, R *out,				   \
-			     unsigned flags);				   \
-									   \
-FFTW_EXTERN X(plan) X(plan_guru_split_dft_r2c)(				   \
-                             int rank, const X(iodim) *dims,		   \
-			     int howmany_rank,				   \
-			     const X(iodim) *howmany_dims,		   \
-			     R *in, R *ro, R *io,			   \
-			     unsigned flags);				   \
-FFTW_EXTERN X(plan) X(plan_guru_split_dft_c2r)(				   \
-                             int rank, const X(iodim) *dims,		   \
-			     int howmany_rank,				   \
-			     const X(iodim) *howmany_dims,		   \
-			     R *ri, R *ii, R *out,			   \
-			     unsigned flags);				   \
-									   \
-FFTW_EXTERN void X(execute_dft_r2c)(const X(plan) p, R *in, C *out);	   \
-FFTW_EXTERN void X(execute_dft_c2r)(const X(plan) p, C *in, R *out);	   \
-									   \
-FFTW_EXTERN void X(execute_split_dft_r2c)(const X(plan) p,		   \
-                                          R *in, R *ro, R *io);		   \
-FFTW_EXTERN void X(execute_split_dft_c2r)(const X(plan) p, 		   \
-                                          R *ri, R *ii, R *out);	   \
-									   \
-FFTW_EXTERN X(plan) X(plan_many_r2r)(int rank, const int *n,		   \
-                         int howmany,					   \
-                         R *in, const int *inembed,			   \
-                         int istride, int idist,			   \
-                         R *out, const int *onembed,			   \
-                         int ostride, int odist,			   \
-                         const X(r2r_kind) *kind, unsigned flags);	   \
-									   \
-FFTW_EXTERN X(plan) X(plan_r2r)(int rank, const int *n, R *in, R *out,	   \
-                    const X(r2r_kind) *kind, unsigned flags);		   \
-									   \
-FFTW_EXTERN X(plan) X(plan_r2r_1d)(int n, R *in, R *out,		   \
-                       X(r2r_kind) kind, unsigned flags);		   \
-FFTW_EXTERN X(plan) X(plan_r2r_2d)(int nx, int ny, R *in, R *out,	   \
-                       X(r2r_kind) kindx, X(r2r_kind) kindy,		   \
-                       unsigned flags);					   \
-FFTW_EXTERN X(plan) X(plan_r2r_3d)(int nx, int ny, int nz,		   \
-                       R *in, R *out, X(r2r_kind) kindx,		   \
-                       X(r2r_kind) kindy, X(r2r_kind) kindz,		   \
-                       unsigned flags);					   \
-									   \
-FFTW_EXTERN X(plan) X(plan_guru_r2r)(int rank, const X(iodim) *dims,	   \
-                         int howmany_rank,				   \
-                         const X(iodim) *howmany_dims,			   \
-                         R *in, R *out,					   \
-                         const X(r2r_kind) *kind, unsigned flags);	   \
-FFTW_EXTERN void X(execute_r2r)(const X(plan) p, R *in, R *out);	   \
-									   \
-FFTW_EXTERN void X(destroy_plan)(X(plan) p);				   \
-FFTW_EXTERN void X(forget_wisdom)(void);				   \
-FFTW_EXTERN void X(cleanup)(void);					   \
-									   \
-FFTW_EXTERN void X(set_timelimit)(double);				   \
-									   \
-FFTW_EXTERN void X(plan_with_nthreads)(int nthreads);			   \
-FFTW_EXTERN int X(init_threads)(void);					   \
-FFTW_EXTERN void X(cleanup_threads)(void);				   \
-									   \
-FFTW_EXTERN void X(export_wisdom_to_file)(FILE *output_file);		   \
-FFTW_EXTERN char *X(export_wisdom_to_string)(void);			   \
-FFTW_EXTERN void X(export_wisdom)(void (*write_char)(char c, void *),	   \
-                                  void *data);				   \
-FFTW_EXTERN int X(import_system_wisdom)(void);				   \
-FFTW_EXTERN int X(import_wisdom_from_file)(FILE *input_file);		   \
-FFTW_EXTERN int X(import_wisdom_from_string)(const char *input_string);	   \
-FFTW_EXTERN int X(import_wisdom)(int (*read_char)(void *), void *data);	   \
-									   \
-FFTW_EXTERN void X(fprint_plan)(const X(plan) p, FILE *output_file);	   \
-FFTW_EXTERN void X(print_plan)(const X(plan) p);			   \
-									   \
-FFTW_EXTERN void *X(malloc)(size_t n);					   \
-FFTW_EXTERN void X(free)(void *p);					   \
-									   \
-FFTW_EXTERN void X(flops)(const X(plan) p,				   \
-                          double *add, double *mul, double *fmas);	   \
-FFTW_EXTERN double X(estimate_cost)(const X(plan) p);			   \
-									   \
-FFTW_EXTERN const char X(version)[];					   \
-FFTW_EXTERN const char X(cc)[];						   \
-FFTW_EXTERN const char X(codelet_optim)[];
-
+#define FFTW_DEFINE_API(X, R, C)                                               \
+                                                                               \
+  FFTW_DEFINE_COMPLEX(R, C);                                                   \
+                                                                               \
+  typedef struct X(plan_s) * X(plan);                                          \
+                                                                               \
+  typedef struct fftw_iodim_do_not_use_me X(iodim);                            \
+                                                                               \
+  typedef enum fftw_r2r_kind_do_not_use_me X(r2r_kind);                        \
+                                                                               \
+  FFTW_EXTERN void X(execute)(const X(plan) p);                                \
+                                                                               \
+  FFTW_EXTERN X(plan) X(plan_dft)(int rank, const int *n, C *in, C *out,       \
+                                  int sign, unsigned flags);                   \
+                                                                               \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_dft_1d)(int n, C *in, C *out, int sign, unsigned flags);          \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_dft_2d)(int nx, int ny, C *in, C *out, int sign, unsigned flags); \
+  FFTW_EXTERN X(plan) X(plan_dft_3d)(int nx, int ny, int nz, C *in, C *out,    \
+                                     int sign, unsigned flags);                \
+                                                                               \
+  FFTW_EXTERN X(plan) X(plan_many_dft)(                                        \
+      int rank, const int *n, int howmany, C *in, const int *inembed,          \
+      int istride, int idist, C *out, const int *onembed, int ostride,         \
+      int odist, int sign, unsigned flags);                                    \
+                                                                               \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_guru_dft)(int rank, const X(iodim) * dims, int howmany_rank,      \
+                       const X(iodim) * howmany_dims, C * in, C * out,         \
+                       int sign, unsigned flags);                              \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_guru_split_dft)(int rank, const X(iodim) * dims,                  \
+                             int howmany_rank, const X(iodim) * howmany_dims,  \
+                             R * ri, R * ii, R * ro, R * io, unsigned flags);  \
+                                                                               \
+  FFTW_EXTERN void X(execute_dft)(const X(plan) p, C *in, C *out);             \
+  FFTW_EXTERN void X(execute_split_dft)(const X(plan) p, R *ri, R *ii, R *ro,  \
+                                        R *io);                                \
+                                                                               \
+  FFTW_EXTERN X(plan) X(plan_many_dft_r2c)(                                    \
+      int rank, const int *n, int howmany, R *in, const int *inembed,          \
+      int istride, int idist, C *out, const int *onembed, int ostride,         \
+      int odist, unsigned flags);                                              \
+                                                                               \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_dft_r2c)(int rank, const int *n, R *in, C *out, unsigned flags);  \
+                                                                               \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_dft_r2c_1d)(int n, R *in, C *out, unsigned flags);                \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_dft_r2c_2d)(int nx, int ny, R *in, C *out, unsigned flags);       \
+  FFTW_EXTERN X(plan) X(plan_dft_r2c_3d)(int nx, int ny, int nz, R *in,        \
+                                         C *out, unsigned flags);              \
+                                                                               \
+  FFTW_EXTERN X(plan) X(plan_many_dft_c2r)(                                    \
+      int rank, const int *n, int howmany, C *in, const int *inembed,          \
+      int istride, int idist, R *out, const int *onembed, int ostride,         \
+      int odist, unsigned flags);                                              \
+                                                                               \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_dft_c2r)(int rank, const int *n, C *in, R *out, unsigned flags);  \
+                                                                               \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_dft_c2r_1d)(int n, C *in, R *out, unsigned flags);                \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_dft_c2r_2d)(int nx, int ny, C *in, R *out, unsigned flags);       \
+  FFTW_EXTERN X(plan) X(plan_dft_c2r_3d)(int nx, int ny, int nz, C *in,        \
+                                         R *out, unsigned flags);              \
+                                                                               \
+  FFTW_EXTERN X(plan) X(plan_guru_dft_r2c)(                                    \
+      int rank, const X(iodim) * dims, int howmany_rank,                       \
+      const X(iodim) * howmany_dims, R * in, C * out, unsigned flags);         \
+  FFTW_EXTERN X(plan) X(plan_guru_dft_c2r)(                                    \
+      int rank, const X(iodim) * dims, int howmany_rank,                       \
+      const X(iodim) * howmany_dims, C * in, R * out, unsigned flags);         \
+                                                                               \
+  FFTW_EXTERN X(plan) X(plan_guru_split_dft_r2c)(                              \
+      int rank, const X(iodim) * dims, int howmany_rank,                       \
+      const X(iodim) * howmany_dims, R * in, R * ro, R * io, unsigned flags);  \
+  FFTW_EXTERN X(plan) X(plan_guru_split_dft_c2r)(                              \
+      int rank, const X(iodim) * dims, int howmany_rank,                       \
+      const X(iodim) * howmany_dims, R * ri, R * ii, R * out, unsigned flags); \
+                                                                               \
+  FFTW_EXTERN void X(execute_dft_r2c)(const X(plan) p, R *in, C *out);         \
+  FFTW_EXTERN void X(execute_dft_c2r)(const X(plan) p, C *in, R *out);         \
+                                                                               \
+  FFTW_EXTERN void X(execute_split_dft_r2c)(const X(plan) p, R *in, R *ro,     \
+                                            R *io);                            \
+  FFTW_EXTERN void X(execute_split_dft_c2r)(const X(plan) p, R *ri, R *ii,     \
+                                            R *out);                           \
+                                                                               \
+  FFTW_EXTERN X(plan) X(plan_many_r2r)(                                        \
+      int rank, const int *n, int howmany, R *in, const int *inembed,          \
+      int istride, int idist, R *out, const int *onembed, int ostride,         \
+      int odist, const X(r2r_kind) * kind, unsigned flags);                    \
+                                                                               \
+  FFTW_EXTERN X(plan) X(plan_r2r)(int rank, const int *n, R *in, R *out,       \
+                                  const X(r2r_kind) * kind, unsigned flags);   \
+                                                                               \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_r2r_1d)(int n, R *in, R *out, X(r2r_kind) kind, unsigned flags);  \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_r2r_2d)(int nx, int ny, R *in, R *out, X(r2r_kind) kindx,         \
+                     X(r2r_kind) kindy, unsigned flags);                       \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_r2r_3d)(int nx, int ny, int nz, R *in, R *out, X(r2r_kind) kindx, \
+                     X(r2r_kind) kindy, X(r2r_kind) kindz, unsigned flags);    \
+                                                                               \
+  FFTW_EXTERN X(plan)                                                          \
+      X(plan_guru_r2r)(int rank, const X(iodim) * dims, int howmany_rank,      \
+                       const X(iodim) * howmany_dims, R * in, R * out,         \
+                       const X(r2r_kind) * kind, unsigned flags);              \
+  FFTW_EXTERN void X(execute_r2r)(const X(plan) p, R *in, R *out);             \
+                                                                               \
+  FFTW_EXTERN void X(destroy_plan)(X(plan) p);                                 \
+  FFTW_EXTERN void X(forget_wisdom)(void);                                     \
+  FFTW_EXTERN void X(cleanup)(void);                                           \
+                                                                               \
+  FFTW_EXTERN void X(set_timelimit)(double);                                   \
+                                                                               \
+  FFTW_EXTERN void X(plan_with_nthreads)(int nthreads);                        \
+  FFTW_EXTERN int X(init_threads)(void);                                       \
+  FFTW_EXTERN void X(cleanup_threads)(void);                                   \
+                                                                               \
+  FFTW_EXTERN void X(export_wisdom_to_file)(FILE * output_file);               \
+  FFTW_EXTERN char *X(export_wisdom_to_string)(void);                          \
+  FFTW_EXTERN void X(export_wisdom)(void (*write_char)(char c, void *),        \
+                                    void *data);                               \
+  FFTW_EXTERN int X(import_system_wisdom)(void);                               \
+  FFTW_EXTERN int X(import_wisdom_from_file)(FILE * input_file);               \
+  FFTW_EXTERN int X(import_wisdom_from_string)(const char *input_string);      \
+  FFTW_EXTERN int X(import_wisdom)(int (*read_char)(void *), void *data);      \
+                                                                               \
+  FFTW_EXTERN void X(fprint_plan)(const X(plan) p, FILE *output_file);         \
+  FFTW_EXTERN void X(print_plan)(const X(plan) p);                             \
+                                                                               \
+  FFTW_EXTERN void *X(malloc)(size_t n);                                       \
+  FFTW_EXTERN void X(free)(void *p);                                           \
+                                                                               \
+  FFTW_EXTERN void X(flops)(const X(plan) p, double *add, double *mul,         \
+                            double *fmas);                                     \
+  FFTW_EXTERN double X(estimate_cost)(const X(plan) p);                        \
+                                                                               \
+  FFTW_EXTERN const char X(version)[];                                         \
+  FFTW_EXTERN const char X(cc)[];                                              \
+  FFTW_EXTERN const char X(codelet_optim)[];
 
 /* end of FFTW_DEFINE_API macro */
 
@@ -303,9 +283,9 @@ FFTW_DEFINE_API(FFTW_MANGLE_LONG_DOUBLE, long double, fftwl_complex)
 #define FFTW_DESTROY_INPUT (1U << 0)
 #define FFTW_UNALIGNED (1U << 1)
 #define FFTW_CONSERVE_MEMORY (1U << 2)
-#define FFTW_EXHAUSTIVE (1U << 3) /* NO_EXHAUSTIVE is default */
+#define FFTW_EXHAUSTIVE (1U << 3)     /* NO_EXHAUSTIVE is default */
 #define FFTW_PRESERVE_INPUT (1U << 4) /* cancels FFTW_DESTROY_INPUT */
-#define FFTW_PATIENT (1U << 5) /* IMPATIENT is default */
+#define FFTW_PATIENT (1U << 5)        /* IMPATIENT is default */
 #define FFTW_ESTIMATE (1U << 6)
 
 /* undocumented beyond-guru flags */
@@ -325,7 +305,7 @@ FFTW_DEFINE_API(FFTW_MANGLE_LONG_DOUBLE, long double, fftwl_complex)
 #define FFTW_ALLOW_PRUNING (1U << 20)
 
 #ifdef __cplusplus
-}  /* extern "C" */
+} /* extern "C" */
 #endif /* __cplusplus */
 
 #endif /* FFTW3_H */

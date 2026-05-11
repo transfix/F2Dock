@@ -20,14 +20,13 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 /*****************************************************************************/
 // Gaussian.cpp: implementation of the Gaussian class.
 /*****************************************************************************/
 
 /*
 
-We precompute the dilated, periodized Gaussian bell function 
+We precompute the dilated, periodized Gaussian bell function
 
 */
 
@@ -36,18 +35,15 @@ We precompute the dilated, periodized Gaussian bell function
 #include "Gaussian.h"
 
 #ifndef M_PI
-#define 	M_PI   3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 
-Gaussian::Gaussian(double alpha, int m, int n, int N) : SmoothingFunction(alpha, m, n, N)
-{
-	precompute();
+Gaussian::Gaussian(double alpha, int m, int n, int N)
+    : SmoothingFunction(alpha, m, n, N) {
+  precompute();
 }
 
-Gaussian::~Gaussian()
-{
-
-}
+Gaussian::~Gaussian() {}
 
 /*
 
@@ -63,47 +59,45 @@ following paper:
 
 Potts, D., Steidl G., and Tasche M.
 Fast Fourier transforms for nonequispaced data: A tutorial.
-in: Modern Sampling Theory: Mathematics and Applications, J.J. Benedetto and P. Ferreira (Eds.), 
-Chapter 12, pages 249-274, 1998.
+in: Modern Sampling Theory: Mathematics and Applications, J.J. Benedetto and P.
+Ferreira (Eds.), Chapter 12, pages 249-274, 1998.
 
 The Psi values in the paper above are truncated to [-m, m], and so
 only r = 0 has any nonzero contribution to the sum.
 
 */
 
-bool Gaussian::precompute( )
-{
-    if ( ( m_PhiLength < 1 ) || ( m_PhiHatLength < 1 ) ) return false;
+bool Gaussian::precompute() {
+  if ((m_PhiLength < 1) || (m_PhiHatLength < 1))
+    return false;
 
-    m_Phi = new double[ m_PhiLength ];        // an array of size N * ( m + 1 )
-    m_PhiHat = new double[ m_PhiHatLength ];  // an array of size n = alpha * N
+  m_Phi = new double[m_PhiLength];       // an array of size N * ( m + 1 )
+  m_PhiHat = new double[m_PhiHatLength]; // an array of size n = alpha * N
 
-    double b = 2 * alpha * m / ( M_PI * ( 2.0 * alpha - 1 ) );  // b value suggested in the paper
+  double b = 2 * alpha * m /
+             (M_PI * (2.0 * alpha - 1)); // b value suggested in the paper
 
-    for ( int i = 0; i < m_PhiLength; i++ ) 
-       {
-        double j = i / ( ( double ) N );	
-	
-        m_Phi[ i ] = pow( M_PI * b, -0.5 ) * exp( - j * j / b );
-		     // m_Phi[ i ] = ( pi * b )^(- 1/2) * e^( - ( (i / N)^2 ) / b )
-		     // getPhi( j ) returns m_Phi[ | j * N | ] = ( pi * b )^(- 1/2) * e^( - ( j^2 ) / b ),
-		     // where -m <= j <= m
-       }
+  for (int i = 0; i < m_PhiLength; i++) {
+    double j = i / ((double)N);
 
-    for ( int i = 0; i < m_PhiHatLength; i++ )
-       {
-        // this j value is different from that in the paper ( ( M_PI * i ) / n );
-        // we get better docking results with this value
-//        double j = ( M_PI * i ) / ( 1.25 * n );
-        double j = ( M_PI * i ) / n;
-	
-        m_PhiHat[ i ] = ( 1.0 / n ) * exp( - j * j * b );
-      	               // m_PhiHat[ i ] = ( 1 / n ) * e^( - ( ( pi * i / n )^2 ) * b )
-      	               // getPhiHat( i ) returns m_PhiHat[ i ]      	    
-       }
+    m_Phi[i] = pow(M_PI * b, -0.5) * exp(-j * j / b);
+    // m_Phi[ i ] = ( pi * b )^(- 1/2) * e^( - ( (i / N)^2 ) / b )
+    // getPhi( j ) returns m_Phi[ | j * N | ] = ( pi * b )^(- 1/2) * e^( - ( j^2
+    // ) / b ), where -m <= j <= m
+  }
 
+  for (int i = 0; i < m_PhiHatLength; i++) {
+    // this j value is different from that in the paper ( ( M_PI * i ) / n );
+    // we get better docking results with this value
+    //        double j = ( M_PI * i ) / ( 1.25 * n );
+    double j = (M_PI * i) / n;
 
-    m_Initialized = true;
-    
-    return true;
+    m_PhiHat[i] = (1.0 / n) * exp(-j * j * b);
+    // m_PhiHat[ i ] = ( 1 / n ) * e^( - ( ( pi * i / n )^2 ) * b )
+    // getPhiHat( i ) returns m_PhiHat[ i ]
+  }
+
+  m_Initialized = true;
+
+  return true;
 }

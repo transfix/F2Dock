@@ -20,7 +20,6 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef GB_RERANK_H
 
 #define GB_RERANK_H
@@ -35,10 +34,10 @@
 #include <pthread.h>
 
 #ifdef _WIN32
-   #include <sys/types.h>
-   #include <sys/timeb.h>
+#include <sys/types.h>
+#include <sys/timeb.h>
 #else
-   #include <sys/time.h>
+#include <sys/time.h>
 #endif
 
 #include "fast-GB/fastBornRadius.h"
@@ -47,58 +46,53 @@
 #include "GB-rerank/pairingHeap.h"
 #include "PG-range/PG.h"
 
-typedef struct
-  {
-    char *staticMoleculePQR;
-    char *movingMoleculePQR;
-    
-    char *staticMoleculeQUAD;
-    char *movingMoleculeQUAD;
+typedef struct {
+  char *staticMoleculePQR;
+  char *movingMoleculePQR;
 
-    char *F2DockOutputFile;
-    char *rerankedOutputFile;
-    
-    double F2DockScoreWeight;
-    double GpolWeight; 
-    double GnonpolWeight;
-    
-    double distanceCutoff;   
-    
-    int numThreadsBR, numThreadsGpol;
-    double epsilonBR, epsilonGpol;
-    bool useApproxMath;
-    
-    int numBands;
-    int *bands;
-    
-    int numSol;
-    
-  } PARAMS_IN;
+  char *staticMoleculeQUAD;
+  char *movingMoleculeQUAD;
 
+  char *F2DockOutputFile;
+  char *rerankedOutputFile;
 
-typedef struct
-  {
-    int numAtoms, numQPoints;    
-    
-    double *atoms;
-    double *qPoints;    
-    
-    double Gpol;
-            
-  } MOLECULE_INFO;
+  double F2DockScoreWeight;
+  double GpolWeight;
+  double GnonpolWeight;
 
+  double distanceCutoff;
 
-typedef struct
-  {
-    char *sol;        
-    int F2DockRank;
-    double rmsd;
-    double DelGpol;
-    double areaProp;
-    double newScore;
-    
-    int nextIndex;
-                
-  } SOLUTION_INFO;
+  int numThreadsBR, numThreadsGpol;
+  double epsilonBR, epsilonGpol;
+  bool useApproxMath;
+
+  int numBands;
+  int *bands;
+
+  int numSol;
+
+} PARAMS_IN;
+
+typedef struct {
+  int numAtoms, numQPoints;
+
+  double *atoms;
+  double *qPoints;
+
+  double Gpol;
+
+} MOLECULE_INFO;
+
+typedef struct {
+  char *sol;
+  int F2DockRank;
+  double rmsd;
+  double DelGpol;
+  double areaProp;
+  double newScore;
+
+  int nextIndex;
+
+} SOLUTION_INFO;
 
 #endif
