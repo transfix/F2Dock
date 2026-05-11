@@ -20,7 +20,6 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef _PG_H_
 #define _PG_H_
 
@@ -28,14 +27,14 @@
 #include "1D-IntegerRange.h"
 #include <cmath>
 
-//#include "grid.h"
-//#include "Point.h"
-//#include <arrangement_2d.h>
+// #include "grid.h"
+// #include "Point.h"
+// #include <arrangement_2d.h>
 
 #define INITHASHSIZE 51
 
-//struct grid;
-//template <class T> class IntegerRange;
+// struct grid;
+// template <class T> class IntegerRange;
 
 struct Point {
   float x;
@@ -47,20 +46,17 @@ struct Point {
     y = b;
     z = c;
   }
-  bool operator==(const Point& p) {
-    return (x==p.x && y==p.y && z==p.z);
-  }
- 
-  float distsq(Point a, Point b) {
-  float res;
-  double dx, dy, dz;
-  dx = a.x - b.x;
-  dy = a.y - b.y;
-  dz = a.z - b.z;  
-  res = dx*dx + dy*dy + dz*dz;
-  return res;
-}
+  bool operator==(const Point &p) { return (x == p.x && y == p.y && z == p.z); }
 
+  float distsq(Point a, Point b) {
+    float res;
+    double dx, dy, dz;
+    dx = a.x - b.x;
+    dy = a.y - b.y;
+    dz = a.z - b.z;
+    res = dx * dx + dy * dy + dz * dz;
+    return res;
+  }
 };
 
 struct cellID {
@@ -80,7 +76,7 @@ struct planeID {
 
 struct gridcell {
   cellID ID;
-  std::vector<Point*> balls;
+  std::vector<Point *> balls;
   gridcell(int a, int b, int c) {
     ID.x = a;
     ID.y = b;
@@ -90,30 +86,27 @@ struct gridcell {
 
 struct line {
   lineID ID;
-  IntegerRange<gridcell*> RR;
+  IntegerRange<gridcell *> RR;
   line(int b, int c) {
     ID.y = b;
     ID.z = c;
-	RR = IntegerRange<gridcell*>();
+    RR = IntegerRange<gridcell *>();
   }
 };
 
 struct plane {
   planeID ID;
-  IntegerRange<line*> RR;
+  IntegerRange<line *> RR;
   plane(int c) {
     ID.z = c;
-    RR = IntegerRange<line*>();
+    RR = IntegerRange<line *>();
   }
 };
 
 struct grid {
-  IntegerRange<plane*> RR;
-  grid()
-  {
-	RR = IntegerRange<plane*>();
-  }
-//  ball* surface_root_ptr;
+  IntegerRange<plane *> RR;
+  grid() { RR = IntegerRange<plane *>(); }
+  //  ball* surface_root_ptr;
 };
 
 class PG {
@@ -127,15 +120,14 @@ class PG {
   double nx, ny, nz;
   int rangeCount;
   double DIM;
-//  dynamic_graph* dg;
- public:
+  //  dynamic_graph* dg;
+public:
   int s1size;
   int s2size;
   int checked;
   double TRANSLATE;
 
-  PG(double D, double xlate, double r)
-  {
+  PG(double D, double xlate, double r) {
     DIM = D;
     rmax = r;
     TRANSLATE = xlate;
@@ -146,20 +138,20 @@ class PG {
     compTime = 0.0;
     rangeCount = 0;
     initTime = 0;
-}
+  }
 
-  PG(double mnx, double mny, double mnz, double mxx, double mxy, double mxz, double divisionsize, int inithashsize = INITHASHSIZE) 
-  {
+  PG(double mnx, double mny, double mnz, double mxx, double mxy, double mxz,
+     double divisionsize, int inithashsize = INITHASHSIZE) {
     maxx = mxx;
     maxy = mxy;
     maxz = mxz;
     minx = mnx;
     miny = mny;
     minz = mnz;
-    if(divisionsize!=0)
-	DIM = divisionsize;
+    if (divisionsize != 0)
+      DIM = divisionsize;
     else
-	DIM = 3.5;
+      DIM = 3.5;
     TRANSLATE = 0.0;
     rmax = 1.5;
     cells = 0;
@@ -171,75 +163,61 @@ class PG {
     initTime = 0;
   }
 
-  PG(std::vector<Point *> *alist, double divisionsize, int inithashsize = INITHASHSIZE);
+  PG(std::vector<Point *> *alist, double divisionsize,
+     int inithashsize = INITHASHSIZE);
 
-  void boundingbox(double &mnx, double &mny, double &mnz, double &mxx, double &mxy, double &mxz)
-  {
-	mnx = this->minx;
-	mny = this->miny;
-	mnz = this->minz;
-	mxx = this->maxx;
-	mxy = this->maxy;
-	mxz = this->maxz;
+  void boundingbox(double &mnx, double &mny, double &mnz, double &mxx,
+                   double &mxy, double &mxz) {
+    mnx = this->minx;
+    mny = this->miny;
+    mnz = this->minz;
+    mxx = this->maxx;
+    mxy = this->maxy;
+    mxz = this->maxz;
   }
 
   /* Supported Queries*/
-  std::vector<Point*> range(Point *, double);
-  bool pointsWithinRange(Point *q, double delta); 
+  std::vector<Point *> range(Point *, double);
+  bool pointsWithinRange(Point *q, double delta);
   int countPointsWithinRange(Point *q, double delta);
-//  std::vector<Point*> *findintersections(Point *, double);
-// std::vector<Point*> *findintersection(Point * a, double d) {return findintersections(a,d);}
-//  std::vector<Point*> *findintersection(Point * a) {return findintersections(a,0.0);}
-//  std::vector<Point*> intersect(Point, float);
-//  bool exposed(Point*);
-//  void surface(void);
-//  void checkInsertion(FILE *fp);
+  //  std::vector<Point*> *findintersections(Point *, double);
+  // std::vector<Point*> *findintersection(Point * a, double d) {return
+  // findintersections(a,d);}
+  //  std::vector<Point*> *findintersection(Point * a) {return
+  //  findintersections(a,0.0);} std::vector<Point*> intersect(Point, float);
+  //  bool exposed(Point*);
+  //  void surface(void);
+  //  void checkInsertion(FILE *fp);
 
-  double getRangeTime()
-  {
-  	return rangeTime;
-  }
-  int getRangeCount()
-  {
-  	return rangeCount;
-  }
-  double getCompTime()
-  {
-  	return compTime;
-  }
-  double getInitTime()
-  {
-  	return initTime;
-  }
-  void resetTimes()
-  {
-  	rangeTime = 0;
-	compTime = 0;
-	rangeCount = 0;
-	initTime =0;
+  double getRangeTime() { return rangeTime; }
+  int getRangeCount() { return rangeCount; }
+  double getCompTime() { return compTime; }
+  double getInitTime() { return initTime; }
+  void resetTimes() {
+    rangeTime = 0;
+    compTime = 0;
+    rangeCount = 0;
+    initTime = 0;
   }
 
+  double getdivsize() { return DIM; }
 
- double getdivsize() { return DIM; }
-  
- int cellsstored(void) { return cells; }
+  int cellsstored(void) { return cells; }
 
- int tablesize(void) { return cells; }
+  int tablesize(void) { return cells; }
 
- int gridsize(void) { return cells; }
+  int gridsize(void) { return cells; }
 
-  
   /* Supported updates*/
   void addPoint(Point *a);
-  void addPoints(std::vector<Point *> *alist)
-  {
-	int i, size;
-	size = alist->size();
-	for(i=0;i<size;i++)
-		addPoint(alist->at(i));
+  void addPoints(std::vector<Point *> *alist) {
+    int i, size;
+    size = alist->size();
+    for (i = 0; i < size; i++)
+      addPoint(alist->at(i));
   }
   void removePoint(Point *a);
-//  void removePoints(std::vector<Point *> *alist);
-  //void move(Point, Point, float);
+  //  void removePoints(std::vector<Point *> *alist);
+  // void move(Point, Point, float);
 };
 #endif

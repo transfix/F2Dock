@@ -20,7 +20,6 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-
 #ifndef FAST_DISP_E_H
 
 #define FAST_DISP_E_H
@@ -35,74 +34,69 @@
 #include <pthread.h>
 
 #ifdef _WIN32
-   #include <sys/types.h>
-   #include <sys/timeb.h>
+#include <sys/types.h>
+#include <sys/timeb.h>
 #else
-   #include <sys/time.h>
+#include <sys/time.h>
 #endif
 
 #include "fastBornRadius.h"
 #include "../utils/utils.h"
 
-
 namespace fastGB {
 
-class fastDispE
-{
- private:
+class fastDispE {
+private:
+  typedef struct {
+    char *staticMoleculeQUAD;
+    char *movingMoleculeQUAD;
 
-   typedef struct
-     {
-       char *staticMoleculeQUAD;
-       char *movingMoleculeQUAD;
-        
-       int numThreads;
-       int numThreadsPerThread;
-       
-       double epsilonBR;
-        
-     } PARAMS_IN;
+    int numThreads;
+    int numThreadsPerThread;
 
-   PARAMS_IN params;
+    double epsilonBR;
 
-   typedef struct
-     {
-       int numAtoms, numQPoints;    
-        
-       double *atoms;
-       double *qPoints;    
-        
-       double dispE;
-                
-     } MOLECULE_INFO;
+  } PARAMS_IN;
 
-   MOLECULE_INFO staticMol, movingMol;  
-   
-   int numAtoms, numQPoints;
-   
-   double *atoms;
-   double *qPoints;
+  PARAMS_IN params;
 
-   void freeMemory( void );
-   void getAtomsQuadsAndDispE( char *quadFile, int numAtoms, double *atomsPQR, MOLECULE_INFO *mol );
-   bool getParamsFromFile( PARAMS_IN *p, char *paramFile );
-   void copyStaticMoleculeToAllThreads( void );
-   void transformAndCopyMovingMolecule( int threadID, double *transMat );
-   
- public:
+  typedef struct {
+    int numAtoms, numQPoints;
 
-   fastDispE( char *paramFile, int numStaticAtoms, double *staticAtomsPQR, int numMovingAtoms, double *movingAtomsPQR,
-              int numThreads, int numThreadsPerThread );
-   ~fastDispE( );
+    double *atoms;
+    double *qPoints;
 
-   double getDispE( int threadID, double *transMat );
-   double getDispE( int threadID );
-   
-   double getDelDispE( int threadID, double *transMat );
-   double getDelDispE( int threadID );   
+    double dispE;
+
+  } MOLECULE_INFO;
+
+  MOLECULE_INFO staticMol, movingMol;
+
+  int numAtoms, numQPoints;
+
+  double *atoms;
+  double *qPoints;
+
+  void freeMemory(void);
+  void getAtomsQuadsAndDispE(char *quadFile, int numAtoms, double *atomsPQR,
+                             MOLECULE_INFO *mol);
+  bool getParamsFromFile(PARAMS_IN *p, char *paramFile);
+  void copyStaticMoleculeToAllThreads(void);
+  void transformAndCopyMovingMolecule(int threadID, double *transMat);
+
+public:
+  fastDispE(char *paramFile, int numStaticAtoms, double *staticAtomsPQR,
+            int numMovingAtoms, double *movingAtomsPQR, int numThreads,
+            int numThreadsPerThread);
+  ~fastDispE();
+
+  double getDispE(int threadID, double *transMat);
+  double getDispE(int threadID);
+
+  double getDelDispE(int threadID, double *transMat);
+  double getDelDispE(int threadID);
 };
 
-};
+}; // namespace fastGB
 
 #endif
-

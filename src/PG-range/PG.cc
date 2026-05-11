@@ -20,7 +20,6 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #include "PG.h"
 #include <cmath>
 #include <time.h>
@@ -32,114 +31,97 @@
 
 using namespace std;
 
-//#define TRANSLATE 2000.0
+// #define TRANSLATE 2000.0
 
 double gtod_sec = 0.0E0;
 
-double gtod_timer()
-{
+double gtod_timer() {
 #ifndef _WIN32
-   struct timeval tv;
-   struct timezone Tzp;
-   double sec;
+  struct timeval tv;
+  struct timezone Tzp;
+  double sec;
 
-   gettimeofday(&tv, &Tzp);
+  gettimeofday(&tv, &Tzp);
 
-   if(gtod_sec == 0.0E0) 
-      gtod_sec = (double)tv.tv_sec;
-   sec = (double)tv.tv_sec - gtod_sec;
+  if (gtod_sec == 0.0E0)
+    gtod_sec = (double)tv.tv_sec;
+  sec = (double)tv.tv_sec - gtod_sec;
 
-   return sec + 1.0E-06*(double)tv.tv_usec;
+  return sec + 1.0E-06 * (double)tv.tv_usec;
 #else
-   struct _timeb tb;
-   _ftime(&tb);
-   if(gtod_sec == 0.0E0)
-      gtod_sec = (double)tb.time;
-   double sec = (double)tb.time - gtod_sec;
-   return sec + 1.0E-03*(double)tb.millitm;
+  struct _timeb tb;
+  _ftime(&tb);
+  if (gtod_sec == 0.0E0)
+    gtod_sec = (double)tb.time;
+  double sec = (double)tb.time - gtod_sec;
+  return sec + 1.0E-03 * (double)tb.millitm;
 #endif
 }
 
-
-
-
-vector<Point*> PG::range(Point *q, double delta) 
-{
+vector<Point *> PG::range(Point *q, double delta) {
   Point p = *q;
 
-  cout<<"Point = "<<q->x<<" "<<q->y<<" "<<q->z<<" "<<endl;
+  cout << "Point = " << q->x << " " << q->y << " " << q->z << " " << endl;
 
   p.x += TRANSLATE;
   p.y += TRANSLATE;
   p.z += TRANSLATE;
 
-  int l = (int)(( p.z - delta) / DIM);
+  int l = (int)((p.z - delta) / DIM);
   int h = (int)((p.z + delta) / DIM);
 
-  int i,j,k,size,size1,size2,m;
-  
-  vector<Point*> result;
-  
-  vector<RangeTuple<line*> >  temp1;
-  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
-  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
-  
-  
+  int i, j, k, size, size1, size2, m;
+
+  vector<Point *> result;
+
+  vector<RangeTuple<line *>> temp1;
+  vector<RangeTuple<gridcell *>> temp2, S0, S1;
+  vector<RangeTuple<gridcell *>>::iterator start2, end2;
 
   int tts;
 
-
-  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane *>> S2 = g.RR.report(l, h);
   rangeCount++;
 
-  if(S2.empty())
-  {
+  if (S2.empty()) {
     return result;
   }
   size2 = (int)S2.size();
 
-
-  for(i = 0; i < size2; i++) 
-  {
+  for (i = 0; i < size2; i++) {
     rangeCount++;
-   
-    l = (int)((p.y - delta)/DIM);
-    h = (int)((p.y + delta)/DIM);
-    temp1 = (S2[i].ptr)->RR.report(l,h);
-    
-    size1 = (int) temp1.size();
-    
-    for(j = 0; j < size1; j++) 
-    {
+
+    l = (int)((p.y - delta) / DIM);
+    h = (int)((p.y + delta) / DIM);
+    temp1 = (S2[i].ptr)->RR.report(l, h);
+
+    size1 = (int)temp1.size();
+
+    for (j = 0; j < size1; j++) {
       rangeCount++;
 
-      l = (int)((p.x - delta)/DIM);
-      h = (int)((p.x + delta)/DIM);
+      l = (int)((p.x - delta) / DIM);
+      h = (int)((p.x + delta) / DIM);
 
+      if ((temp1[j].ptr)->RR.getn()) {
+        temp2 = (temp1[j].ptr)->RR.report(l, h);
 
-      if((temp1[j].ptr)->RR.getn())
-      {
-	temp2 = (temp1[j].ptr)->RR.report(l,h);
-        
-	size = (int)temp2.size();
-	int pbcount;
+        size = (int)temp2.size();
+        int pbcount;
 
-	Point *oa;
+        Point *oa;
 
-	double delsq = delta*delta;
-	for(int mn=0;mn<size;mn++)
-	{
-		int atomsInCell = temp2[mn].ptr->balls.size();
-		for(int pq=0;pq<atomsInCell;pq++)
-		{
-			oa = temp2[mn].ptr->balls[pq];
-			if(oa->distsq(*oa, *q) <= delsq)
-				result.push_back(oa);
-		}
-	}
-	
-      	temp2.clear();
-	
+        double delsq = delta * delta;
+        for (int mn = 0; mn < size; mn++) {
+          int atomsInCell = temp2[mn].ptr->balls.size();
+          for (int pq = 0; pq < atomsInCell; pq++) {
+            oa = temp2[mn].ptr->balls[pq];
+            if (oa->distsq(*oa, *q) <= delsq)
+              result.push_back(oa);
+          }
+        }
+
+        temp2.clear();
       }
     }
     temp1.clear();
@@ -148,78 +130,66 @@ vector<Point*> PG::range(Point *q, double delta)
   return result;
 }
 
-
-
-bool PG::pointsWithinRange(Point *q, double delta) 
-{
+bool PG::pointsWithinRange(Point *q, double delta) {
   Point p = *q;
 
   p.x += TRANSLATE;
   p.y += TRANSLATE;
   p.z += TRANSLATE;
 
-  int l = (int)(( p.z - delta) / DIM);
+  int l = (int)((p.z - delta) / DIM);
   int h = (int)((p.z + delta) / DIM);
 
-  int i,j,k,size,size1,size2,m;
-  
-  vector<RangeTuple<line*> >  temp1;
-  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
-  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
-  
+  int i, j, k, size, size1, size2, m;
+
+  vector<RangeTuple<line *>> temp1;
+  vector<RangeTuple<gridcell *>> temp2, S0, S1;
+  vector<RangeTuple<gridcell *>>::iterator start2, end2;
+
   int tts;
 
-
-  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane *>> S2 = g.RR.report(l, h);
   rangeCount++;
 
-  if(S2.empty())
-  {
+  if (S2.empty()) {
     return false;
   }
   size2 = (int)S2.size();
 
-
-  for(i = 0; i < size2; i++) 
-  {
+  for (i = 0; i < size2; i++) {
     rangeCount++;
-   
-    l = (int)((p.y - delta)/DIM);
-    h = (int)((p.y + delta)/DIM);
-    temp1 = (S2[i].ptr)->RR.report(l,h);
-    
-    size1 = (int) temp1.size();
-    
-    for(j = 0; j < size1; j++) 
-    {
+
+    l = (int)((p.y - delta) / DIM);
+    h = (int)((p.y + delta) / DIM);
+    temp1 = (S2[i].ptr)->RR.report(l, h);
+
+    size1 = (int)temp1.size();
+
+    for (j = 0; j < size1; j++) {
       rangeCount++;
 
-      l = (int)((p.x - delta)/DIM);
-      h = (int)((p.x + delta)/DIM);
+      l = (int)((p.x - delta) / DIM);
+      h = (int)((p.x + delta) / DIM);
 
+      if ((temp1[j].ptr)->RR.getn()) {
+        temp2 = (temp1[j].ptr)->RR.report(l, h);
 
-      if((temp1[j].ptr)->RR.getn())
-      {
-	temp2 = (temp1[j].ptr)->RR.report(l,h);
-        
-	size = (int)temp2.size();
-	int pbcount;
+        size = (int)temp2.size();
+        int pbcount;
 
-	Point *oa;
+        Point *oa;
 
-	double delsq = delta*delta;
-	for(int mn=0;mn<size;mn++)
-	{
-		int atomsInCell = temp2[mn].ptr->balls.size();
-		for(int pq=0;pq<atomsInCell;pq++)
-		{
-			oa = temp2[mn].ptr->balls[pq];
-			if(oa->distsq(*oa, *q) <= delsq) return true;
-		}
-	}
-	
-      	temp2.clear();
-	
+        double delsq = delta * delta;
+        for (int mn = 0; mn < size; mn++) {
+          int atomsInCell = temp2[mn].ptr->balls.size();
+          for (int pq = 0; pq < atomsInCell; pq++) {
+            oa = temp2[mn].ptr->balls[pq];
+            if (oa->distsq(*oa, *q) <= delsq)
+              return true;
+          }
+        }
+
+        temp2.clear();
       }
     }
     temp1.clear();
@@ -228,78 +198,68 @@ bool PG::pointsWithinRange(Point *q, double delta)
   return false;
 }
 
-
-
-int PG::countPointsWithinRange(Point *q, double delta) 
-{
+int PG::countPointsWithinRange(Point *q, double delta) {
   Point p = *q;
 
   p.x += TRANSLATE;
   p.y += TRANSLATE;
   p.z += TRANSLATE;
 
-  int l = (int)(( p.z - delta) / DIM);
+  int l = (int)((p.z - delta) / DIM);
   int h = (int)((p.z + delta) / DIM);
 
-  int i,j,k,size,size1,size2,m;
-  
-  vector<RangeTuple<line*> >  temp1;
-  vector<RangeTuple<gridcell*> >  temp2, S0, S1;
-  vector<RangeTuple<gridcell*> >::iterator start2, end2; 
-  
+  int i, j, k, size, size1, size2, m;
+
+  vector<RangeTuple<line *>> temp1;
+  vector<RangeTuple<gridcell *>> temp2, S0, S1;
+  vector<RangeTuple<gridcell *>>::iterator start2, end2;
+
   int tts;
 
-  vector<RangeTuple<plane*> > S2 = g.RR.report(l,h);
+  vector<RangeTuple<plane *>> S2 = g.RR.report(l, h);
   rangeCount++;
 
-  if(S2.empty())
-  {
+  if (S2.empty()) {
     return 0;
   }
   size2 = (int)S2.size();
 
   int count = 0;
 
-  for(i = 0; i < size2; i++) 
-  {
+  for (i = 0; i < size2; i++) {
     rangeCount++;
-   
-    l = (int)((p.y - delta)/DIM);
-    h = (int)((p.y + delta)/DIM);
-    temp1 = (S2[i].ptr)->RR.report(l,h);
-    
-    size1 = (int) temp1.size();
-    
-    for(j = 0; j < size1; j++) 
-    {
+
+    l = (int)((p.y - delta) / DIM);
+    h = (int)((p.y + delta) / DIM);
+    temp1 = (S2[i].ptr)->RR.report(l, h);
+
+    size1 = (int)temp1.size();
+
+    for (j = 0; j < size1; j++) {
       rangeCount++;
 
-      l = (int)((p.x - delta)/DIM);
-      h = (int)((p.x + delta)/DIM);
+      l = (int)((p.x - delta) / DIM);
+      h = (int)((p.x + delta) / DIM);
 
+      if ((temp1[j].ptr)->RR.getn()) {
+        temp2 = (temp1[j].ptr)->RR.report(l, h);
 
-      if((temp1[j].ptr)->RR.getn())
-      {
-	temp2 = (temp1[j].ptr)->RR.report(l,h);
-        
-	size = (int)temp2.size();
-	int pbcount;
+        size = (int)temp2.size();
+        int pbcount;
 
-	Point *oa;
+        Point *oa;
 
-	double delsq = delta*delta;
-	for(int mn=0;mn<size;mn++)
-	{
-		int atomsInCell = temp2[mn].ptr->balls.size();
-		for(int pq=0;pq<atomsInCell;pq++)
-		{
-			oa = temp2[mn].ptr->balls[pq];
-			if(oa->distsq(*oa, *q) <= delsq) count++;
-		}
-	}
-	
-      	temp2.clear();
-	
+        double delsq = delta * delta;
+        for (int mn = 0; mn < size; mn++) {
+          int atomsInCell = temp2[mn].ptr->balls.size();
+          for (int pq = 0; pq < atomsInCell; pq++) {
+            oa = temp2[mn].ptr->balls[pq];
+            if (oa->distsq(*oa, *q) <= delsq)
+              count++;
+          }
+        }
+
+        temp2.clear();
       }
     }
     temp1.clear();
@@ -308,121 +268,113 @@ int PG::countPointsWithinRange(Point *q, double delta)
   return count;
 }
 
-
 /*adds a ball to the collection of balls*/
-void PG::addPoint(Point *a) 
-{
-//  cout<<"INSERTING AN ATOM "<<endl;
+void PG::addPoint(Point *a) {
+  //  cout<<"INSERTING AN ATOM "<<endl;
 
   Point center = *a;
 
   center.x += TRANSLATE;
   center.y += TRANSLATE;
   center.z += TRANSLATE;
-//  double radius = a->getr();
+  //  double radius = a->getr();
 
-  int cz = (int)center.z/DIM;
-  int cy = (int)center.y/DIM;
-  int cx = (int)center.x/DIM;
-  RangeTuple<plane*> temp;
-  plane* p;
-  line* l;
-  gridcell* c;
+  int cz = (int)center.z / DIM;
+  int cy = (int)center.y / DIM;
+  int cx = (int)center.x / DIM;
+  RangeTuple<plane *> temp;
+  plane *p;
+  line *l;
+  gridcell *c;
 
-//  if(rmax<radius)
-//	rmax = radius;
+  //  if(rmax<radius)
+  //	rmax = radius;
 
-  vector<RangeTuple<plane*> > P = g.RR.report(cz,cz);
-  
-  if(P.empty()) 
-  {
+  vector<RangeTuple<plane *>> P = g.RR.report(cz, cz);
+
+  if (P.empty()) {
     planes++;
     p = new plane(cz);
-    temp = RangeTuple<plane*>(cz, p);
+    temp = RangeTuple<plane *>(cz, p);
     P.push_back(temp);
     g.RR.insert(cz, p);
   }
-  
-  vector<RangeTuple<line*> > L = P[0].ptr->RR.report(cy,cy);
-  
-  if(L.empty()) 
-  {
+
+  vector<RangeTuple<line *>> L = P[0].ptr->RR.report(cy, cy);
+
+  if (L.empty()) {
     lines++;
-    l = new line(cy, cz); 
-    RangeTuple<line*> temp1(cy, l);
+    l = new line(cy, cz);
+    RangeTuple<line *> temp1(cy, l);
     L.push_back(temp1);
-    P[0].ptr->RR.insert(cy, l); //same here
+    P[0].ptr->RR.insert(cy, l); // same here
   }
-  
-  vector<RangeTuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
-  
-  if(C.empty()) 
-  {
+
+  vector<RangeTuple<gridcell *>> C = L[0].ptr->RR.report(cx, cx); // same here
+
+  if (C.empty()) {
     cells++;
-    c = new gridcell(cx, cy, cz); //and here
-    RangeTuple<gridcell*> temp2(cx, c);
+    c = new gridcell(cx, cy, cz); // and here
+    RangeTuple<gridcell *> temp2(cx, c);
     C.push_back(temp2);
-    L[0].ptr->RR.insert(cx, c); //and here
+    L[0].ptr->RR.insert(cx, c); // and here
   }
 
-  (C[0].ptr->balls).push_back(a); //and here
+  (C[0].ptr->balls).push_back(a); // and here
 
-//cout<<"Inserted"<<endl;
-
-return;
-}
-
-/*removes the given ball from the collection of balls*/
-void PG::removePoint(Point *a) 
-{
-cout<<"Inside removeatom"<<endl;
-
-  Point center = *a;
-
-  center.x += TRANSLATE;
-  center.y += TRANSLATE;
-  center.z += TRANSLATE;
-//  double radius = a->getr();
-
-  cout<<"REMOVING AN ATOM "<<endl;
-  int cz = (int)center.z/DIM;
-  int cy = (int)center.y/DIM;
-  int cx = (int)center.x/DIM;
-  
-  vector<RangeTuple<plane*> > P = g.RR.report(cz,cz);
-  if(P.empty()) {
-    cout<<"Atom does not exist"<<endl;
-    return;
-  }
-
-  vector<RangeTuple<line*> > L = P[0].ptr->RR.report(cy,cy);
-  if(L.empty()) {
-    cout<<"Atom does not exist"<<endl;
-    return;
-  }
-
-  vector<RangeTuple<gridcell*> > C = L[0].ptr->RR.report(cx,cx); //same here
-  if(C.empty()) {
-    cout<<"Atom does not exist"<<endl;
-    return;
-  }
-
-  int index = -1;
-  for(int i=0; i<(int)(C[0].ptr->balls).size(); i++) 
-  {
-    if(a->x == C[0].ptr->balls[i]->x && a->y == C[0].ptr->balls[i]->y && a->z == C[0].ptr->balls[i]->z) 
-    {
-      index = i;
-      break;
-    }
-  }
-  if(index < 0) return;
-  C[0].ptr->balls[index] = C[0].ptr->balls[C[0].ptr->balls.size()-1];
-  C[0].ptr->balls.pop_back();
-  
-cout<<"return from removeatom"<<endl;
+  // cout<<"Inserted"<<endl;
 
   return;
 }
 
+/*removes the given ball from the collection of balls*/
+void PG::removePoint(Point *a) {
+  cout << "Inside removeatom" << endl;
 
+  Point center = *a;
+
+  center.x += TRANSLATE;
+  center.y += TRANSLATE;
+  center.z += TRANSLATE;
+  //  double radius = a->getr();
+
+  cout << "REMOVING AN ATOM " << endl;
+  int cz = (int)center.z / DIM;
+  int cy = (int)center.y / DIM;
+  int cx = (int)center.x / DIM;
+
+  vector<RangeTuple<plane *>> P = g.RR.report(cz, cz);
+  if (P.empty()) {
+    cout << "Atom does not exist" << endl;
+    return;
+  }
+
+  vector<RangeTuple<line *>> L = P[0].ptr->RR.report(cy, cy);
+  if (L.empty()) {
+    cout << "Atom does not exist" << endl;
+    return;
+  }
+
+  vector<RangeTuple<gridcell *>> C = L[0].ptr->RR.report(cx, cx); // same here
+  if (C.empty()) {
+    cout << "Atom does not exist" << endl;
+    return;
+  }
+
+  int index = -1;
+  for (int i = 0; i < (int)(C[0].ptr->balls).size(); i++) {
+    if (a->x == C[0].ptr->balls[i]->x && a->y == C[0].ptr->balls[i]->y &&
+        a->z == C[0].ptr->balls[i]->z) {
+      index = i;
+      break;
+    }
+  }
+  if (index < 0)
+    return;
+  C[0].ptr->balls[index] = C[0].ptr->balls[C[0].ptr->balls.size() - 1];
+  C[0].ptr->balls.pop_back();
+
+  cout << "return from removeatom" << endl;
+
+  return;
+}

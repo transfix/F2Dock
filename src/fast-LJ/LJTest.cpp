@@ -20,28 +20,25 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #include <stdio.h>
 #include "fastLJ.h"
 
-int main( int argc, char *argv[ ] )
-{
-  if ( argc < 2 )
-    {
-      printError( "Input text file not specified!" );
-      return 1;
-    }
-     
-  fastLJ testLJ( argv[ 1 ] );   
+int main(int argc, char *argv[]) {
+  if (argc < 2) {
+    printError("Input text file not specified!");
+    return 1;
+  }
 
-  testLJ.setPrintStatus( true );     
-  
+  fastLJ testLJ(argv[1]);
+
+  testLJ.setPrintStatus(true);
+
   double fastP = 0, naiveP = 0;
-  
-  testLJ.computePotential( 0, &fastP );
-  testLJ.computePotentialNaively( 0, &naiveP );
-  
-  printf( "\nfastP = %lf, naiveP = %lf\n", fastP, naiveP );
-    
+
+  testLJ.computePotential(0, &fastP);
+  testLJ.computePotentialNaively(0, &naiveP);
+
+  printf("\nfastP = %lf, naiveP = %lf\n", fastP, naiveP);
+
   return 0;
 }

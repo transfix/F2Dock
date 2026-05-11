@@ -20,7 +20,6 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef _PAIR_H_
 
 #define _PAIR_H_
@@ -31,82 +30,61 @@
 #include <limits.h>
 
 #ifndef VAL_TYPE
-   #define VAL_TYPE double
+#define VAL_TYPE double
 #endif
 
 #ifndef INF
-  #define INF ( ( VAL_TYPE ) INT_MAX )
+#define INF ((VAL_TYPE)INT_MAX)
 #endif
 
-typedef std::vector< VAL_TYPE > data_type;
+typedef std::vector<VAL_TYPE> data_type;
 
-class PairingHeap
-{  
- private:
-
-  enum misc{ NIL = -1, REC_SIZE = 5 };
-  enum rec_ids{ ID, KEY, CHILD, LEFT, RIGHT };
+class PairingHeap {
+private:
+  enum misc { NIL = -1, REC_SIZE = 5 };
+  enum rec_ids { ID, KEY, CHILD, LEFT, RIGHT };
 
   data_type *heap;
 
   int n, root, auxptr, min_auxptr, freeptr, csize;
   bool use_multi_pass, use_aux_trees;
-  
-  void basic_init( bool use_mpass, bool use_aux )
-    {
-     n = 0;
-     root = NIL;
-     freeptr = NIL;
-     auxptr = NIL;
-     min_auxptr = NIL;
 
-     heap = new data_type;
-     csize = 0;
+  void basic_init(bool use_mpass, bool use_aux) {
+    n = 0;
+    root = NIL;
+    freeptr = NIL;
+    auxptr = NIL;
+    min_auxptr = NIL;
 
-     use_multi_pass = use_mpass;
-     use_aux_trees = use_aux;
-    }
-  
-  int new_node( int x, VAL_TYPE k );
-  void free_node( int xp );
-  void add_to_aux_area( int xp );
-  int pairing_heap_link( int xp, int yp );
-  int two_pass_merge( int xp );
-  int multi_pass_merge( int xp );
+    heap = new data_type;
+    csize = 0;
 
- public:
+    use_multi_pass = use_mpass;
+    use_aux_trees = use_aux;
+  }
 
-  PairingHeap( void )
-    {
-      basic_init( false, false );
-    }
+  int new_node(int x, VAL_TYPE k);
+  void free_node(int xp);
+  void add_to_aux_area(int xp);
+  int pairing_heap_link(int xp, int yp);
+  int two_pass_merge(int xp);
+  int multi_pass_merge(int xp);
 
-  PairingHeap( bool use_mpass )
-    {
-      basic_init( use_mpass, false );
-    }
+public:
+  PairingHeap(void) { basic_init(false, false); }
 
-  PairingHeap( bool use_mpass, bool use_aux )
-    {
-      basic_init( use_mpass, use_aux );
-    }
+  PairingHeap(bool use_mpass) { basic_init(use_mpass, false); }
 
-  ~PairingHeap( )
-    {
-      delete heap; 
-    }
+  PairingHeap(bool use_mpass, bool use_aux) { basic_init(use_mpass, use_aux); }
 
+  ~PairingHeap() { delete heap; }
 
-  int isEmpty( void )
-    {
-      return !n;
-    }
+  int isEmpty(void) { return !n; }
 
-    
-  int Insert( int x, VAL_TYPE k );
-  void Find_Min( int &mx, VAL_TYPE &mk );
-  void Delete_Min( int &mx, VAL_TYPE &mk );
-  void Decrease_Key( int xp, VAL_TYPE k );
+  int Insert(int x, VAL_TYPE k);
+  void Find_Min(int &mx, VAL_TYPE &mk);
+  void Delete_Min(int &mx, VAL_TYPE &mk);
+  void Decrease_Key(int xp, VAL_TYPE k);
 };
 
 #endif

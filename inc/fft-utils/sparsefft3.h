@@ -1,5 +1,5 @@
 /*
-   Modified at CVC Lab, UT Austin for use in F2Dock with FFTW3 
+   Modified at CVC Lab, UT Austin for use in F2Dock with FFTW3
 */
 
 /* Copyright (C) 2000 Massachusetts Institute of Technology.
@@ -25,50 +25,46 @@
 #include "fftw3.h"
 #include "fftwPrecision.h"
 
-#define c_re( c ) ( ( c )[ 0 ] )
-#define c_im( c ) ( ( c )[ 1 ] )
+#define c_re(c) ((c)[0])
+#define c_im(c) ((c)[1])
 
 #define MAX_LOG_HOWMANY 7
 
-struct sparse3DFFT_range_struct_ 
-  {
-    int min, max;
-    struct sparse3DFFT_range_struct_ *next;
-  };
-  
+struct sparse3DFFT_range_struct_ {
+  int min, max;
+  struct sparse3DFFT_range_struct_ *next;
+};
+
 typedef struct sparse3DFFT_range_struct_ sparse3DFFT_range_struct;
 typedef sparse3DFFT_range_struct *sparse3DFFT_range;
 
-typedef enum 
-  {
-    SPARSE3DFFT_SPARSEINPUT,
-    SPARSE3DFFT_SPARSEOUTPUT
-  } sparse3DFFT_sparsedir;
+typedef enum {
+  SPARSE3DFFT_SPARSEINPUT,
+  SPARSE3DFFT_SPARSEOUTPUT
+} sparse3DFFT_sparsedir;
 
-typedef struct 
-  {
-    sparse3DFFT_sparsedir sparsedir;
-    int n[ 3 ], nafter[ 3 ];
-    FFTW_plan p[ 3 ][ 3 ][ MAX_LOG_HOWMANY + 1 ];
-    sparse3DFFT_range *range1[ 3 ][ 3 ], range2[ 3 ];
-    FFTW_complex *scratch;
-    int fft2_first, first_dim, second_dim, third_dim;
-  } sparse3DFFT_plan_struct;
-  
+typedef struct {
+  sparse3DFFT_sparsedir sparsedir;
+  int n[3], nafter[3];
+  FFTW_plan p[3][3][MAX_LOG_HOWMANY + 1];
+  sparse3DFFT_range *range1[3][3], range2[3];
+  FFTW_complex *scratch;
+  int fft2_first, first_dim, second_dim, third_dim;
+} sparse3DFFT_plan_struct;
+
 typedef sparse3DFFT_plan_struct *sparse3DFFT_plan;
 
-typedef int ( *sparse3DFFT_nonzero_func ) ( int x[ 3 ], void *data );
+typedef int (*sparse3DFFT_nonzero_func)(int x[3], void *data);
 
-extern sparse3DFFT_plan sparse3DFFT_create_plan( int nx, int ny, int nz,
-					         int dir, int flags,
-					         sparse3DFFT_sparsedir sparsedir,
-					         sparse3DFFT_nonzero_func nonzero,
-					         void *nonzero_data,
-					         FFTW_complex *data_in,
-					         FFTW_complex *data_out );
-					      
-extern void sparse3DFFT_destroy_plan( sparse3DFFT_plan p );
+extern sparse3DFFT_plan
+sparse3DFFT_create_plan(int nx, int ny, int nz, int dir, int flags,
+                        sparse3DFFT_sparsedir sparsedir,
+                        sparse3DFFT_nonzero_func nonzero, void *nonzero_data,
+                        FFTW_complex *data_in, FFTW_complex *data_out);
 
-extern void sparse3DFFT( sparse3DFFT_plan p, FFTW_complex *data_in, FFTW_complex *data_out );
+extern void sparse3DFFT_destroy_plan(sparse3DFFT_plan p);
+
+extern void sparse3DFFT(sparse3DFFT_plan p, FFTW_complex *data_in,
+                        FFTW_complex *data_out);
 
 #endif /* SPARSE3DFFT_H */

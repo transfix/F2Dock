@@ -20,14 +20,12 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef INC_CELL_H
 #define INC_CELL_H
 #include "ball.h"
 #include <vector>
 
 #include <cmath>
-
 
 struct Point {
   float x;
@@ -39,20 +37,17 @@ struct Point {
     y = b;
     z = c;
   }
-  bool operator==(const Point& p) {
-    return (x==p.x && y==p.y && z==p.z);
-  }
- 
-  float distsq(Point a, Point b) {
-  float res;
-  double dx, dy, dz;
-  dx = a.x - b.x;
-  dy = a.y - b.y;
-  dz = a.z - b.z;  
-  res = dx*dx + dy*dy + dz*dz;
-  return res;
-}
+  bool operator==(const Point &p) { return (x == p.x && y == p.y && z == p.z); }
 
+  float distsq(Point a, Point b) {
+    float res;
+    double dx, dy, dz;
+    dx = a.x - b.x;
+    dy = a.y - b.y;
+    dz = a.z - b.z;
+    res = dx * dx + dy * dy + dz * dz;
+    return res;
+  }
 };
 
 struct cellID {
@@ -74,7 +69,7 @@ class atom;
 
 struct gridcell {
   cellID ID;
-  std::vector<atom*> balls;
+  std::vector<atom *> balls;
   gridcell(int a, int b, int c) {
     ID.x = a;
     ID.y = b;

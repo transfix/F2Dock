@@ -20,28 +20,26 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #include <stdio.h>
 #include <hbondFilter/hbondFilter.h>
 
-int main( int argc, char* argv[ ] )
-{
-  if ( argc < 10 )
-    {
-      printf( "Input files not specified (  staticPQR,  movingPQR,  staticPSF,  movingPSF,  staticMol2,  movingMol2,  rtfFile,  prmFile,  aprmFile )! \n" );
-      return 1;
-    }
-    
-  hbondFilter hf(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9]);
-  hf.initializeFilter();
-       
-  double trans[ ] = { 1, 0, 0, 1,
-                      0, 1, 0, 0,
-                      0, 0, 1, 0 };	// small translation
-  double e;
-  hf.getEnergy( trans, &e );
+int main(int argc, char *argv[]) {
+  if (argc < 10) {
+    printf("Input files not specified (  staticPQR,  movingPQR,  staticPSF,  "
+           "movingPSF,  staticMol2,  movingMol2,  rtfFile,  prmFile,  aprmFile "
+           ")! \n");
+    return 1;
+  }
 
-  printf( "\nhbondEnergy = %lf\n", e );   
-    
+  hbondFilter hf(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7],
+                 argv[8], argv[9]);
+  hf.initializeFilter();
+
+  double trans[] = {1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0}; // small translation
+  double e;
+  hf.getEnergy(trans, &e);
+
+  printf("\nhbondEnergy = %lf\n", e);
+
   return 0;
 }

@@ -20,7 +20,6 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef MISC_IDENT_H
 
 #define MISC_IDENT_H
@@ -36,64 +35,91 @@
 #include <string.h>
 
 #ifdef _WIN32
-   #include <sys/types.h>
-   #include <sys/timeb.h>
+#include <sys/types.h>
+#include <sys/timeb.h>
 #else
-   #include <sys/time.h>
+#include <sys/time.h>
 #endif
 
 #include "../utils/utils.h"
 #include "../fast-clash/clashFilter.h"
 #include "../fast-resCont/resContFilter.h"
 
-//enum resType { NONE = 0, ALA, ARG, ASN, ASP, CYS, GLN, GLU, GLY, HIS, ILE, LEU, LYS, MET, PHE, PRO, SER, THR, TRP, TYR, VAL };
-enum resType { NONE = 0, ILE, VAL, LEU, PHE, CYS, MET, ALA, GLY, THR, SER, TRP, TYR, PRO, HIS, GLU, GLN, ASP, ASN, LYS, ARG };
+// enum resType { NONE = 0, ALA, ARG, ASN, ASP, CYS, GLN, GLU, GLY, HIS, ILE,
+// LEU, LYS, MET, PHE, PRO, SER, THR, TRP, TYR, VAL };
+enum resType {
+  NONE = 0,
+  ILE,
+  VAL,
+  LEU,
+  PHE,
+  CYS,
+  MET,
+  ALA,
+  GLY,
+  THR,
+  SER,
+  TRP,
+  TYR,
+  PRO,
+  HIS,
+  GLU,
+  GLN,
+  ASP,
+  ASN,
+  LYS,
+  ARG
+};
 
-typedef struct
-  {
-    int resNum, resID;
-    int chainID;                
-  } RESIDUE;
+typedef struct {
+  int resNum, resID;
+  int chainID;
+} RESIDUE;
 
+int getResidueID(char *resName);
+bool countResidues(char *pqrFile, int res, int *count, int *total);
 
-int getResidueID( char *resName );
-bool countResidues( char *pqrFile, int res, int *count, int *total );
+bool isGXY(int nRes, RESIDUE *res, int i);
+bool isYXG(int nRes, RESIDUE *res, int i);
 
-bool isGXY( int nRes, RESIDUE *res, int i );
-bool isYXG( int nRes, RESIDUE *res, int i );
+bool readResidues(char *pqrFile, int *nRes, RESIDUE **res, int *nChn,
+                  int **chn);
+bool readAtomsAndResidues(char *pqrFile, int *nAtm, double **atm, int *nRes,
+                          RESIDUE **res, int *nChn, int **chn);
+bool readAtomsOnly(char *pqrFile, int *nAtm, double **atm);
+bool readAtomsWithResidueInfo(char *pqrFile, int *nAtm, double **atm);
+bool readGlycines(char *pqrFile, int *nAtm, double **atm);
 
-bool readResidues( char *pqrFile, int *nRes, RESIDUE **res, int *nChn, int **chn );
-bool readAtomsAndResidues( char *pqrFile, int *nAtm, double **atm, int *nRes, RESIDUE **res, int *nChn, int **chn );
-bool readAtomsOnly( char *pqrFile, int *nAtm, double **atm );
-bool readAtomsWithResidueInfo( char *pqrFile, int *nAtm, double **atm );
-bool readGlycines( char *pqrFile, int *nAtm, double **atm );
+bool getTotalCharge(char *pqrFile, double *tCharge);
 
-bool getTotalCharge( char *pqrFile, double *tCharge );
+bool CDR_L1_start(RESIDUE *res, int i);
+bool CDR_L1_end(RESIDUE *res, int i, int chainEnd);
+bool CDR_L2_start(RESIDUE *res, int i);
+bool CDR_L3_start(RESIDUE *res, int i);
+bool CDR_L3_end(RESIDUE *res, int i, int chainEnd);
+bool CDR_H1_start(RESIDUE *res, int i);
+bool CDR_H1_end(RESIDUE *res, int i, int chainEnd);
+bool CDR_H2_end(RESIDUE *res, int i, int chainEnd);
+bool CDR_H3_start(RESIDUE *res, int i);
+bool CDR_H3_end(RESIDUE *res, int i, int chainEnd);
+bool CDR_L3_identified(RESIDUE *res, int c, int l, int s, int *id);
+bool CDR_L2_L3_identified(RESIDUE *res, int c, int l, int s, int *id);
+bool CDR_L_identified(RESIDUE *res, int c, int l, int *id);
+bool CDR_H3_identified(RESIDUE *res, int c, int l, int s, int *id);
+bool CDR_H2_H3_identified(RESIDUE *res, int c, int l, int s, int *id);
+bool CDR_H_identified(RESIDUE *res, int c, int l, int *id);
 
-bool CDR_L1_start( RESIDUE *res, int i );
-bool CDR_L1_end( RESIDUE *res, int i, int chainEnd );
-bool CDR_L2_start( RESIDUE *res, int i );
-bool CDR_L3_start( RESIDUE *res, int i );
-bool CDR_L3_end( RESIDUE *res, int i, int chainEnd );
-bool CDR_H1_start( RESIDUE *res, int i );
-bool CDR_H1_end( RESIDUE *res, int i, int chainEnd );
-bool CDR_H2_end( RESIDUE *res, int i, int chainEnd );
-bool CDR_H3_start( RESIDUE *res, int i );
-bool CDR_H3_end( RESIDUE *res, int i, int chainEnd );
-bool CDR_L3_identified( RESIDUE *res, int c, int l, int s, int *id );
-bool CDR_L2_L3_identified( RESIDUE *res, int c, int l, int s, int *id );
-bool CDR_L_identified( RESIDUE *res, int c, int l, int *id );
-bool CDR_H3_identified( RESIDUE *res, int c, int l, int s, int *id );
-bool CDR_H2_H3_identified( RESIDUE *res, int c, int l, int s, int *id );
-bool CDR_H_identified( RESIDUE *res, int c, int l, int *id );
+bool isAntibody(char *pqrFile);
+bool getAntibodyBindingSite(char *pqrFile, int *numAtoms, double **atm,
+                            bool low, bool high, int l1, int l2);
 
-bool isAntibody( char *pqrFile );
-bool getAntibodyBindingSite( char *pqrFile, int *numAtoms, double **atm, bool low, bool high, int l1, int l2 );
+bool countGXYandYXG(char *pqrFile, int *count, int *total, int *nGly);
 
-bool countGXYandYXG( char *pqrFile, int *count, int *total, int *nGly );
-
-bool initAntibodyClashFilter( char *staticPQR, char *movingPQR, bool low, bool high, int l1, int l2, clashFilter **cFilter );
-bool initEnzymeClashFilter( char *staticPQR, char *movingPQR, clashFilter **cFilter );
-bool initResContFilter( char *staticPQR, char *movingPQR, char *resContFile, resContFilter **cFilter );
+bool initAntibodyClashFilter(char *staticPQR, char *movingPQR, bool low,
+                             bool high, int l1, int l2, clashFilter **cFilter);
+bool initEnzymeClashFilter(char *staticPQR, char *movingPQR,
+                           clashFilter **cFilter);
+bool initResContFilter(char *staticPQR, char *movingPQR, char *resContFile,
+                       resContFilter **cFilter);
 
 #endif

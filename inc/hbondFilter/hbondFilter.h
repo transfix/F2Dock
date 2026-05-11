@@ -20,61 +20,60 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
 #ifndef HBOND_FILTER_H
 #define HBOND_FILTER_H
 
-#include <stdlib.h> 
-#include <stdio.h> 
-#include <string.h> 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #ifndef _WIN32
-#include <unistd.h> 
+#include <unistd.h>
 #endif
-#include <math.h> 
+#include <math.h>
 #include <time.h>
 #include <libmol/libmol.h>
 
-//using namespace LibMol; 
+// using namespace LibMol;
 
 #define MAX_ITER 1000
 
-class hbondFilter
-{
-	private:
-		int* fix1;
-		int* fix2; 
-		int nfix1, nfix2; 
+class hbondFilter {
+private:
+  int *fix1;
+  int *fix2;
+  int nfix1, nfix2;
 
-        	double eface; 
-		double efacv; 
+  double eface;
+  double efacv;
 
-		struct LibMol::prm* aprm;
-		struct LibMol::atomgrp* staticAG;
-		struct LibMol::atomgrp* movingAG;
-		struct LibMol::agsetup* ags1;
-		struct LibMol::agsetup* ags2;  
-		int ndim1, ndim2;
-	 	double* startag1;
-	 	double* startag2;
+  struct LibMol::prm *aprm;
+  struct LibMol::atomgrp *staticAG;
+  struct LibMol::atomgrp *movingAG;
+  struct LibMol::agsetup *ags1;
+  struct LibMol::agsetup *ags2;
+  int ndim1, ndim2;
+  double *startag1;
+  double *startag2;
 
-	        LibMol::OCTREE staticOctree;
-	        LibMol::OCTREE movingOctree;
-		LibMol::OCTREE_PARAMS static_eng_params;
-		LibMol::OCTREE_PARAMS moving_eng_params;
-		LibMol::OCTREE_PARAMS complex_eng_params;
+  LibMol::OCTREE staticOctree;
+  LibMol::OCTREE movingOctree;
+  LibMol::OCTREE_PARAMS static_eng_params;
+  LibMol::OCTREE_PARAMS moving_eng_params;
+  LibMol::OCTREE_PARAMS complex_eng_params;
 
-		double staticHbondEnergy;
-		double movingHbondEnergy;
-		double complexHbondEnergy;
+  double staticHbondEnergy;
+  double movingHbondEnergy;
+  double complexHbondEnergy;
 
-		void read_fix(char *ffile, int *nfix, int **fix);
+  void read_fix(char *ffile, int *nfix, int **fix);
 
-		
-	public:
-		hbondFilter(char* staticPQR, char* movingPQR, char* staticPSF, char* movingPSF, char* staticMol2, char* movingMol2, char* rtfFile, char* prmFile, char* aprmFile);
-		~hbondFilter();
-		bool initializeFilter();
-		bool getEnergy(double* trans, double* en);
+public:
+  hbondFilter(char *staticPQR, char *movingPQR, char *staticPSF,
+              char *movingPSF, char *staticMol2, char *movingMol2,
+              char *rtfFile, char *prmFile, char *aprmFile);
+  ~hbondFilter();
+  bool initializeFilter();
+  bool getEnergy(double *trans, double *en);
 };
 
 #endif

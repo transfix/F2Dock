@@ -1,8 +1,9 @@
 /*
   Copyright 2011 The University of Texas at Austin
 
-        Authors: Rezaul Alam Chowdhury <shaikat@cs.utexas.edu>, Vinay Siddavanahalli <skvinay@cs.utexas.edu>
-        Advisor: Chandrajit Bajaj <bajaj@cs.utexas.edu>
+        Authors: Rezaul Alam Chowdhury <shaikat@cs.utexas.edu>, Vinay
+  Siddavanahalli <skvinay@cs.utexas.edu> Advisor: Chandrajit Bajaj
+  <bajaj@cs.utexas.edu>
 
   This file is part of F2Dock.
 
@@ -30,36 +31,35 @@
 
 namespace CCVOpenGLMath {
 
-	class Ray  
-	{
-	public:
-		Ray();
-		Ray(const Vector& origin, const Vector& dir);
-		virtual ~Ray();
+class Ray {
+public:
+  Ray();
+  Ray(const Vector &origin, const Vector &dir);
+  virtual ~Ray();
 
-		void print();
+  void print();
 
-		Vector getPointOnRay(float t) const;
+  Vector getPointOnRay(float t) const;
 
-		float nearestTOnXAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
-		float nearestTOnYAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
-		float nearestTOnZAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  float nearestTOnXAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  float nearestTOnYAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  float nearestTOnZAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
 
-		Vector nearestPointOnXAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
-		Vector nearestPointOnYAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
-		Vector nearestPointOnZAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  Vector nearestPointOnXAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  Vector nearestPointOnYAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  Vector nearestPointOnZAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
 
-		float distanceToXAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
-		float distanceToYAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
-		float distanceToZAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  float distanceToXAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  float distanceToYAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
+  float distanceToZAxis(Vector Origin = Vector(0.0, 0.0, 0.0, 1.0)) const;
 
-		bool intersectSphere( Vector center, float radius, Vector *point1, Vector* point2, float *distance1, float* distance2 );
+  bool intersectSphere(Vector center, float radius, Vector *point1,
+                       Vector *point2, float *distance1, float *distance2);
 
-		Vector m_Origin;
-		Vector m_Dir;
-
-	};
-
+  Vector m_Origin;
+  Vector m_Dir;
 };
+
+}; // namespace CCVOpenGLMath
 
 #endif // !defined(AFX_RAY_H__8760CFFE_A656_460F_A893_4C81FF806264__INCLUDED_)

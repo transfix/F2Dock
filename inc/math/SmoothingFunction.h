@@ -1,8 +1,9 @@
 /*
   Copyright 2011 The University of Texas at Austin
 
-        Authors: Rezaul Alam Chowdhury <shaikat@cs.utexas.edu>, Vinay Siddavanahalli <skvinay@cs.utexas.edu>
-        Advisor: Chandrajit Bajaj <bajaj@cs.utexas.edu>
+        Authors: Rezaul Alam Chowdhury <shaikat@cs.utexas.edu>, Vinay
+  Siddavanahalli <skvinay@cs.utexas.edu> Advisor: Chandrajit Bajaj
+  <bajaj@cs.utexas.edu>
 
   This file is part of F2Dock.
 
@@ -23,68 +24,69 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#if !defined(AFX_SMOOTHINGFUNCTION_H__29D14D8B_2356_4D85_86BF_AAD558BB98E5__INCLUDED_)
+#if !defined(                                                                  \
+    AFX_SMOOTHINGFUNCTION_H__29D14D8B_2356_4D85_86BF_AAD558BB98E5__INCLUDED_)
 #define AFX_SMOOTHINGFUNCTION_H__29D14D8B_2356_4D85_86BF_AAD558BB98E5__INCLUDED_
 
 #include <math.h>
 #include <stdio.h>
 
-//using namespace std;
+// using namespace std;
 
-class SmoothingFunction  
-{
+class SmoothingFunction {
 public:
-	SmoothingFunction(double alpha, int m, int n, int N);
-	virtual ~SmoothingFunction();
+  SmoothingFunction(double alpha, int m, int n, int N);
+  virtual ~SmoothingFunction();
 
-	inline double getPhi( double index );
-	inline double getPhiHat( int index );
-	virtual inline double getPhiAtRealPos( double pos ) = 0;
-	virtual inline double getPhiHatAtRealPos( double pos ) = 0;
+  inline double getPhi(double index);
+  inline double getPhiHat(int index);
+  virtual inline double getPhiAtRealPos(double pos) = 0;
+  virtual inline double getPhiHatAtRealPos(double pos) = 0;
 
 protected:
+  virtual bool precompute() = 0;
 
-	virtual bool precompute() = 0;
+  double *m_Phi;
+  double *m_PhiHat;
+  int m_PhiLength;
+  int m_PhiHatLength;
 
-	double* m_Phi;
-	double* m_PhiHat;
-	int m_PhiLength;
-	int m_PhiHatLength;
-
-	double alpha;
-	int m;
-	int n;
-	int N; // used to compare with large FFT.
-	bool m_Initialized;
+  double alpha;
+  int m;
+  int n;
+  int N; // used to compare with large FFT.
+  bool m_Initialized;
 };
 
 // this index is a real number between 0 and m+1.
-// When multiplied by N, this should be an integer. 
+// When multiplied by N, this should be an integer.
 // This is useful to compare with a FFT method.
-double SmoothingFunction::getPhi( double index )
-{
-	if( !m_Initialized ) precompute();
+double SmoothingFunction::getPhi(double index) {
+  if (!m_Initialized)
+    precompute();
 
-	if( !m_Phi ) return 0;
-	if( (index<-(m+1)) || (index >= m+1) ) 
-	  {
-//	   fprintf( stderr, "( index = %lf, m = %d )\n", index, m );
-	   return 0;
-	  } 
+  if (!m_Phi)
+    return 0;
+  if ((index < -(m + 1)) || (index >= m + 1)) {
+    //	   fprintf( stderr, "( index = %lf, m = %d )\n", index, m );
+    return 0;
+  }
 
-	//printf(" AAAA %d\n", (int) fabs((double)(index*N)));
-	return m_Phi[(int) fabs((double)(index*N))];
+  // printf(" AAAA %d\n", (int) fabs((double)(index*N)));
+  return m_Phi[(int)fabs((double)(index * N))];
 }
 
-double SmoothingFunction::getPhiHat( int index )
-{
-	if( !m_Initialized ) precompute();
+double SmoothingFunction::getPhiHat(int index) {
+  if (!m_Initialized)
+    precompute();
 
-	if( !m_PhiHat ) return 0;
-	
-	if( (index<0) || (index >= m_PhiHatLength) ) return 0;
+  if (!m_PhiHat)
+    return 0;
 
-	return m_PhiHat[index];
+  if ((index < 0) || (index >= m_PhiHatLength))
+    return 0;
+
+  return m_PhiHat[index];
 }
 
 #endif // !defined(AFX_SMOOTHINGFUNCTION_H__29D14D8B_2356_4D85_86BF_AAD558BB98E5__INCLUDED_)

@@ -33,7 +33,7 @@
 #include <cstring>
 #include <pthread.h>
 
-#if ! defined(__APPLE__)
+#if !defined(__APPLE__)
 #include <malloc.h>
 #endif
 
@@ -43,162 +43,173 @@
 #include "../math/Vector.h"
 
 #ifdef _WIN32
-   #include <sys/types.h>
-   #include <sys/timeb.h>
+#include <sys/types.h>
+#include <sys/timeb.h>
 #else
-   #include <sys/time.h>
+#include <sys/time.h>
 #endif
 
 #ifdef freeMem
-   #undef freeMem
+#undef freeMem
 #endif
-#define freeMem( ptr ) { if ( ptr != NULL ) free( ptr ); }
+#define freeMem(ptr)                                                           \
+  {                                                                            \
+    if (ptr != NULL)                                                           \
+      free(ptr);                                                               \
+  }
 
-#ifdef zeroIfLess   
-   #undef zeroIfLess
+#ifdef zeroIfLess
+#undef zeroIfLess
 #endif
-#define zeroIfLess( a, b ) ( ( ( a ) < ( b ) ) ? 0 : 1 )
-
+#define zeroIfLess(a, b) (((a) < (b)) ? 0 : 1)
 
 using CCVOpenGLMath::Matrix;
 using CCVOpenGLMath::Vector;
 
+class clashFilter {
+private:
+  typedef struct {
+    int id;
+    double x, y, z;
+    double q, r;
+  } ATOM;
 
-class clashFilter
-{
- private:
+  typedef struct {
+    double cx, cy, cz;
+    double cq, cr;
+    bool leaf;
+    int cPtr[8];
+    int atomsStartID, atomsEndID;
+  } ATOMS_OCTREE_NODE;
 
-   typedef struct
-    {
-     int id;
-     double x, y, z;
-     double q, r;
-    } ATOM;
+  typedef struct {
+    clashFilter *cF;
+    Matrix *transMat;
+    int nClashes, nSevereClashes;
+    double interactionValue;
+  } THREAD_RESULT;
 
-   typedef struct
-    {
-     double cx, cy, cz;
-     double cq, cr;
-     bool leaf;
-     int cPtr[ 8 ];
-     int atomsStartID, atomsEndID;
-    } ATOMS_OCTREE_NODE;    
+  ATOM *staticAtoms;
+  int nStaticAtoms;
 
-   typedef struct
-    {
-     clashFilter *cF;
-     Matrix *transMat;
-     int nClashes, nSevereClashes;
-     double interactionValue;
-    } THREAD_RESULT;
+  int numStaticAtomsOctreeNodes;
+  bool staticAtomsOctreeBuilt;
+  ATOMS_OCTREE_NODE *staticAtomsOctree;
+  int staticAtomsOctreeRoot;
 
-   ATOM *staticAtoms;
-   int nStaticAtoms;      
+  ATOM *movingAtoms;
+  int nMovingAtoms;
 
-   int numStaticAtomsOctreeNodes;
-   bool staticAtomsOctreeBuilt;
-   ATOMS_OCTREE_NODE *staticAtomsOctree;
-   int staticAtomsOctreeRoot;
+  int numMovingAtomsOctreeNodes;
+  bool movingAtomsOctreeBuilt;
+  ATOMS_OCTREE_NODE *movingAtomsOctree;
+  int movingAtomsOctreeRoot;
 
-   ATOM *movingAtoms;
-   int nMovingAtoms;      
+  bool priorComputationCleared;
 
-   int numMovingAtomsOctreeNodes;
-   bool movingAtomsOctreeBuilt;
-   ATOMS_OCTREE_NODE *movingAtomsOctree;
-   int movingAtomsOctreeRoot;
-   
-   bool priorComputationCleared;
-   
-   bool computedInteractionNaively;
+  bool computedInteractionNaively;
 
-   double minRadius, minRadiusUsed;
-   int maxLeafSize, maxLeafSizeUsed;
-   
-   double epsilon;
-   
-   pthread_mutex_t nodesLock;
-   int curNode, maxNode;   
+  double minRadius, minRadiusUsed;
+  int maxLeafSize, maxLeafSizeUsed;
 
-   pthread_mutex_t subtreeRootsLock;
-   int curSubtreeRoot, maxSubtreeRoot;   
-   int *movingAtomsSubtreeRoots;
-   int movingAtomsSubtreeRootsSize;
-   
-   Matrix transMatrix;   
-   double clashFrac, severeClashFrac, fuzzyFrac;     
-      
-   int numThreads;   
-   
-   bool printStatus;
+  double epsilon;
 
-   void printError( const std::string& msg );
-   double getTime( void );   
-   void freeMemory( void );
-   void setDefaults( void );
-   bool allocateMovingAtomsSubtreeRootsArray( int nThreads );   
-   void initFreeNodeServer( int numNodes );   
-   int nextFreeNode( void );
-   void initSubtreeRootServer( );   
-   int nextSubtreeRoot( void );   
-   bool copyAtomsFromArray( int numAtomsSrc, double *atmsSrc, int *numAtomsDest, ATOM **atmsDest );   
-   void countAtomsOctreeNodesAndSortAtoms( ATOM *sAtoms, int sAtomsStartID, int sAtomsEndID, ATOM *sAtomsT, int *numNodes );      
-   int constructAtomsOctree( int atomsStartID, int atomsEndID, ATOM *atoms, ATOMS_OCTREE_NODE *atomsOctree );
-   bool buildStaticAtomsOctree( void );   
-   bool buildMovingAtomsOctree( void );            
-   bool buildOctrees( void );         
-   void fillMovingAtomsSubtreeRootsArray( int nodeID, int maxNodesInLevel );   
-   void approximateInteractions( Matrix transMat, int nodeS, int nodeM, int *nClashes, int *nSevereClashes, double *interactionValue );
+  pthread_mutex_t nodesLock;
+  int curNode, maxNode;
 
-   static void *approximateInteractionsThread( void *v )
-    {
-     THREAD_RESULT *tR = ( THREAD_RESULT * ) v;     
-     
-     tR->nClashes = tR->nSevereClashes = 0; 
-     tR->interactionValue = 0;
-     
-     while ( 1 )
-       {
-        int nextRoot = tR->cF->nextSubtreeRoot( );     
-        if ( nextRoot < 0 ) break;      
-        
-        int nClashes, nSevereClashes;
-        double interactionValue;
-        
-        tR->cF->approximateInteractions( *( tR->transMat ), tR->cF->staticAtomsOctreeRoot, nextRoot, &nClashes, &nSevereClashes, &interactionValue );
-        
-        tR->nClashes += nClashes;
-        tR->nSevereClashes += nSevereClashes;
-        tR->interactionValue += interactionValue;
-       }
-     return nullptr;
+  pthread_mutex_t subtreeRootsLock;
+  int curSubtreeRoot, maxSubtreeRoot;
+  int *movingAtomsSubtreeRoots;
+  int movingAtomsSubtreeRootsSize;
+
+  Matrix transMatrix;
+  double clashFrac, severeClashFrac, fuzzyFrac;
+
+  int numThreads;
+
+  bool printStatus;
+
+  void printError(const std::string &msg);
+  double getTime(void);
+  void freeMemory(void);
+  void setDefaults(void);
+  bool allocateMovingAtomsSubtreeRootsArray(int nThreads);
+  void initFreeNodeServer(int numNodes);
+  int nextFreeNode(void);
+  void initSubtreeRootServer();
+  int nextSubtreeRoot(void);
+  bool copyAtomsFromArray(int numAtomsSrc, double *atmsSrc, int *numAtomsDest,
+                          ATOM **atmsDest);
+  void countAtomsOctreeNodesAndSortAtoms(ATOM *sAtoms, int sAtomsStartID,
+                                         int sAtomsEndID, ATOM *sAtomsT,
+                                         int *numNodes);
+  int constructAtomsOctree(int atomsStartID, int atomsEndID, ATOM *atoms,
+                           ATOMS_OCTREE_NODE *atomsOctree);
+  bool buildStaticAtomsOctree(void);
+  bool buildMovingAtomsOctree(void);
+  bool buildOctrees(void);
+  void fillMovingAtomsSubtreeRootsArray(int nodeID, int maxNodesInLevel);
+  void approximateInteractions(Matrix transMat, int nodeS, int nodeM,
+                               int *nClashes, int *nSevereClashes,
+                               double *interactionValue);
+
+  static void *approximateInteractionsThread(void *v) {
+    THREAD_RESULT *tR = (THREAD_RESULT *)v;
+
+    tR->nClashes = tR->nSevereClashes = 0;
+    tR->interactionValue = 0;
+
+    while (1) {
+      int nextRoot = tR->cF->nextSubtreeRoot();
+      if (nextRoot < 0)
+        break;
+
+      int nClashes, nSevereClashes;
+      double interactionValue;
+
+      tR->cF->approximateInteractions(
+          *(tR->transMat), tR->cF->staticAtomsOctreeRoot, nextRoot, &nClashes,
+          &nSevereClashes, &interactionValue);
+
+      tR->nClashes += nClashes;
+      tR->nSevereClashes += nSevereClashes;
+      tR->interactionValue += interactionValue;
     }
+    return nullptr;
+  }
 
-    
- public:
+public:
+  clashFilter(int numStaticAtoms, double *staticAtoms, int numMovingAtoms,
+              double *movingAtoms, bool printStat);
+  clashFilter(int numStaticAtoms, double *staticAtoms, int numMovingAtoms,
+              double *movingAtoms, bool printStat, double cF);
+  clashFilter(int numStaticAtoms, double *staticAtoms, int numMovingAtoms,
+              double *movingAtoms);
+  ~clashFilter();
 
-   clashFilter( int numStaticAtoms, double *staticAtoms, int numMovingAtoms, double *movingAtoms, bool printStat ); 
-   clashFilter( int numStaticAtoms, double *staticAtoms, int numMovingAtoms, double *movingAtoms, bool printStat , double cF); 	  
-   clashFilter( int numStaticAtoms, double *staticAtoms, int numMovingAtoms, double *movingAtoms );      
-   ~clashFilter( );
-   
-   bool setMinRadius( double minRad );
-   bool setMaxLeafSize( int maxLfSize );
-   bool setEpsilon( double eps );
-   bool setNumThreads( int nThreads );
+  bool setMinRadius(double minRad);
+  bool setMaxLeafSize(int maxLfSize);
+  bool setEpsilon(double eps);
+  bool setNumThreads(int nThreads);
 
-   bool setProximityFactors( double clashFactor, double severeClashFactor, double fuzzyFactor );
-   bool setTransformationMatrix( Matrix transMat );
+  bool setProximityFactors(double clashFactor, double severeClashFactor,
+                           double fuzzyFactor);
+  bool setTransformationMatrix(Matrix transMat);
 
-   void setPrintStatus( bool printStat );
-      
-   void printCurrentSettings( void );   
-   
-   bool computeInteractions( int *nClashes, int *nSevereClashes, double *interactionValue );
-   bool computeInteractions( Matrix transMat, int *nClashes, int *nSevereClashes, double *interactionValue );
-   
-   bool computeInteractionsNaively( int *nClashes, int *nSevereClashes, double *interactionValue );
-   bool computeInteractionsNaively( Matrix transMat, int *nClashes, int *nSevereClashes, double *interactionValue );   
+  void setPrintStatus(bool printStat);
+
+  void printCurrentSettings(void);
+
+  bool computeInteractions(int *nClashes, int *nSevereClashes,
+                           double *interactionValue);
+  bool computeInteractions(Matrix transMat, int *nClashes, int *nSevereClashes,
+                           double *interactionValue);
+
+  bool computeInteractionsNaively(int *nClashes, int *nSevereClashes,
+                                  double *interactionValue);
+  bool computeInteractionsNaively(Matrix transMat, int *nClashes,
+                                  int *nSevereClashes,
+                                  double *interactionValue);
 };
 
 #endif
