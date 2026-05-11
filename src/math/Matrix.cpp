@@ -415,8 +415,8 @@ Matrix Matrix::sqrt() {
 
     for (int i = 0; i < 4; i++)
       for (int j = 0; j < 4; j++) {
-        Y1.set(i, j, 0.5 * (Y.get(i, j) + invZ.get(i, j)));
-        Z1.set(i, j, 0.5 * (Z.get(i, j) + invY.get(i, j)));
+        Y1.set(i, j, (float)(0.5 * (Y.get(i, j) + invZ.get(i, j))));
+        Z1.set(i, j, (float)(0.5 * (Z.get(i, j) + invY.get(i, j))));
       }
 
     Y = Y1;

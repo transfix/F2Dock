@@ -685,7 +685,7 @@ void initializeCurvatureGrid(PARAMS_IN *pr, int pw, double maxRatio,
 
   cGrid->gridSpacing = pr->gridSpacing;
 
-  int gSize = dimX * dimY * dimZ;
+  int gSize = (int)(dimX * dimY * dimZ);
 
   cGrid->grid = (int *)malloc(gSize * sizeof(int));
 
@@ -733,7 +733,7 @@ void initializeCurvatureGrid(PARAMS_IN *pr, int pw, double maxRatio,
             if (d2 > rc2)
               continue;
 
-            int index = (zt * dimY + yt) * dimX + xt;
+            int index = (int)((zt * dimY + yt) * dimX + xt);
 
             cGrid->grid[index] = 1;
           }
@@ -1994,7 +1994,7 @@ bool rotateAboutOrigin(double *x, double *y, double *z, int n, Matrix &rotMat) {
     return false;
 
   for (int i = 0; i < n; i++) {
-    Vector oldPos(x[i], y[i], z[i], 1);
+    Vector oldPos((float)(x[i]), (float)(y[i]), (float)(z[i]), 1);
     Vector newPos = rotMat * oldPos;
 
     x[i] = newPos[0];
@@ -2593,7 +2593,8 @@ void retrieveTransformation(int ix, int iy, int iz, int c, int r, int f, int n,
   rz = z - realz;
 
   // find final transformation by adding the translation
-  trans = trans.preMultiplication(Matrix::translation(rx, ry, rz));
+  trans = trans.preMultiplication(
+      Matrix::translation((float)(rx), (float)(ry), (float)(rz)));
 }
 
 void retrieveTransformation(int ix, int iy, int iz, int c, int r, int f,
@@ -2796,7 +2797,8 @@ void printIntermediateStats(FILE *fp, int rmsdToReport, int rmsdGood,
     if (iv_sc > max_iv_sc)
       max_iv_sc = iv_sc;
 
-    retrieveTransformation(x, y, z, c, r, f, pr, rx, ry, rz, transformation);
+    retrieveTransformation((int)(x), (int)(y), (int)(z), c, r, f, pr, rx, ry,
+                           rz, transformation);
 
     if (reDocking)
       rmsd = getRMSD(pr->pri, transformation);
@@ -3078,7 +3080,8 @@ void printUntransformedScore(FILE *fp, PARAMS *pr) {
                              &nclashes, &scomp, &pgsol, &pgsolh, &dispe, &x, &y,
                              &z, &r, &f, &c);
 
-    retrieveTransformation(x, y, z, c, r, f, pr, rx, ry, rz, transformation);
+    retrieveTransformation((int)(x), (int)(y), (int)(z), c, r, f, pr, rx, ry,
+                           rz, transformation);
 
     double d = rx * rx + ry * ry + rz * rz;
 
@@ -3292,9 +3295,9 @@ void rotateGrid(FFTW_complex *rotGrid, FFTW_complex *grid, int n, double theta1,
         yf -= ofs;
         zf -= ofs;
 
-        int xl = floor(xf), xh = ceil(xf);
-        int yl = floor(yf), yh = ceil(yf);
-        int zl = floor(zf), zh = ceil(zf);
+        int xl = (int)(floor(xf)), xh = (int)(ceil(xf));
+        int yl = (int)(floor(yf)), yh = (int)(ceil(yf));
+        int zl = (int)(floor(zf)), zh = (int)(ceil(zf));
 
         int i = ((z + nn) * n + (y + nn)) * n + (x + nn);
 
@@ -3544,9 +3547,9 @@ void rotateGrid(FFTW_complex *rotGrid, int n, NONZERO_GRIDCELLS *grid,
 
       double xf = newPos[0] - ofs, yf = newPos[1] - ofs, zf = newPos[2] - ofs;
 
-      int xl = floor(xf), xh = ceil(xf);
-      int yl = floor(yf), yh = ceil(yf);
-      int zl = floor(zf), zh = ceil(zf);
+      int xl = (int)(floor(xf)), xh = (int)(ceil(xf));
+      int yl = (int)(floor(yf)), yh = (int)(ceil(yf));
+      int zl = (int)(floor(zf)), zh = (int)(ceil(zf));
 
       if ((xl < -nn) || (xh >= nn + odd) || (yl < -nn) || (yh >= nn + odd) ||
           (zl < -nn) || (zh >= nn + odd))
@@ -3566,14 +3569,15 @@ void rotateGrid(FFTW_complex *rotGrid, int n, NONZERO_GRIDCELLS *grid,
       //                                                    ( float ) grid[ i
       //                                                    ].v[ 0 ], ( float )
       //                                                    grid[ i ].v[ 1 ] );
-      Vector oldPos(grid[i].x + ofs, grid[i].y + ofs, grid[i].z + ofs, 1.0);
+      Vector oldPos((float)(grid[i].x + ofs), (float)(grid[i].y + ofs),
+                    (float)(grid[i].z + ofs), 1.0);
       Vector newPos = rotMat * oldPos;
 
       double xf = newPos[0] - ofs, yf = newPos[1] - ofs, zf = newPos[2] - ofs;
 
-      int xl = floor(xf), xh = ceil(xf);
-      int yl = floor(yf), yh = ceil(yf);
-      int zl = floor(zf), zh = ceil(zf);
+      int xl = (int)(floor(xf)), xh = (int)(ceil(xf));
+      int yl = (int)(floor(yf)), yh = (int)(ceil(yf));
+      int zl = (int)(floor(zf)), zh = (int)(ceil(zf));
 
       if ((xl < -nn) || (xh >= nn + odd) || (yl < -nn) || (yh >= nn + odd) ||
           (zl < -nn) || (zh >= nn + odd))
@@ -3632,9 +3636,9 @@ void rotateElecGrid(FFTW_DATA_TYPE *rotGrid, int n, NONZERO_GRIDCELLS *grid,
 
       double xf = newPos[0] - ofs, yf = newPos[1] - ofs, zf = newPos[2] - ofs;
 
-      int xl = floor(xf), xh = ceil(xf);
-      int yl = floor(yf), yh = ceil(yf);
-      int zl = floor(zf), zh = ceil(zf);
+      int xl = (int)(floor(xf)), xh = (int)(ceil(xf));
+      int yl = (int)(floor(yf)), yh = (int)(ceil(yf));
+      int zl = (int)(floor(zf)), zh = (int)(ceil(zf));
 
       if ((xl < -nn) || (xh >= nn + odd) || (yl < -nn) || (yh >= nn + odd) ||
           (zl < -nn) || (zh >= nn + odd))
@@ -3649,14 +3653,15 @@ void rotateElecGrid(FFTW_DATA_TYPE *rotGrid, int n, NONZERO_GRIDCELLS *grid,
     }
   } else {
     for (int i = 0; i < numNonzeroCells; i++) {
-      Vector oldPos(grid[i].x + ofs, grid[i].y + ofs, grid[i].z + ofs, 1.0);
+      Vector oldPos((float)(grid[i].x + ofs), (float)(grid[i].y + ofs),
+                    (float)(grid[i].z + ofs), 1.0);
       Vector newPos = rotMat * oldPos;
 
       double xf = newPos[0] - ofs, yf = newPos[1] - ofs, zf = newPos[2] - ofs;
 
-      int xl = floor(xf), xh = ceil(xf);
-      int yl = floor(yf), yh = ceil(yf);
-      int zl = floor(zf), zh = ceil(zf);
+      int xl = (int)(floor(xf)), xh = (int)(ceil(xf));
+      int yl = (int)(floor(yf)), yh = (int)(ceil(yf));
+      int zl = (int)(floor(zf)), zh = (int)(ceil(zf));
 
       if ((xl < -nn) || (xh >= nn + odd) || (yl < -nn) || (yh >= nn + odd) ||
           (zl < -nn) || (zh >= nn + odd))
@@ -3808,7 +3813,7 @@ void elecScoreSingleConfiguration(int nA, double *xA, double *yA, double *zA,
   //  printf( "\n\n" );
 
   for (int i = 0; i < nB; i++) {
-    Vector oldPos(xB[i], yB[i], zB[i], 1.0);
+    Vector oldPos((float)(xB[i]), (float)(yB[i]), (float)(zB[i]), 1.0);
     Vector newPos = transMat * oldPos;
     double xxB = newPos[0], yyB = newPos[1], zzB = newPos[2];
 
@@ -4642,8 +4647,9 @@ void applyFilters(FILTER_PARAMS *pr) {
 
       else {
 
-        Vector oldPos(pr->pri->centroidxB, pr->pri->centroidyB,
-                      pr->pri->centroidzB, 1.0);
+        Vector oldPos((float)(pr->pri->centroidxB),
+                      (float)(pr->pri->centroidyB),
+                      (float)(pr->pri->centroidzB), 1.0);
         Vector newPos = transM * oldPos;
         double xM = newPos[0], yM = newPos[1], zM = newPos[2];
 
@@ -5169,14 +5175,14 @@ int saveGrid(PARAMS_IN *pr) {
   double numFreq3 = numFreq * numFreq * numFreq;
 
   FFTW_complex *gridA =
-      (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
-  FFTW_DATA_TYPE *elecGridA =
-      (FFTW_DATA_TYPE *)FFTW_malloc(sizeof(FFTW_DATA_TYPE) * numFreq3);
+      (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
+  FFTW_DATA_TYPE *elecGridA = (FFTW_DATA_TYPE *)FFTW_malloc(
+      (size_t)(sizeof(FFTW_DATA_TYPE) * numFreq3));
 
   FFTW_complex *gridB =
-      (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
-  FFTW_DATA_TYPE *elecGridB =
-      (FFTW_DATA_TYPE *)FFTW_malloc(sizeof(FFTW_DATA_TYPE) * numFreq3);
+      (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
+  FFTW_DATA_TYPE *elecGridB = (FFTW_DATA_TYPE *)FFTW_malloc(
+      (size_t)(sizeof(FFTW_DATA_TYPE) * numFreq3));
 
   // static molecule
   double *xkAOrig = pr->xkAOrig;
@@ -5219,7 +5225,7 @@ int saveGrid(PARAMS_IN *pr) {
 
   double n = (int)(alpha * numFreq);
 
-  smoothingFunction = new Gaussian(alpha, interpFuncExtent, n, gridSize);
+  smoothingFunction = new Gaussian(alpha, interpFuncExtent, (int)(n), gridSize);
   std::cout << "typeA " << typeA << " typeB " << typeB << " numCentersA "
             << numCentersA << " " << "numCentersB " << numCentersB
             << " A origin " << *xkAOrig << " " << *ykAOrig << " " << *zkAOrig
@@ -5253,8 +5259,8 @@ int saveGrid(PARAMS_IN *pr) {
   griddingElec(numCentersA, xkA, ykA, zkA, rkA, typeA, fkAElec, blobbiness,
                numFreq, elecRadiusInGrids, elecGridA, false, false);
 
-  if (!writeGrid(gridA, elecGridA, n, -xTransA, -yTransA, -zTransA, scale,
-                 fileNameA, pr->staticMoleculeSCReRaw,
+  if (!writeGrid(gridA, elecGridA, (int)(n), -xTransA, -yTransA, -zTransA,
+                 scale, fileNameA, pr->staticMoleculeSCReRaw,
                  pr->staticMoleculeSCImRaw, pr->staticMoleculeElecReRaw))
     return -1;
 
@@ -5284,8 +5290,8 @@ int saveGrid(PARAMS_IN *pr) {
   griddingElec(numCentersB, xkB, ykB, zkB, rkB, typeB, fkBElec, blobbiness,
                numFreq, elecRadiusInGrids, elecGridB, false, true);
 
-  if (!writeGrid(gridB, elecGridB, n, -xTransB, -yTransB, -zTransB, scale,
-                 fileNameB, pr->movingMoleculeSCReRaw,
+  if (!writeGrid(gridB, elecGridB, (int)(n), -xTransB, -yTransB, -zTransB,
+                 scale, fileNameB, pr->movingMoleculeSCReRaw,
                  pr->movingMoleculeSCImRaw, pr->movingMoleculeElecReRaw))
     return -1;
 
@@ -6449,23 +6455,23 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
   //  double numFreq3 = numFreq*numFreq*numFreq;
   FFTW_complex *centerFrequenciesA =
-      (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+      (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
 
   FFTW_complex *centerElecFrequenciesA = 0;
   FFTW_complex *smallElectrostaticsKernel = 0;
 
   if (elecScale != 0) {
     centerElecFrequenciesA =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
     smallElectrostaticsKernel =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
   }
 
   FFTW_complex *centerHbondFrequenciesA = 0;
 
   if (hbondWeight != 0)
     centerHbondFrequenciesA =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
 
   FFTW_complex *centerHydrophobicityFrequenciesA = 0;
   FFTW_complex *centerHydrophobicityTwoFrequenciesA = 0;
@@ -6473,17 +6479,17 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
   if ((hydrophobicityWeight != 0) || (hydroPhobicPhobicWeight != 0) ||
       (hydroPhilicPhilicWeight != 0) || (hydroPhobicPhilicWeight != 0)) {
     centerHydrophobicityFrequenciesA =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
     if (twoWayHydrophobicity)
-      centerHydrophobicityTwoFrequenciesA =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+      centerHydrophobicityTwoFrequenciesA = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
   }
 
   FFTW_complex *centerSimpleComplementarityFrequenciesA = 0;
 
   if ((simpleShapeWeight > 0) || (simpleChargeWeight > 0))
     centerSimpleComplementarityFrequenciesA =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
 
   FFTW_complex *ourMoreFrequenciesA;
 
@@ -6694,7 +6700,8 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
   FFTW_complex *gridA = 0;
 
-  gridA = (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+  gridA =
+      (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
 
   globalTopValues = new TopValues(numberOfPositions, numFreq);
   if (clusterRotRad > 0) {
@@ -6707,17 +6714,17 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
   double n = (int)(alpha * numFreq);
   int alphaM = (int)n;
 
-  int *validOutputMap = (int *)FFTW_malloc(sizeof(int) * numFreq3);
+  int *validOutputMap = (int *)FFTW_malloc((size_t)(sizeof(int) * numFreq3));
 
   for (int i = 0; i < numThreads; i++) {
     centerFrequenciesB[i] =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
     centerFrequenciesProduct[i] =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
     sparseProfile[i] =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
     sparseShapeProfile[i] =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
 
     freqHat[i] =
         (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * gridSize * 4);
@@ -6745,12 +6752,12 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
           ourMoreFrequenciesOut[i], FFTW_FORWARD, OPT_FFTW_SEARCH_TYPE);
 
     if (elecScale != 0) {
-      centerElecFrequenciesB[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
-      centerFrequenciesElecProduct[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
-      sparseElecProfile[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+      centerElecFrequenciesB[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
+      centerFrequenciesElecProduct[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
+      sparseElecProfile[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
 
       elecFreqPlan[i] = FFTW_plan_dft_c2r_3d(
           numFreq, numFreq, numFreq, centerFrequenciesElecProduct[i],
@@ -6770,27 +6777,27 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
           sparseElecProfile[i] = elecGridB[i] = NULL;
 
     if (hbondWeight != 0)
-      sparseHbondProfile[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+      sparseHbondProfile[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
     else
       sparseHbondProfile[i] = NULL;
 
     if ((hydrophobicityWeight != 0) || (hydroPhobicPhobicWeight != 0) ||
         (hydroPhilicPhilicWeight != 0) || (hydroPhobicPhilicWeight != 0)) {
-      sparseHydrophobicityProfile[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+      sparseHydrophobicityProfile[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
 
       if (twoWayHydrophobicity)
-        sparseHydrophobicityTwoProfile[i] =
-            (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        sparseHydrophobicityTwoProfile[i] = (FFTW_complex *)FFTW_malloc(
+            (size_t)(sizeof(FFTW_complex) * numFreq3));
       else
         sparseHydrophobicityTwoProfile[i] = NULL;
     } else
       sparseHydrophobicityProfile[i] = sparseHydrophobicityTwoProfile[i] = NULL;
 
     if ((simpleShapeWeight > 0) || (simpleChargeWeight > 0))
-      sparseSimpleComplementarityProfile[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+      sparseSimpleComplementarityProfile[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
     else
       sparseSimpleComplementarityProfile[i] = NULL;
 
@@ -6804,7 +6811,7 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
     if ((clusterTransRad > 0) || (peaksPerRotation < numFreq3) ||
         ((clusterRotRad > 0) && (i == 0))) {
-      sortedPeaks[i] = (double *)malloc(sizeof(double) * numFreq3);
+      sortedPeaks[i] = (double *)malloc((size_t)(sizeof(double) * numFreq3));
       for (int j = 0; j < numFreq3; j++)
         sortedPeaks[i][j] = 0;
     } else
@@ -6835,19 +6842,19 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
   if (breakDownScores) {
     centerFrequenciesA_01 =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
     centerFrequenciesA_10 =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
     centerFrequenciesA_11 =
-        (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+        (FFTW_complex *)FFTW_malloc((size_t)(sizeof(FFTW_complex) * numFreq3));
 
     for (int i = 0; i < numThreads; i++) {
-      sparseProfile_01[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
-      sparseProfile_10[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
-      sparseProfile_11[i] =
-          (FFTW_complex *)FFTW_malloc(sizeof(FFTW_complex) * numFreq3);
+      sparseProfile_01[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
+      sparseProfile_10[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
+      sparseProfile_11[i] = (FFTW_complex *)FFTW_malloc(
+          (size_t)(sizeof(FFTW_complex) * numFreq3));
     }
   } else {
     centerFrequenciesA_01 = centerFrequenciesA_10 = centerFrequenciesA_11 =
@@ -7690,7 +7697,7 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
                                   i);
         }
 
-      int *sPeaks = (int *)malloc(sizeof(int) * numFreq3);
+      int *sPeaks = (int *)malloc((size_t)(sizeof(int) * numFreq3));
 
       for (int i = 0; i < numFreq3; i++)
         sPeaks[i] = -1;
@@ -7706,9 +7713,10 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
                            &scomp, &pgsol, &pgsolh, &dispe, &x, &y, &z, &r, &f,
                            &k);
 
-        if (!closePeaksExist(z, y, x, r, rotations, sPeaks, peakList, numFreq,
-                             gridSpacing, clusterTransRad, cosTheta)) {
-          int cc = (z * numFreq + y) * numFreq + x;
+        if (!closePeaksExist((int)(z), (int)(y), (int)(x), r, rotations, sPeaks,
+                             peakList, numFreq, gridSpacing, clusterTransRad,
+                             cosTheta)) {
+          int cc = (int)((z * numFreq + y) * numFreq + x);
 
           peakList[2 * numInserted] = r;
           peakList[2 * numInserted + 1] = sPeaks[cc];
@@ -7754,12 +7762,12 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
         }
       }
 
-      filterPoses(&prT[0], globalTopValuesT, globalTopValues, numFreq, scale,
-                  translate_A, translate_B, rotations, functionScaleFactor,
-                  randRot);
+      filterPoses(&prT[0], globalTopValuesT, globalTopValues, numFreq,
+                  (float)(scale), translate_A, translate_B, rotations,
+                  functionScaleFactor, randRot);
 
       if (clusterTransRad > 0) {
-        double *hash3d = (double *)malloc(sizeof(double) * numFreq3);
+        double *hash3d = (double *)malloc((size_t)(sizeof(double) * numFreq3));
 
         for (int c = 0; c < numFreq3; c++)
           hash3d[c] = 0;
@@ -7776,12 +7784,15 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
           int clusterPenalty = 0;
 
-          int cVal1 = getClusterValue(x, y, z, hash3d, pr->numFreq, gridSpacing,
-                                      clusterTransRad * 1, -v);
-          int cVal2 = getClusterValue(x, y, z, hash3d, pr->numFreq, gridSpacing,
-                                      clusterTransRad * 2, -v);
-          int cVal3 = getClusterValue(x, y, z, hash3d, pr->numFreq, gridSpacing,
-                                      clusterTransRad * 3, -v);
+          int cVal1 =
+              getClusterValue((int)(x), (int)(y), (int)(z), hash3d, pr->numFreq,
+                              gridSpacing, clusterTransRad * 1, -v);
+          int cVal2 =
+              getClusterValue((int)(x), (int)(y), (int)(z), hash3d, pr->numFreq,
+                              gridSpacing, clusterTransRad * 2, -v);
+          int cVal3 =
+              getClusterValue((int)(x), (int)(y), (int)(z), hash3d, pr->numFreq,
+                              gridSpacing, clusterTransRad * 3, -v);
 
           if (cVal1 >= clusterTransSize * 1 + 0)
             clusterPenalty = 8;
@@ -7799,7 +7810,8 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
           globalTopValues->updateTopValues(sol);
 
           if (clusterPenalty == 0)
-            markCluster(x, y, z, hash3d, pr->numFreq, gridSpacing, 0, -v);
+            markCluster((int)(x), (int)(y), (int)(z), hash3d, pr->numFreq,
+                        gridSpacing, 0, -v);
         }
 
         free(hash3d);

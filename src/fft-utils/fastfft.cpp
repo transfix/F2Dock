@@ -95,9 +95,9 @@ void gridding(int M, double *x, double *y, double *z, float *r, char *type,
     // influence; observe that xL, xU, yL, yU, zL, zU \in [ -n/2, n/2 )
     int xL, xU, yL, yU, zL, zU;
 
-    xL = floor(xc) - m, xU = ceil(xc) + m;
-    yL = floor(yc) - m, yU = ceil(yc) + m;
-    zL = floor(zc) - m, zU = ceil(zc) + m;
+    xL = floor(xc) - m, xU = (int)(ceil(xc) + m);
+    yL = floor(yc) - m, yU = (int)(ceil(yc) + m);
+    zL = floor(zc) - m, zU = (int)(ceil(zc) + m);
 
     // apply atom s's influence
     for (int zt = zL; zt <= zU; zt++)
@@ -172,9 +172,9 @@ void gridding(int M, double *x, double *y, double *z, float *r, char *type,
 
         // compute the region [ xL, xU ] x [ yL, yU ] x [ zL, zU ] of atom s's
         // influence; observe that xL, xU, yL, yU, zL, zU \in [ -n/2, n/2 )
-        int xL = floor(xc) - md, xU = ceil(xc) + md;
-        int yL = floor(yc) - md, yU = ceil(yc) + md;
-        int zL = floor(zc) - md, zU = ceil(zc) + md;
+        int xL = (int)(floor(xc) - md), xU = (int)(ceil(xc) + md);
+        int yL = (int)(floor(yc) - md), yU = (int)(ceil(yc) + md);
+        int zL = (int)(floor(zc) - md), zU = (int)(ceil(zc) + md);
 
         if (xL < -n / 2)
           xL = -n / 2;
@@ -266,9 +266,9 @@ void griddingElec(int M, double *x, double *y, double *z, float *r, char *type,
 
     // compute the region [ xL, xU ] x [ yL, yU ] x [ zL, zU ] of atom s's
     // influence; observe that xL, xU, yL, yU, zL, zU \in [ -n/2, n/2 )
-    int xL = floor(xc) - rc, xU = ceil(xc) + rc;
-    int yL = floor(yc) - rc, yU = ceil(yc) + rc;
-    int zL = floor(zc) - rc, zU = ceil(zc) + rc;
+    int xL = (int)(floor(xc) - rc), xU = (int)(ceil(xc) + rc);
+    int yL = (int)(floor(yc) - rc), yU = (int)(ceil(yc) + rc);
+    int zL = (int)(floor(zc) - rc), zU = (int)(ceil(zc) + rc);
 
     if (xL < -(n >> 1))
       xL = -(n >> 1);
@@ -328,9 +328,9 @@ void griddingHbond(int M, double *x, double *y, double *z, float *r,
 
     // compute the region [ xL, xU ] x [ yL, yU ] x [ zL, zU ] of atom s's
     // influence; observe that xL, xU, yL, yU, zL, zU \in [ -n/2, n/2 )
-    int xL = floor(xc) - rc, xU = ceil(xc) + rc;
-    int yL = floor(yc) - rc, yU = ceil(yc) + rc;
-    int zL = floor(zc) - rc, zU = ceil(zc) + rc;
+    int xL = (int)(floor(xc) - rc), xU = (int)(ceil(xc) + rc);
+    int yL = (int)(floor(yc) - rc), yU = (int)(ceil(yc) + rc);
+    int zL = (int)(floor(zc) - rc), zU = (int)(ceil(zc) + rc);
 
     if (xL < -(n >> 1))
       xL = -(n >> 1);
@@ -386,9 +386,9 @@ void griddingHydrophobicity(int M, double *x, double *y, double *z, float *r,
 
     // compute the region [ xL, xU ] x [ yL, yU ] x [ zL, zU ] of atom s's
     // influence; observe that xL, xU, yL, yU, zL, zU \in [ -n/2, n/2 )
-    int xL = floor(xc) - rc, xU = ceil(xc) + rc;
-    int yL = floor(yc) - rc, yU = ceil(yc) + rc;
-    int zL = floor(zc) - rc, zU = ceil(zc) + rc;
+    int xL = (int)(floor(xc) - rc), xU = (int)(ceil(xc) + rc);
+    int yL = (int)(floor(yc) - rc), yU = (int)(ceil(yc) + rc);
+    int zL = (int)(floor(zc) - rc), zU = (int)(ceil(zc) + rc);
 
     if (xL < -(n >> 1))
       xL = -(n >> 1);
@@ -454,9 +454,9 @@ void griddingSimpleComplementarity(int M, double *x, double *y, double *z,
 
     // compute the region [ xL, xU ] x [ yL, yU ] x [ zL, zU ] of atom s's
     // influence; observe that xL, xU, yL, yU, zL, zU \in [ -n/2, n/2 )
-    int xL = floor(xc) - rc, xU = ceil(xc) + rc;
-    int yL = floor(yc) - rc, yU = ceil(yc) + rc;
-    int zL = floor(zc) - rc, zU = ceil(zc) + rc;
+    int xL = (int)(floor(xc) - rc), xU = (int)(ceil(xc) + rc);
+    int yL = (int)(floor(yc) - rc), yU = (int)(ceil(yc) + rc);
+    int zL = (int)(floor(zc) - rc), zU = (int)(ceil(zc) + rc);
 
     if (xL < -(n >> 1))
       xL = -(n >> 1);
