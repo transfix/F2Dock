@@ -32,6 +32,53 @@ include( SetupFFTW )
 
 SetupFFTW()
 
+option(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL "Build experimental features ported from F3Dock" ON)
+option(F2DOCK_ENABLE_F3DOCK_SCIENCE_STACK "Discover optional scientific dependencies for F3Dock ports" ON)
+
+if(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL)
+  add_library(f3dock_science_stack INTERFACE)
+  if(F2DOCK_ENABLE_F3DOCK_SCIENCE_STACK)
+    find_package(Eigen3 QUIET)
+    if(Eigen3_FOUND)
+      target_link_libraries(f3dock_science_stack INTERFACE Eigen3::Eigen)
+      target_compile_definitions(f3dock_science_stack INTERFACE F2DOCK_HAVE_EIGEN3=1)
+    endif()
+
+    find_package(LAPACK QUIET)
+    if(LAPACK_FOUND)
+      if(TARGET LAPACK::LAPACK)
+        target_link_libraries(f3dock_science_stack INTERFACE LAPACK::LAPACK)
+      elseif(LAPACK_LIBRARIES)
+        target_link_libraries(f3dock_science_stack INTERFACE ${LAPACK_LIBRARIES})
+      endif()
+      target_compile_definitions(f3dock_science_stack INTERFACE F2DOCK_HAVE_LAPACK=1)
+    endif()
+
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+      pkg_check_modules(NFFT QUIET IMPORTED_TARGET nfft3)
+      if(NFFT_FOUND)
+        target_link_libraries(f3dock_science_stack INTERFACE PkgConfig::NFFT)
+        target_compile_definitions(f3dock_science_stack INTERFACE F2DOCK_HAVE_NFFT=1)
+      endif()
+    endif()
+  endif()
+endif()
+
+include(FetchContent)
+# Lean on libcvc for XML-RPC support used by F2DockServer.
+set(CVC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(CVC_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
+set(CVC_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
+set(CVC_BUILD_VOLROVER3 OFF CACHE BOOL "" FORCE)
+set(CVC_USING_XMLRPC ON CACHE BOOL "" FORCE)
+FetchContent_Declare(
+  libcvc
+  GIT_REPOSITORY https://github.com/transfix/libcvc.git
+  GIT_TAG        972afd8552b4755356e572f9b4ffc33d4366cda9 # v3.1.0
+)
+FetchContent_MakeAvailable(libcvc)
+
 #output 
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
@@ -57,9 +104,14 @@ if(F2DOCK_BUILD_TESTS)
   add_subdirectory(tests/unit)
 endif()
 
+option(F2DOCK_BUILD_INTEGRATION_TESTS "Build long-running integration tests" OFF)
+if(F2DOCK_BUILD_TESTS AND F2DOCK_BUILD_INTEGRATION_TESTS)
+  add_subdirectory(tests/integration)
+endif()
+
 # ── Install targets ──
 set(_F2DOCK_INSTALL_TARGETS F2Dock GB-Rerank FilterOutput)
-if(NOT WIN32)
+if(TARGET F2DockServer)
   list(APPEND _F2DOCK_INSTALL_TARGETS F2DockServer)
 endif()
 install(TARGETS ${_F2DOCK_INSTALL_TARGETS}

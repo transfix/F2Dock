@@ -20,12 +20,11 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
-#include "XmlRPC/XmlRpc.h"
+#include <fstream>
 #include <iostream>
 #include <stdlib.h>
-#include <fstream>
 #include <vector>
+#include <xmlrpc/XmlRpc.h>
 
 #include "F2DockServer/jobHandler.h"
 

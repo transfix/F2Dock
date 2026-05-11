@@ -1003,10 +1003,11 @@ bool build_fks_bak( char *type, int numCenters, double *xk, double *yk, double *
             if ( num_I == num_I_prev ) bw2 *= 2;
             else
                {
-                printf( "bandwidth = %lf, imag_magnitude = %lf, #atoms = %d\n", sqrt( bw2 ), imag_magnitude, num_I_prev - num_I, num_I );
-                fflush( stdout );
-                bw2 = bandwidth * bandwidth;
-                imag_magnitude *= gradFactor;
+              printf("bandwidth = %lf, imag_magnitude = %lf, #atoms = %d\n",
+                     sqrt(bw2), imag_magnitude, num_I_prev - num_I);
+              fflush(stdout);
+              bw2 = bandwidth * bandwidth;
+              imag_magnitude *= gradFactor;
                }
 	  }
 
@@ -2735,63 +2736,87 @@ void printIntermediateStats( FILE *fp,
       if ( reDocking )
 	rmsd = getRMSD( pr->pri, transformation );
       else
-	rmsd = 0.0;
-	  // MS .. WHAT IS THAT ?? FIXME
-//          rmsd = baseComplex->getRMSD( transformation, unboundLigandAtomList[ c ], unboundLigandInterfaceAtomIndex[ c ] );
+        rmsd = 0.0;
+      // MS .. WHAT IS THAT ?? FIXME
+      //          rmsd = baseComplex->getRMSD( transformation,
+      //          unboundLigandAtomList[ c ], unboundLigandInterfaceAtomIndex[ c
+      //          ] );
 
-      if ( !breakDownScores ) {
+      if (!breakDownScores) {
         double riv = rv + iv * unrealWeight;
-	fprintf( fp, (char *)"\n%6d %16.5lf %16.5lf %16.5lf %16.5lf %16.5lf %20.5lf %20.5lf %20.5lf %20.5lf %16.5lf %10d %20.5lf %20.5lf %20.5lf ",
-	       ( n + 1 ), ( double ) v / functionScaleFactor, ( double ) riv / functionScaleFactor, ( double ) rv_ss / functionScaleFactor,
-	       ( double ) rv_cc / functionScaleFactor, ( double ) iv / functionScaleFactor, ( double ) elec / functionScaleFactor,
-	       ( double ) hbond / functionScaleFactor, ( double ) hydrop / functionScaleFactor, ( double ) scomp / functionScaleFactor,
-	       vdw, nclashes, pgsol, pgsolh, dispe );
-
-//	fprintf( fp, (char *)"\n%6d %16.5lf %16.5lf %16.5lf %16.5lf %20.5lf %20.5lf %16.5lf %10d ", ( n + 1 ), ( double ) v / functionScaleFactor,
-//	       ( double ) riv / functionScaleFactor, ( double ) rv / functionScaleFactor, ( double ) iv / functionScaleFactor,
-//	       ( double ) elec / functionScaleFactor, ( double ) hbond / functionScaleFactor, vdw, nclashes );
+        fprintf(fp,
+                (char *)"\n%6d %16.5lf %16.5lf %16.5lf %16.5lf %16.5lf %20.5lf "
+                        "%20.5lf %20.5lf %20.5lf %16.5lf %10d %20.5lf %20.5lf "
+                        "%20.5lf ",
+                (n + 1), (double)v / functionScaleFactor,
+                (double)riv / functionScaleFactor,
+                (double)rv_ss / functionScaleFactor,
+                (double)rv_cc / functionScaleFactor,
+                (double)iv / functionScaleFactor,
+                (double)elec / functionScaleFactor,
+                (double)hbond / functionScaleFactor,
+                (double)hydrop / functionScaleFactor,
+                (double)scomp / functionScaleFactor, vdw, nclashes, pgsol,
+                pgsolh, dispe);
       } else {
-        double riv = skinSkinWeight * rv_ss + coreCoreWeight * rv_cc + skinCoreWeight * iv_sc;
-	fprintf( fp, (char *)"\n%6d %16.5lf %16.5lf %16.5lf %16.5lf %16.5lf %16.5lf %16.5lf %16.5lf %20.5lf %20.5lf %20.5lf %20.5lf %16.5lf %10d %20.5lf %20.5lf %20.5lf ",
-		 ( n + 1 ), ( double ) v / functionScaleFactor,
-		 ( double ) riv / functionScaleFactor,
-		 ( double ) rv_ss / functionScaleFactor, ( double ) rv_cc / functionScaleFactor,
-		 ( double ) rv_sc / functionScaleFactor,
-		 ( double ) iv_ss / functionScaleFactor, ( double ) iv_cc / functionScaleFactor,
-		 ( double ) iv_sc / functionScaleFactor,
-		 ( double ) elec / functionScaleFactor,
-		 ( double ) hbond / functionScaleFactor,
-		 ( double ) hydrop / functionScaleFactor,
-		 ( double ) scomp / functionScaleFactor,
-		 vdw, nclashes, pgsol, pgsolh, dispe );
+        double riv = skinSkinWeight * rv_ss + coreCoreWeight * rv_cc +
+                     skinCoreWeight * iv_sc;
+        fprintf(fp,
+                (char *)"\n%6d %16.5lf %16.5lf %16.5lf %16.5lf %16.5lf %16.5lf "
+                        "%16.5lf %16.5lf %20.5lf %20.5lf %20.5lf %20.5lf "
+                        "%16.5lf %10d %20.5lf %20.5lf %20.5lf ",
+                (n + 1), (double)v / functionScaleFactor,
+                (double)riv / functionScaleFactor,
+                (double)rv_ss / functionScaleFactor,
+                (double)rv_cc / functionScaleFactor,
+                (double)rv_sc / functionScaleFactor,
+                (double)iv_ss / functionScaleFactor,
+                (double)iv_cc / functionScaleFactor,
+                (double)iv_sc / functionScaleFactor,
+                (double)elec / functionScaleFactor,
+                (double)hbond / functionScaleFactor,
+                (double)hydrop / functionScaleFactor,
+                (double)scomp / functionScaleFactor, vdw, nclashes, pgsol,
+                pgsolh, dispe);
       }
 
-      for ( int i = 0; i < 3; i++ )
-	for ( int j = 0; j < 4; j++ )
-	  fprintf( fp, (char *)"%9.3f ", transformation.get( i, j ) );
-      fprintf( fp, (char *)"%2d %9.2f", c, rmsd );
+      for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 4; j++)
+          fprintf(fp, (char *)"%9.3f ", transformation.get(i, j));
+      fprintf(fp, (char *)"%2d %9.2f", c, rmsd);
 
-      if ( mrmsd > rmsd )
-        {
-	  mrmsd = rmsd;
-	  mv = v;
-	  mrv = rv; mrv_ss = rv_ss; mrv_cc = rv_cc; mrv_sc = rv_sc;
-	  miv = iv; miv_ss = iv_ss; miv_cc = iv_cc; miv_sc = iv_sc;
-	  melec = elec;
-	  mhbond = hbond;
-	  mhydrop = hydrop;
-	  mvdw = vdw;
-	  mnclashes = nclashes;
-	  mscomp = scomp;
-	  mpgsol = pgsol;
-	  mpgsolh = pgsolh;
-	  mdispe = dispe;
-	  mx = x; my = y; mz = z;
-	  mx = rx; my = ry; mz = rz;
-	  mr = r; mf = f; mc = c;
-	  mtransformation = transformation;
-	  rank = n + 1;
-        }
+      if (mrmsd > rmsd) {
+        mrmsd = rmsd;
+        mv = v;
+        mrv = rv;
+        mrv_ss = rv_ss;
+        mrv_cc = rv_cc;
+        mrv_sc = rv_sc;
+        miv = iv;
+        miv_ss = iv_ss;
+        miv_cc = iv_cc;
+        miv_sc = iv_sc;
+        melec = elec;
+        mhbond = hbond;
+        mhydrop = hydrop;
+        mvdw = vdw;
+        mnclashes = nclashes;
+        mscomp = scomp;
+        mpgsol = pgsol;
+        mpgsolh = pgsolh;
+        mdispe = dispe;
+        mx = x;
+        my = y;
+        mz = z;
+        mx = rx;
+        my = ry;
+        mz = rz;
+        mr = r;
+        mf = f;
+        mc = c;
+        mtransformation = transformation;
+        rank = n + 1;
+      }
 
       int rmsdIntF = ( int ) floor( rmsd );
       int rmsdIntC = ( int ) ceil( rmsd );
@@ -4116,194 +4141,236 @@ void printInputParamters( PARAMS_IN *pr, FILE* fp )
 	fprintf( fp, (char *)"# \t hbondWeight = %lf\n", pr->hbondWeight );
 	fprintf( fp, (char *)"# \t hbondDistanceCutoff = %lf\n", pr->hbondDistanceCutoff );
 	fprintf( fp, (char *)"# \t hydrophobicityWeight = %lf\n", pr->hydrophobicityWeight );
-	fprintf( fp, (char *)"# \t hydrophobicityProductWeight = %lf\n", pr->hydrophobicityProductWeight );
-	fprintf( fp, (char *)"# \t hydroRatioTolerance = %lf\n", pr->hydroRatioTolerance );
-	fprintf( fp, (char *)"# \t twoWayHydrophobicity = %d\n", pr->twoWayHydrophobicity );
-	fprintf( fp, (char *)"# \t hydroPhobicPhobicWeight = %lf\n", pr->hydroPhobicPhobicWeight );
-	fprintf( fp, (char *)"# \t hydroPhobicPhilicWeight = %lf\n", pr->hydroPhobicPhilicWeight );
-	fprintf( fp, (char *)"# \t hydroPhilicPhilicWeight = %lf\n", pr->hydroPhilicPhilicWeight );
-	fprintf( fp, (char *)"# \t hydroRadExt = %lf\n", pr->hydroRadExt );
-	fprintf( fp, (char *)"# \t useInterfacePropensity = %d\n", pr->useInterfacePropensity );
-	fprintf( fp, (char *)"# \t perResidueHydrophobicity = %d\n", pr->perResidueHydrophobicity );
-	fprintf( fp, (char *)"# \t numTopHydrophobicResidues = %d\n", pr->numTopHydrophobicResidues );
-	fprintf( fp, (char *)"# \t staticMolHydroDistCutoff = %lf\n", pr->staticMolHydroDistCutoff );
-	fprintf( fp, (char *)"# \t simpleShapeWeight = %lf\n", pr->simpleShapeWeight );
-	fprintf( fp, (char *)"# \t simpleChargeWeight = %lf\n", pr->simpleChargeWeight );
-	fprintf( fp, (char *)"# \t simpleRadExt = %lf\n", pr->simpleRadExt );
-	fprintf( fp, (char *)"# \t scoreScaleUpFactor = %lf\n", pr->scoreScaleUpFactor );
-	fprintf( fp, (char *)"# \t bandwidth = %lf\n", pr->bandwidth );
-	fprintf( fp, (char *)"# \t gradFactor = %lf\n", pr->gradFactor );
-	fprintf( fp, (char *)"# \t applyVdWFilter = %d\n", pr->applyVdWFilter );
-	fprintf( fp, (char *)"# \t vdWCutoffLow = %lf\n", pr->vdWCutoffLow );
-	fprintf( fp, (char *)"# \t vdWCutoffHigh = %lf\n", pr->vdWCutoffHigh );
-	fprintf( fp, (char *)"# \t vdWWellWidth = %lf\n", pr->vdWWellWidth );
-	fprintf( fp, (char *)"# \t vdWTolerance = %lf\n", pr->vdWTolerance );
-	fprintf( fp, (char *)"# \t compQuadVdW = %lf\n", pr->compQuadVdW );
-	fprintf( fp, (char *)"# \t vdWGridSize = %d\n", pr->vdWGridSize );
-	fprintf( fp, (char *)"# \t surfaceBasedVdW = %d\n", pr->surfaceBasedVdW );
-	fprintf( fp, (char *)"# \t applyClashFilter = %d\n", pr->applyClashFilter );
-	fprintf( fp, (char *)"# \t eqmDistFrac = %lf\n", pr->eqmDistFrac );
-	fprintf( fp, (char *)"# \t clashTolerance = %d\n", pr->clashTolerance );
-	fprintf( fp, (char *)"# \t filterDepth = %d\n", pr->filterDepth );
-	fprintf( fp, (char *)"# \t clashWeight = %lf\n", pr->clashWeight );
-	fprintf( fp, (char *)"# \t clusterTransRad = %lf\n", pr->clusterTransRad );
-	fprintf( fp, (char *)"# \t clusterRotRad = %lf\n", pr->clusterRotRad );
-	fprintf( fp, (char *)"# \t applyPseudoGsolFilter = %d\n", pr->applyPseudoGsolFilter );
-	fprintf( fp, (char *)"# \t pseudoGsolCutoff = %lf\n", pr->pseudoGsolCutoff );
-	fprintf( fp, (char *)"# \t pseudoGsolWeight = %lf\n", pr->pseudoGsolWeight );
-	fprintf( fp, (char *)"# \t pseudoGsolFilterLowestRank = %d\n", pr->pseudoGsolFilterLowestRank );
-	fprintf( fp, (char *)"# \t applyDispersionFilter = %d\n", pr->applyDispersionFilter );
-	fprintf( fp, (char *)"# \t dispersionCutoff = %lf\n", pr->dispersionCutoff );
-	fprintf( fp, (char *)"# \t dispersionWeight = %lf\n", pr->dispersionWeight );
-	fprintf( fp, (char *)"# \t filterScaleDownFactor = %lf\n", pr->filterScaleDownFactor );
-	// fprintf( fp, (char *)"# \t  = %lf\n", pr-> );
+        fprintf(fp, (char *)"# \t hydrophobicityProductWeight = %lf\n",
+                pr->hydrophobicityProductWeight);
+        fprintf(fp, (char *)"# \t hydroRatioTolerance = %lf\n",
+                pr->hydroRatioTolerance);
+        fprintf(fp, (char *)"# \t twoWayHydrophobicity = %d\n",
+                pr->twoWayHydrophobicity);
+        fprintf(fp, (char *)"# \t hydroPhobicPhobicWeight = %lf\n",
+                pr->hydroPhobicPhobicWeight);
+        fprintf(fp, (char *)"# \t hydroPhobicPhilicWeight = %lf\n",
+                pr->hydroPhobicPhilicWeight);
+        fprintf(fp, (char *)"# \t hydroPhilicPhilicWeight = %lf\n",
+                pr->hydroPhilicPhilicWeight);
+        fprintf(fp, (char *)"# \t hydroRadExt = %lf\n", pr->hydroRadExt);
+        fprintf(fp, (char *)"# \t useInterfacePropensity = %d\n",
+                pr->useInterfacePropensity);
+        fprintf(fp, (char *)"# \t perResidueHydrophobicity = %d\n",
+                pr->perResidueHydrophobicity);
+        fprintf(fp, (char *)"# \t numTopHydrophobicResidues = %d\n",
+                pr->numTopHydrophobicResidues);
+        fprintf(fp, (char *)"# \t staticMolHydroDistCutoff = %lf\n",
+                pr->staticMolHydroDistCutoff);
+        fprintf(fp, (char *)"# \t simpleShapeWeight = %lf\n",
+                pr->simpleShapeWeight);
+        fprintf(fp, (char *)"# \t simpleChargeWeight = %lf\n",
+                pr->simpleChargeWeight);
+        fprintf(fp, (char *)"# \t simpleRadExt = %lf\n", pr->simpleRadExt);
+        fprintf(fp, (char *)"# \t scoreScaleUpFactor = %lf\n",
+                pr->scoreScaleUpFactor);
+        fprintf(fp, (char *)"# \t bandwidth = %lf\n", pr->bandwidth);
+        fprintf(fp, (char *)"# \t gradFactor = %lf\n", pr->gradFactor);
+        fprintf(fp, (char *)"# \t applyVdWFilter = %d\n", pr->applyVdWFilter);
+        fprintf(fp, (char *)"# \t vdWCutoffLow = %lf\n", pr->vdWCutoffLow);
+        fprintf(fp, (char *)"# \t vdWCutoffHigh = %lf\n", pr->vdWCutoffHigh);
+        fprintf(fp, (char *)"# \t vdWWellWidth = %lf\n", pr->vdWWellWidth);
+        fprintf(fp, (char *)"# \t vdWTolerance = %lf\n", pr->vdWTolerance);
+        fprintf(fp, (char *)"# \t compQuadVdW = %d\n", (int)pr->compQuadVdW);
+        fprintf(fp, (char *)"# \t vdWGridSize = %d\n", pr->vdWGridSize);
+        fprintf(fp, (char *)"# \t surfaceBasedVdW = %d\n", pr->surfaceBasedVdW);
+        fprintf(fp, (char *)"# \t applyClashFilter = %d\n",
+                pr->applyClashFilter);
+        fprintf(fp, (char *)"# \t eqmDistFrac = %lf\n", pr->eqmDistFrac);
+        fprintf(fp, (char *)"# \t clashTolerance = %d\n", pr->clashTolerance);
+        fprintf(fp, (char *)"# \t filterDepth = %d\n", pr->filterDepth);
+        fprintf(fp, (char *)"# \t clashWeight = %lf\n", pr->clashWeight);
+        fprintf(fp, (char *)"# \t clusterTransRad = %lf\n",
+                pr->clusterTransRad);
+        fprintf(fp, (char *)"# \t clusterRotRad = %lf\n", pr->clusterRotRad);
+        fprintf(fp, (char *)"# \t applyPseudoGsolFilter = %d\n",
+                pr->applyPseudoGsolFilter);
+        fprintf(fp, (char *)"# \t pseudoGsolCutoff = %lf\n",
+                pr->pseudoGsolCutoff);
+        fprintf(fp, (char *)"# \t pseudoGsolWeight = %lf\n",
+                pr->pseudoGsolWeight);
+        fprintf(fp, (char *)"# \t pseudoGsolFilterLowestRank = %d\n",
+                pr->pseudoGsolFilterLowestRank);
+        fprintf(fp, (char *)"# \t applyDispersionFilter = %d\n",
+                pr->applyDispersionFilter);
+        fprintf(fp, (char *)"# \t dispersionCutoff = %lf\n",
+                pr->dispersionCutoff);
+        fprintf(fp, (char *)"# \t dispersionWeight = %lf\n",
+                pr->dispersionWeight);
+        fprintf(fp, (char *)"# \t filterScaleDownFactor = %lf\n",
+                pr->filterScaleDownFactor);
+        // fprintf( fp, (char *)"# \t  = %lf\n", pr-> );
 
-	fprintf( fp, (char *)"# \t peaksPerRotation = %d\n", pr->peaksPerRotation );
-	fprintf( fp, (char *)"# \t spectrum = %s\n", pr->spectrum );
-	// fprintf( fp, (char *)"# \t  = %d\n", pr-> );
+        fprintf(fp, (char *)"# \t peaksPerRotation = %d\n",
+                pr->peaksPerRotation);
+        fprintf(fp, (char *)"# \t spectrum = %s\n", pr->spectrum);
+        // fprintf( fp, (char *)"# \t  = %d\n", pr-> );
 
-	fprintf( fp, (char *)"# \t staticMoleculeF2d = %s\n", pr->staticMoleculeF2d );
-	fprintf( fp, (char *)"# \t movingMoleculeF2d = %s\n", pr->movingMoleculeF2d );
+        fprintf(fp, (char *)"# \t staticMoleculeF2d = %s\n",
+                pr->staticMoleculeF2d);
+        fprintf(fp, (char *)"# \t movingMoleculeF2d = %s\n",
+                pr->movingMoleculeF2d);
 
-	int numStaticMolSkinAtoms = 0, numStaticMolCoreAtoms = 0;
+        int numStaticMolSkinAtoms = 0, numStaticMolCoreAtoms = 0;
 
-	for ( int i = 0; i < pr->numCentersA; i++ )
-	  if ( pr->typeA[ i ] == 'I' ) numStaticMolCoreAtoms++;
-	  else if ( pr->typeA[ i ] == 'E' ) numStaticMolSkinAtoms++;
+        for (int i = 0; i < pr->numCentersA; i++)
+          if (pr->typeA[i] == 'I')
+            numStaticMolCoreAtoms++;
+          else if (pr->typeA[i] == 'E')
+            numStaticMolSkinAtoms++;
 
-	int numMovingMolSkinAtoms = 0, numMovingMolCoreAtoms = 0;
+        int numMovingMolSkinAtoms = 0, numMovingMolCoreAtoms = 0;
 
-	for ( int i = 0; i < pr->numCentersB; i++ )
-	  if ( pr->typeB[ i ] == 'I' ) numMovingMolCoreAtoms++;
-	  else if ( pr->typeB[ i ] == 'E' ) numMovingMolSkinAtoms++;
+        for (int i = 0; i < pr->numCentersB; i++)
+          if (pr->typeB[i] == 'I')
+            numMovingMolCoreAtoms++;
+          else if (pr->typeB[i] == 'E')
+            numMovingMolSkinAtoms++;
 
-	fprintf( fp, (char *)"# \t numStaticMolSkinAtoms = %d\n", numStaticMolSkinAtoms );
-	fprintf( fp, (char *)"# \t numStaticMolCoreAtoms = %d\n", numStaticMolCoreAtoms );
-	fprintf( fp, (char *)"# \t numMovingMolSkinAtoms = %d\n", numMovingMolSkinAtoms );
-	fprintf( fp, (char *)"# \t numMovingMolCoreAtoms = %d\n", numMovingMolCoreAtoms );
+        fprintf(fp, (char *)"# \t numStaticMolSkinAtoms = %d\n",
+                numStaticMolSkinAtoms);
+        fprintf(fp, (char *)"# \t numStaticMolCoreAtoms = %d\n",
+                numStaticMolCoreAtoms);
+        fprintf(fp, (char *)"# \t numMovingMolSkinAtoms = %d\n",
+                numMovingMolSkinAtoms);
+        fprintf(fp, (char *)"# \t numMovingMolCoreAtoms = %d\n",
+                numMovingMolCoreAtoms);
 
-	double sumStaticMolPosCharges = 0, sumStaticMolNegCharges = 0;
+        double sumStaticMolPosCharges = 0, sumStaticMolNegCharges = 0;
 
-	for ( int i = 0; i < pr->numCentersA; i++ )
-	  if ( pr->typeA[ i ] == 'I' )
-	     {
-	       if ( pr->chargesA[ i ] > 0 ) sumStaticMolPosCharges += pr->chargesA[ i ];
-	       else sumStaticMolNegCharges += pr->chargesA[ i ];
-	     }
-
-	double sumMovingMolPosCharges = 0, sumMovingMolNegCharges = 0;
-
-	for ( int i = 0; i < pr->numCentersB; i++ )
-	     {
-	       if ( pr->chargesB[ i ] > 0 ) sumMovingMolPosCharges += pr->chargesB[ i ];
-	       else sumMovingMolNegCharges += pr->chargesB[ i ];
-	     }
-
-	fprintf( fp, (char *)"# \t sumStaticMolCharges = %lf ( %lf, %lf )\n", sumStaticMolPosCharges + sumStaticMolNegCharges,
-	                                                              sumStaticMolPosCharges, sumStaticMolNegCharges );
-	fprintf( fp, (char *)"# \t sumMovingMolCharges = %lf ( %lf, %lf )\n", sumMovingMolPosCharges + sumMovingMolNegCharges,
-	                                                              sumMovingMolPosCharges, sumMovingMolNegCharges );
-
-	fprintf( fp, (char *)"# \t staticMoleculeSCReRaw = %s\n", pr->staticMoleculeSCReRaw );
-	fprintf( fp, (char *)"# \t staticMoleculeSCImRaw = %s\n", pr->staticMoleculeSCImRaw );
-	fprintf( fp, (char *)"# \t staticMoleculeElecReRaw = %s\n", pr->staticMoleculeElecReRaw );
-	fprintf( fp, (char *)"# \t movingMoleculeSCReRaw = %s\n", pr->movingMoleculeSCReRaw );
-	fprintf( fp, (char *)"# \t movingMoleculeSCImRaw = %s\n", pr->movingMoleculeSCImRaw );
-	fprintf( fp, (char *)"# \t movingMoleculeElecReRaw = %s\n", pr->movingMoleculeElecReRaw );
-	fprintf( fp, (char *)"# \t outputFilename = %s\n", pr->outputFilename );
-
-	fprintf( fp, (char *)"#\n" );
-	fprintf( fp, (char *)"#\n" );
-	if (pr->breakDownScores)
-	  fprintf( fp, (char *)"# OUTPUT FORMAT: 32\n" );
-	else
-	  fprintf( fp, (char *)"# OUTPUT FORMAT: 29\n" );
-
-	fprintf( fp, (char *)"#\t COLNAME rank int rank of this docking result according to the F2Dock scoring function\n");
-	fprintf( fp, (char *)"#\t COLNAME score float overall F2Dock score, the higher the better\n");
-	fprintf( fp, (char *)"#\t COLNAME shape float shape complementarity score\n");
-	if ( pr->breakDownScores )
-	  {
-	   fprintf( fp, (char *)"#\t COLNAME ssr float \n");
-	   fprintf( fp, (char *)"#\t COLNAME ccr float \n");
-	   fprintf( fp, (char *)"#\t COLNAME scr float \n");
-	   fprintf( fp, (char *)"#\t COLNAME ssi float \n");
-	   fprintf( fp, (char *)"#\t COLNAME cci float \n");
-	   fprintf( fp, (char *)"#\t COLNAME sci float \n");
-	  }
-	else
-	  {
-//	   fprintf( fp, (char *)"#\t COLNAME realshape float real part of shape complementarity score\n");
-//	   fprintf( fp, (char *)"#\t COLNAME unrealshape float imaginary part of shape complementarity score\n");
-	   fprintf( fp, (char *)"#\t COLNAME ssr float skin-skin overlap score\n");
-	   fprintf( fp, (char *)"#\t COLNAME ccr float core-core overlap score\n");
-	   fprintf( fp, (char *)"#\t COLNAME scr float skin-core overlap score\n");
-	  }
-	fprintf( fp, (char *)"#\t COLNAME elec float \n");
-	fprintf( fp, (char *)"#\t COLNAME hbond float \n");
-	fprintf( fp, (char *)"#\t COLNAME hydrophobicity float \n");
-	fprintf( fp, (char *)"#\t COLNAME smplcomp float \n");
-	fprintf( fp, (char *)"#\t COLNAME vdw float \n");
-	fprintf( fp, (char *)"#\t COLNAME clashes int \n");
-	fprintf( fp, (char *)"#\t COLNAME pgsol float \n");
-	fprintf( fp, (char *)"#\t COLNAME pgsolh float \n");
-	fprintf( fp, (char *)"#\t COLNAME deldispe float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat1 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat2 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat3 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat4 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat5 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat6 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat7 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat8 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat9 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat10 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat11 float \n");
-	fprintf( fp, (char *)"#\t COLNAME mat12 float \n");
-	fprintf( fp, (char *)"#\t COLNAME conf int \n");
-	fprintf( fp, (char *)"#\t COLNAME rmsd float \n");
-
-	fprintf( fp, (char *)"#\n" );
-	fprintf( fp, (char *)"#\n" );
-}
-
-
-int getFromGlobalIn( TopValues *globalIn, ValuePosition3D &sol, bool setVars, int maxCount )
-{
-   static int count = 0;
-   static int cmax = globalIn->getCurrentNumberOfPositions( );
-
-   int retVal = 0;
-
-   if ( setVars )
-     {
-       count = 0;
-       cmax = globalIn->getCurrentNumberOfPositions( );
-
-       if ( maxCount < cmax ) cmax = maxCount;
-
-       pthread_mutex_init( &globalInLock, NULL );
-     }
-   else
-     {
-       pthread_mutex_lock( &globalInLock );
-
-       if ( count == cmax ) retVal = 0;
-       else
-          {
-            if ( globalIn->extractMin( sol ) )
-              {
-                retVal = globalIn->getCurrentNumberOfPositions( ) + 1;
-                count++;
-              }
+        for (int i = 0; i < pr->numCentersA; i++)
+          if (pr->typeA[i] == 'I') {
+            if (pr->chargesA[i] > 0)
+              sumStaticMolPosCharges += pr->chargesA[i];
+            else
+              sumStaticMolNegCharges += pr->chargesA[i];
           }
 
-       pthread_mutex_unlock( &globalInLock );
-     }
+        double sumMovingMolPosCharges = 0, sumMovingMolNegCharges = 0;
 
-   return retVal;
+        for (int i = 0; i < pr->numCentersB; i++) {
+          if (pr->chargesB[i] > 0)
+            sumMovingMolPosCharges += pr->chargesB[i];
+          else
+            sumMovingMolNegCharges += pr->chargesB[i];
+        }
+
+        fprintf(fp, (char *)"# \t sumStaticMolCharges = %lf ( %lf, %lf )\n",
+                sumStaticMolPosCharges + sumStaticMolNegCharges,
+                sumStaticMolPosCharges, sumStaticMolNegCharges);
+        fprintf(fp, (char *)"# \t sumMovingMolCharges = %lf ( %lf, %lf )\n",
+                sumMovingMolPosCharges + sumMovingMolNegCharges,
+                sumMovingMolPosCharges, sumMovingMolNegCharges);
+
+        fprintf(fp, (char *)"# \t staticMoleculeSCReRaw = %s\n",
+                pr->staticMoleculeSCReRaw);
+        fprintf(fp, (char *)"# \t staticMoleculeSCImRaw = %s\n",
+                pr->staticMoleculeSCImRaw);
+        fprintf(fp, (char *)"# \t staticMoleculeElecReRaw = %s\n",
+                pr->staticMoleculeElecReRaw);
+        fprintf(fp, (char *)"# \t movingMoleculeSCReRaw = %s\n",
+                pr->movingMoleculeSCReRaw);
+        fprintf(fp, (char *)"# \t movingMoleculeSCImRaw = %s\n",
+                pr->movingMoleculeSCImRaw);
+        fprintf(fp, (char *)"# \t movingMoleculeElecReRaw = %s\n",
+                pr->movingMoleculeElecReRaw);
+        fprintf(fp, (char *)"# \t outputFilename = %s\n", pr->outputFilename);
+
+        fprintf(fp, (char *)"#\n");
+        fprintf(fp, (char *)"#\n");
+        if (pr->breakDownScores)
+          fprintf(fp, (char *)"# OUTPUT FORMAT: 32\n");
+        else
+          fprintf(fp, (char *)"# OUTPUT FORMAT: 29\n");
+
+        fprintf(fp, (char *)"#\t COLNAME rank int rank of this docking result "
+                            "according to the F2Dock scoring function\n");
+        fprintf(fp, (char *)"#\t COLNAME score float overall F2Dock score, the "
+                            "higher the better\n");
+        fprintf(
+            fp,
+            (char *)"#\t COLNAME shape float shape complementarity score\n");
+        if (pr->breakDownScores) {
+          fprintf(fp, (char *)"#\t COLNAME ssr float \n");
+          fprintf(fp, (char *)"#\t COLNAME ccr float \n");
+          fprintf(fp, (char *)"#\t COLNAME scr float \n");
+          fprintf(fp, (char *)"#\t COLNAME ssi float \n");
+          fprintf(fp, (char *)"#\t COLNAME cci float \n");
+          fprintf(fp, (char *)"#\t COLNAME sci float \n");
+        } else {
+          // Legacy real/imag shape COLNAME fields are intentionally omitted.
+          fprintf(fp,
+                  (char *)"#\t COLNAME ssr float skin-skin overlap score\n");
+          fprintf(fp,
+                  (char *)"#\t COLNAME ccr float core-core overlap score\n");
+          fprintf(fp,
+                  (char *)"#\t COLNAME scr float skin-core overlap score\n");
+        }
+        fprintf(fp, (char *)"#\t COLNAME elec float \n");
+        fprintf(fp, (char *)"#\t COLNAME hbond float \n");
+        fprintf(fp, (char *)"#\t COLNAME hydrophobicity float \n");
+        fprintf(fp, (char *)"#\t COLNAME smplcomp float \n");
+        fprintf(fp, (char *)"#\t COLNAME vdw float \n");
+        fprintf(fp, (char *)"#\t COLNAME clashes int \n");
+        fprintf(fp, (char *)"#\t COLNAME pgsol float \n");
+        fprintf(fp, (char *)"#\t COLNAME pgsolh float \n");
+        fprintf(fp, (char *)"#\t COLNAME deldispe float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat1 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat2 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat3 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat4 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat5 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat6 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat7 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat8 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat9 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat10 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat11 float \n");
+        fprintf(fp, (char *)"#\t COLNAME mat12 float \n");
+        fprintf(fp, (char *)"#\t COLNAME conf int \n");
+        fprintf(fp, (char *)"#\t COLNAME rmsd float \n");
+
+        fprintf(fp, (char *)"#\n");
+        fprintf(fp, (char *)"#\n");
 }
 
+int getFromGlobalIn(TopValues *globalIn, ValuePosition3D &sol, bool setVars,
+                    int maxCount) {
+  static int count = 0;
+  static int cmax = globalIn->getCurrentNumberOfPositions();
+
+  int retVal = 0;
+
+  if (setVars) {
+    count = 0;
+    cmax = globalIn->getCurrentNumberOfPositions();
+
+    if (maxCount < cmax)
+      cmax = maxCount;
+
+    pthread_mutex_init(&globalInLock, NULL);
+  } else {
+    pthread_mutex_lock(&globalInLock);
+
+    if (count == cmax)
+      retVal = 0;
+    else {
+      if (globalIn->extractMin(sol)) {
+        retVal = globalIn->getCurrentNumberOfPositions() + 1;
+        count++;
+      }
+    }
+
+    pthread_mutex_unlock(&globalInLock);
+  }
+
+  return retVal;
+}
 
 bool insertIntoGlobalOut( TopValues *globalOut, ValuePosition3D &sol, bool setVars )
 {
@@ -5068,91 +5135,98 @@ void createValidOutputMap( FFTW_complex *staticMol, int n, int minRadMovingMol, 
            }
 
       printf( "\nmaxRadMovingMol = %d", maxRadMovingMol );
-      printf( "\nExcluded ( outer band ): %lf \%\n", ( t * 100.0 ) / n3 );
+      printf("\nExcluded ( outer band ): %lf %%\n", (t * 100.0) / n3);
 
-//      for ( int c = 0; c < n3; c++ )
-//          mMol[ c ][ 0 ] = mMol[ c ][ 1 ] = 0.0;
-//
-//      minRadMovingMol -= 2;
-//      if ( minRadMovingMol < 0 ) minRadMovingMol = 0;
-//
-//      int minRad2 = minRadMovingMol * minRadMovingMol;
-//      nl = nn;
-//      nr = nn + ( n & 1 );
-//
-//      if ( minRadMovingMol < nl )
-//        {
-//          nl = minRadMovingMol;
-//          if ( minRadMovingMol + 1 <= nr ) nr = minRadMovingMol + 1;
-//          else nr = minRadMovingMol;
-//        }
-//
-//      for ( int iz = -nl; iz < nr; iz++ )
-//        for ( int iy = -nl; iy < nr; iy++ )
-//          for ( int ix = -nl; ix < nr; ix++ )
-//            {
-//              double d2 = ( ix + ofs ) * ( ix + ofs ) + ( iy + ofs ) * ( iy + ofs ) + ( iz + ofs ) * ( iz + ofs );
-//
-//              if ( d2 <= minRad2 )
-//                 {
-//                   int c = ( iz + nn ) * n * n + ( iy + nn ) * n + ( ix + nn );
-//
-//                   mMol[ c ][ 0 ] = 1;
-//                 }
-//            }
-//
-//      FFTW_execute( mForwardPlan );
-//
-//      for ( int c = 0; c < n3; c++ )
-//	 {
-//	   smProd[ c ][ 0 ] = sMol[ c ][ 0 ] * mMol[ c ][ 0 ] - sMol[ c ][ 1 ] * mMol[ c ][ 1 ];
-//	   smProd[ c ][ 1 ] = sMol[ c ][ 0 ] * mMol[ c ][ 1 ] + sMol[ c ][ 1 ] * mMol[ c ][ 0 ];
-//	 }
-//
-//      FFTW_execute( smBackwardPlan );
-//
-//      t = 0;
-//      for ( int c = 0; c < n3; c++ )
-//         if ( smProd[ c ][ 0 ] > 0.5 * n3 )
-//           {
-//             validOutputMap[ c ] = 0;
-//             t++;
-//           }
-//
-//      printf( "\nminRadMovingMol = %d", minRadMovingMol );
-//      printf( "\nExcluded ( inner band ): %lf \%\n", ( t * 100.0 ) / n3 );
-//
-//      t = 0;
-//      for ( int z = 0, k = 0; z < n; z++ )
-//        {
-//          int iz = z;
-//          if ( iz > n / 2 ) iz -= n;
-//
-//          for ( int y = 0; y < n; y++ )
-//            {
-//              int iy = y;
-//              if ( iy > n / 2 ) iy -= n;
-//
-//              for ( int x = 0; x < n; x++, k++ )
-//                {
-//                  int ix = x;
-//                  if ( ix > n / 2 ) ix -= n;
-//
-//                  int ik = ( ( iz + ( n / 2 ) ) * n + ( iy + ( n / 2 ) ) ) * n + ( ix + ( n / 2 ) );
-//
-//                  if ( ( staticMol[ ik ][ 1 ] > eps ) || ( - staticMol[ ik ][ 1 ] > eps ) )
-//                    {
-//                     if ( validOutputMap[ k ] )
-//                       {
-//                         validOutputMap[ k ] = 0;
-//                         t++;
-//                       }
-//                    }
-//                }
-//            }
-//        }
-//
-//      if ( t > 0 ) printf( "\nExcluded ( core ): %lf \%\n", ( t * 100.0 ) / n3 );
+      //      for ( int c = 0; c < n3; c++ )
+      //          mMol[ c ][ 0 ] = mMol[ c ][ 1 ] = 0.0;
+      //
+      //      minRadMovingMol -= 2;
+      //      if ( minRadMovingMol < 0 ) minRadMovingMol = 0;
+      //
+      //      int minRad2 = minRadMovingMol * minRadMovingMol;
+      //      nl = nn;
+      //      nr = nn + ( n & 1 );
+      //
+      //      if ( minRadMovingMol < nl )
+      //        {
+      //          nl = minRadMovingMol;
+      //          if ( minRadMovingMol + 1 <= nr ) nr = minRadMovingMol + 1;
+      //          else nr = minRadMovingMol;
+      //        }
+      //
+      //      for ( int iz = -nl; iz < nr; iz++ )
+      //        for ( int iy = -nl; iy < nr; iy++ )
+      //          for ( int ix = -nl; ix < nr; ix++ )
+      //            {
+      //              double d2 = ( ix + ofs ) * ( ix + ofs ) + ( iy + ofs ) * (
+      //              iy + ofs ) + ( iz + ofs ) * ( iz + ofs );
+      //
+      //              if ( d2 <= minRad2 )
+      //                 {
+      //                   int c = ( iz + nn ) * n * n + ( iy + nn ) * n + ( ix
+      //                   + nn );
+      //
+      //                   mMol[ c ][ 0 ] = 1;
+      //                 }
+      //            }
+      //
+      //      FFTW_execute( mForwardPlan );
+      //
+      //      for ( int c = 0; c < n3; c++ )
+      //	 {
+      //	   smProd[ c ][ 0 ] = sMol[ c ][ 0 ] * mMol[ c ][ 0 ] - sMol[ c
+      //][ 1 ] * mMol[ c ][ 1 ]; 	   smProd[ c ][ 1 ] = sMol[ c ][ 0 ] *
+      // mMol[ c ][ 1 ] + sMol[ c ][ 1 ] * mMol[ c ][ 0 ];
+      //	 }
+      //
+      //      FFTW_execute( smBackwardPlan );
+      //
+      //      t = 0;
+      //      for ( int c = 0; c < n3; c++ )
+      //         if ( smProd[ c ][ 0 ] > 0.5 * n3 )
+      //           {
+      //             validOutputMap[ c ] = 0;
+      //             t++;
+      //           }
+      //
+      //      printf( "\nminRadMovingMol = %d", minRadMovingMol );
+      //      printf( "\nExcluded ( inner band ): %lf \%\n", ( t * 100.0 ) / n3
+      //      );
+      //
+      //      t = 0;
+      //      for ( int z = 0, k = 0; z < n; z++ )
+      //        {
+      //          int iz = z;
+      //          if ( iz > n / 2 ) iz -= n;
+      //
+      //          for ( int y = 0; y < n; y++ )
+      //            {
+      //              int iy = y;
+      //              if ( iy > n / 2 ) iy -= n;
+      //
+      //              for ( int x = 0; x < n; x++, k++ )
+      //                {
+      //                  int ix = x;
+      //                  if ( ix > n / 2 ) ix -= n;
+      //
+      //                  int ik = ( ( iz + ( n / 2 ) ) * n + ( iy + ( n / 2 ) )
+      //                  ) * n + ( ix + ( n / 2 ) );
+      //
+      //                  if ( ( staticMol[ ik ][ 1 ] > eps ) || ( - staticMol[
+      //                  ik ][ 1 ] > eps ) )
+      //                    {
+      //                     if ( validOutputMap[ k ] )
+      //                       {
+      //                         validOutputMap[ k ] = 0;
+      //                         t++;
+      //                       }
+      //                    }
+      //                }
+      //            }
+      //        }
+      //
+      //      if ( t > 0 ) printf( "\nExcluded ( core ): %lf \%\n", ( t * 100.0
+      //      ) / n3 );
 
       FFTW_destroy_plan( sForwardPlan );
       FFTW_destroy_plan( mForwardPlan );
@@ -5542,7 +5616,7 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
 
       if(temp.compare("ATOM")==0 || temp.compare("HETATM")==0){
 	numStaticAtoms++;
-	fgets(str, 1999, fp);
+        fgets(str, (int)sizeof(str), fp);
       }
     }
     fclose(fp);
@@ -5575,15 +5649,16 @@ bool initForbiddenVolumeFilter( PARAMS_IN *pr, clashFilter **cFilter )
       char resName[50];
 
       if(temp.compare("ATOM")==0 || temp.compare("HETATM")==0){
-	if(fscanf(fp,"%d %s %s %lf %lf %lf %lf %lf", &atomNum, &atomName, &resName, &x, &y, &z, &charge, &radius)==8){
-	  staticAtoms[ j++ ] = x;
-	  staticAtoms[ j++ ] = y;
-	  staticAtoms[ j++ ] = z;
+        if (fscanf(fp, "%d %49s %49s %lf %lf %lf %lf %lf", &atomNum, atomName,
+                   resName, &x, &y, &z, &charge, &radius) == 8) {
+          staticAtoms[j++] = x;
+          staticAtoms[j++] = y;
+          staticAtoms[j++] = z;
 
-	  staticAtoms[ j++ ] = charge;
+          staticAtoms[j++] = charge;
 
-	  staticAtoms[ j++ ] = radius;
-	}
+          staticAtoms[j++] = radius;
+        }
       }
     }
 

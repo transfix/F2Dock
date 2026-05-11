@@ -8,11 +8,59 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# Cheap jobs cancel on new pushes for fast feedback.
+# Packaging jobs keep running so branch builds still produce downloadable
+# binaries even when new commits arrive during a long package step.
 
 jobs:
+  format-check:
+    name: clang-format (changed lines)
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ci-${{ github.ref }}-format-check
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-format
+
+      - name: Determine merge base
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+            if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="HEAD~1"
+            fi
+          fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Run git-clang-format on changed lines
+        run: |
+          set -euo pipefail
+          base="${{ steps.base.outputs.base }}"
+          out=$(git clang-format --diff "$base" -- \
+                  '*.c' '*.cc' '*.cpp' '*.cxx' \
+                  '*.h' '*.hh' '*.hpp' '*.hxx' || true)
+          if [ -z "$out" ] \
+             || [ "$out" = "no modified files to format" ] \
+             || [ "$out" = "clang-format did not modify any files" ]; then
+            echo "Formatting OK on changed lines."
+            exit 0
+          fi
+          echo "::error::clang-format would reformat changed lines. To apply:"
+          echo "  git clang-format $base"
+          echo
+          echo "$out"
+          exit 1
+
   build:
     strategy:
       fail-fast: false
@@ -22,30 +70,39 @@ jobs:
           - os: ubuntu-latest
             build_type: Debug
             coverage: true
+            integration: true
           - os: ubuntu-latest
             build_type: Release
             coverage: false
+            integration: false
           # macOS
           - os: macos-latest
             build_type: Debug
             coverage: false
+            integration: true
           - os: macos-latest
             build_type: Release
             coverage: false
+            integration: false
           # Windows
           - os: windows-latest
             build_type: Debug
             coverage: false
+            integration: true
           - os: windows-latest
             build_type: Release
             coverage: false
+            integration: false
 
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} / ${{ matrix.build_type }}
+    concurrency:
+      group: ci-${{ github.ref }}-build-${{ matrix.os }}-${{ matrix.build_type }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -58,7 +115,11 @@ jobs:
             build-essential \
             cmake \
             ninja-build \
-            libfftw3-dev
+            libfftw3-dev \
+            libboost-all-dev \
+            libhdf5-dev \
+            libgsl-dev \
+            libcgal-dev
           # Coverage tools
           if [ "${{ matrix.coverage }}" = "true" ]; then
             sudo apt-get install -y --no-install-recommends lcov
@@ -71,24 +132,49 @@ jobs:
           brew install \
             cmake \
             ninja \
-            fftw
+            fftw \
+            boost \
+            hdf5 \
+            gsl \
+            cgal
+          echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix boost)" >> $GITHUB_ENV
 
       # ── Windows dependencies (vcpkg) ──
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          vcpkg install fftw3:x64-windows pthreads:x64-windows
+          vcpkg install fftw3:x64-windows pthreads:x64-windows \
+            boost-thread:x64-windows boost-date-time:x64-windows \
+            boost-regex:x64-windows boost-filesystem:x64-windows \
+            boost-system:x64-windows boost-chrono:x64-windows \
+            boost-program-options:x64-windows boost-signals2:x64-windows \
+            boost-format:x64-windows boost-property-tree:x64-windows \
+            boost-algorithm:x64-windows boost-asio:x64-windows \
+            boost-any:x64-windows boost-array:x64-windows \
+            boost-dynamic-bitset:x64-windows boost-exception:x64-windows \
+            boost-foreach:x64-windows boost-function:x64-windows \
+            boost-lambda:x64-windows boost-lexical-cast:x64-windows \
+            boost-multi-array:x64-windows boost-optional:x64-windows \
+            boost-smart-ptr:x64-windows boost-tuple:x64-windows \
+            boost-utility:x64-windows \
+            "hdf5[cpp]:x64-windows" gsl:x64-windows cgal:x64-windows
 
       # ── Configure (Unix) ──
       - name: Configure (Unix)
         if: runner.os != 'Windows'
         run: |
+          integration_tests=OFF
+          if [ "${{ matrix.integration }}" = "true" ]; then
+            integration_tests=ON
+          fi
           cmake_args=(
             -B build
             -G Ninja
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
+            -DF2DOCK_BUILD_INTEGRATION_TESTS=${integration_tests}
           )
           if [ "${{ matrix.coverage }}" = "true" ]; then
             # F2Dock's CMakeLists.txt overwrites CMAKE_CXX_FLAGS via set(),
@@ -104,9 +190,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
+          integration_tests=OFF
+          if [ "${{ matrix.integration }}" = "true" ]; then
+            integration_tests=ON
+          fi
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DF2DOCK_BUILD_INTEGRATION_TESTS=${integration_tests} \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
 
       # ── Build ──
@@ -114,9 +205,14 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
       # ── Test ──
-      - name: Run tests
+      - name: Run unit tests
         working-directory: build
-        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 4
+        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 4 -LE integration
+
+      - name: Run integration tests
+        if: matrix.integration
+        working-directory: build
+        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure --parallel 1 -L integration
 
       # ── Coverage (Linux Debug only) ──
       - name: Generate coverage report
@@ -192,3 +288,226 @@ jobs:
             build/bin/
             build/lib/
           retention-days: 14
+
+  package-linux:
+    runs-on: ubuntu-latest
+    name: package / linux
+    concurrency:
+      group: ci-${{ github.ref }}-package-linux
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compute artifact metadata
+        id: meta
+        run: |
+          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          SHA=$(git rev-parse --short=8 HEAD)
+          ARCH=$(uname -m)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build libfftw3-dev dpkg-dev \
+            libboost-all-dev libhdf5-dev libgsl-dev libcgal-dev
+
+      - name: Configure
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DF2DOCK_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Create portable tarball
+        run: |
+          STEM="F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-linux-${{ steps.meta.outputs.arch }}"
+          cmake --install build --prefix staging/F2Dock
+          mkdir -p staging/F2Dock/lib
+          for bin in staging/F2Dock/bin/*; do
+            ldd "$bin" 2>/dev/null | grep -oP '/\S+libfftw\S+' | while read lib; do
+              cp -uL "$lib" staging/F2Dock/lib/
+            done
+          done
+          for bin in staging/F2Dock/bin/*; do
+            name=$(basename "$bin")
+            mv "$bin" "$bin.real"
+            printf '%s\n' \
+              '#!/bin/sh' \
+              'DIR="$(cd "$(dirname "$0")" && pwd)"' \
+              'export LD_LIBRARY_PATH="$DIR/../lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"' \
+              'exec "$DIR/BINNAME.real" "$@"' > "$bin"
+            sed -i "s/BINNAME/$name/" "$bin"
+            chmod +x "$bin"
+          done
+          cp README.md staging/F2Dock/
+          tar -czf "$STEM.tar.gz" -C staging F2Dock
+
+      - name: Build .deb package
+        run: |
+          STEM="F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-linux-${{ steps.meta.outputs.arch }}"
+          cd build
+          cpack -G DEB
+          for f in *.deb; do cp "$f" "../$STEM.deb"; done
+
+      - name: Upload Linux tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-linux-${{ steps.meta.outputs.arch }}.tar.gz
+          path: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-linux-${{ steps.meta.outputs.arch }}.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Linux .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-linux-${{ steps.meta.outputs.arch }}.deb
+          path: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-linux-${{ steps.meta.outputs.arch }}.deb
+          if-no-files-found: error
+          retention-days: 30
+
+  package-macos:
+    runs-on: macos-latest
+    name: package / macos
+    concurrency:
+      group: ci-${{ github.ref }}-package-macos
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compute artifact metadata
+        id: meta
+        run: |
+          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          SHA=$(git rev-parse --short=8 HEAD)
+          ARCH=$(uname -m)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: |
+          brew install cmake ninja fftw boost hdf5 gsl cgal
+          echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix boost):$(brew --prefix hdf5)" >> $GITHUB_ENV
+
+      - name: Configure
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DF2DOCK_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Create .dmg and .zip
+        run: |
+          STEM="F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-macos-${{ steps.meta.outputs.arch }}"
+          cmake --install build --prefix staging/F2Dock.app/Contents/Resources
+          mkdir -p staging/F2Dock.app/Contents/MacOS
+          cp staging/F2Dock.app/Contents/Resources/bin/* staging/F2Dock.app/Contents/MacOS/
+          mkdir -p staging/F2Dock.app/Contents/Frameworks
+          for bin in staging/F2Dock.app/Contents/MacOS/*; do
+            otool -L "$bin" 2>/dev/null | grep -oE '/[^ ]+libfftw[^ ]+' | while read lib; do
+              bname=$(basename "$lib")
+              cp -n "$lib" staging/F2Dock.app/Contents/Frameworks/ 2>/dev/null || true
+              install_name_tool -change "$lib" "@executable_path/../Frameworks/$bname" "$bin" 2>/dev/null || true
+            done
+          done
+          cp README.md staging/F2Dock.app/Contents/Resources/
+          ditto -c -k --keepParent staging/F2Dock.app "$STEM.zip"
+          hdiutil create -volname F2Dock \
+            -srcfolder staging/F2Dock.app \
+            -ov -format UDZO \
+            "$STEM.dmg"
+
+      - name: Upload macOS dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-macos-${{ steps.meta.outputs.arch }}.dmg
+          path: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-macos-${{ steps.meta.outputs.arch }}.dmg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload macOS zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-macos-${{ steps.meta.outputs.arch }}.zip
+          path: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-macos-${{ steps.meta.outputs.arch }}.zip
+          if-no-files-found: error
+          retention-days: 30
+
+  package-windows:
+    runs-on: windows-latest
+    name: package / windows
+    concurrency:
+      group: ci-${{ github.ref }}-package-windows
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compute artifact metadata
+        id: meta
+        shell: bash
+        run: |
+          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          SHA=$(git rev-parse --short=8 HEAD)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "arch=x64" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          vcpkg install fftw3:x64-windows pthreads:x64-windows \
+            boost-thread:x64-windows boost-date-time:x64-windows \
+            boost-regex:x64-windows boost-filesystem:x64-windows \
+            boost-system:x64-windows boost-chrono:x64-windows \
+            boost-program-options:x64-windows boost-signals2:x64-windows \
+            boost-format:x64-windows boost-property-tree:x64-windows \
+            boost-algorithm:x64-windows boost-asio:x64-windows \
+            boost-any:x64-windows boost-array:x64-windows \
+            boost-dynamic-bitset:x64-windows boost-exception:x64-windows \
+            boost-foreach:x64-windows boost-function:x64-windows \
+            boost-lambda:x64-windows boost-lexical-cast:x64-windows \
+            boost-multi-array:x64-windows boost-optional:x64-windows \
+            boost-smart-ptr:x64-windows boost-tuple:x64-windows \
+            boost-utility:x64-windows \
+            "hdf5[cpp]:x64-windows" gsl:x64-windows cgal:x64-windows
+
+      - name: Configure
+        shell: bash
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DCMAKE_INSTALL_PREFIX=install \
+            -DF2DOCK_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Create zip
+        shell: bash
+        run: |
+          STEM="F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-windows-${{ steps.meta.outputs.arch }}"
+          cmake --install build --config Release --prefix staging/F2Dock
+          cp "$VCPKG_INSTALLATION_ROOT"/installed/x64-windows/bin/*.dll staging/F2Dock/bin/ 2>/dev/null || true
+          cp README.md staging/F2Dock/
+          cd staging
+          7z a -tzip ../"$STEM.zip" F2Dock/
+
+      - name: Upload Windows zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-windows-${{ steps.meta.outputs.arch }}.zip
+          path: F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-windows-${{ steps.meta.outputs.arch }}.zip
+          if-no-files-found: error
+          retention-days: 30

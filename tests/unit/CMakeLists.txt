@@ -80,3 +80,31 @@ target_compile_definitions(test_value_position PRIVATE
   F2DOCK_TEST_DATA_DIR="${F2DOCK_TESTS_DATA}"
 )
 gtest_discover_tests(test_value_position)
+
+if(TARGET f3dock-loop-closure)
+  f2dock_add_test(test_f3dock_loop_closure
+    SOURCES test_f3dock_loop_closure.cpp
+    LIBS f3dock-loop-closure
+  )
+endif()
+
+if(TARGET f3dock-icp)
+  f2dock_add_test(test_f3dock_icp
+    SOURCES test_f3dock_icp.cpp
+    LIBS f3dock-icp
+  )
+endif()
+
+if(TARGET f3dock-flex)
+  f2dock_add_test(test_f3dock_flex
+    SOURCES test_f3dock_flex.cpp
+    LIBS f3dock-flex
+  )
+endif()
+
+if(TARGET f3dock-domain)
+  f2dock_add_test(test_f3dock_domain
+    SOURCES test_f3dock_domain.cpp
+    LIBS f3dock-domain
+  )
+endif()
