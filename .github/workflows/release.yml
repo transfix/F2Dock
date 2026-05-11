@@ -23,14 +23,6 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
-      - name: Compute artifact metadata
-        id: meta
-        run: |
-          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
-          ARCH=$(uname -m)
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
-
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -106,14 +98,6 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
-      - name: Compute artifact metadata
-        id: meta
-        run: |
-          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
-          ARCH=$(uname -m)
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
-
       - name: Install dependencies
         run: brew install cmake ninja fftw
 
@@ -168,14 +152,6 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
-
-      - name: Compute artifact metadata
-        id: meta
-        shell: bash
-        run: |
-          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "arch=x64" >> "$GITHUB_OUTPUT"
 
       - name: Compute artifact metadata
         id: meta
