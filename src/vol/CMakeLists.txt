@@ -11,3 +11,9 @@ INCLUDE_DIRECTORIES(
 )
 
 ADD_LIBRARY (vol STATIC ${SOURCE_FILES} ${INCLUDE_FILES})
+
+# Volume serialization (RAWIV.cpp) now delegates to libcvc's volume I/O.
+if(NOT TARGET cvc::cvc)
+  message(FATAL_ERROR "cvc::cvc target not found; libcvc dependency was not configured")
+endif()
+target_link_libraries(vol PUBLIC cvc::cvc)

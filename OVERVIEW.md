@@ -2,17 +2,35 @@
 
 ## What is F2Dock?
 
-F2Dock is a **rigid-body protein-protein docking program** developed at the University of Texas at Austin's Computational Visualization Center. It predicts binding poses between two proteins by systematically exploring rotational and translational configurations in 3D space, using FFT-accelerated scoring to efficiently evaluate millions of candidate poses.
+F2Dock is a **protein-protein docking program** developed at the University of Texas at Austin's Computational Visualization Center. It predicts binding poses between two proteins by systematically exploring rotational and translational configurations in 3D space, using FFT-accelerated scoring to efficiently evaluate millions of candidate poses.
+
+This repository ships a **single consolidated executable** (`F2Dock`) that supports two docking pipelines, selected at runtime via a flag:
+
+- **F2Dock mode** — *Fast Fourier* rigid-body docking (the original F2Dock pipeline; this is the default).
+- **F3Dock mode** — *Flexible Fast Fourier* docking (layers F3Dock-derived loop-closure, hinge / shear flexibility, ICP refinement, and domain-graph composition on top of the F2Dock FFT scoring core).
+
+The "**F2**" stands for **Fast Fourier**; the "**F3**" stands for **Flexible Fast Fourier**. Both modes share the same FFT scoring core, so a single binary can serve both rigid and flexible workflows. F3-only modules are gated and never loaded when running in F2 mode.
 
 The distribution also includes **GB-Rerank**, a companion tool that rescores the top predicted docking poses using the more computationally expensive Generalized Born (GB) electrostatic solvation model.
 
-**Authors:** Rezaul Alam Chowdhury, Muhibur Rasheed (advisor: Chandrajit Bajaj)  
-**License:** GNU Lesser General Public License v2.1  
+**Authors:** Rezaul Alam Chowdhury, Muhibur Rasheed (advisor: Chandrajit Bajaj)
+**License:** GNU Lesser General Public License v2.1
 **Usage:**
 ```
-F2Dock -score|saveGrid|vdw|effGridFile parameterFile
+F2Dock [--mode=f2|f3] [-score|saveGrid|vdw|effGridFile] parameterFile
+F2Dock --f2dock parameterFile        # shorthand for --mode=f2 (rigid; default)
+F2Dock --f3dock parameterFile        # shorthand for --mode=f3 (flexible)
 GB-rerank parameterFile
 ```
+
+The mode can equivalently be selected from the input file:
+
+```
+dockMode f2        # synonyms: f2dock, rigid
+dockMode f3        # synonyms: f3dock, flex, flexible
+```
+
+CLI flags override the input-file value when both are set. The active mode is printed at startup. See [doc/F3DOCK_MIGRATION_MATRIX.md](doc/F3DOCK_MIGRATION_MATRIX.md) for the dispatch architecture and the F3Dock-stage migration roadmap.
 
 ---
 
@@ -66,6 +84,16 @@ GB-rerank parameterFile
 | Module        | Directory          | Purpose                                    |
 |---------------|--------------------|--------------------------------------------|
 | **PG-range**  | `src/PG-range/`    | Spatial indexing / geometric range queries  |
+
+### F3Dock (Flexible Fast Fourier) Modules
+These modules are F3Dock-derived. They are only invoked when the binary is run in F3Dock mode (`--f3dock` / `--mode=f3` / `dockMode f3`).
+
+| Module                    | Directory                       | Purpose                                                                |
+|---------------------------|---------------------------------|------------------------------------------------------------------------|
+| **f3dock-loop-closure**   | `src/f3dock-loop-closure/`      | Tripeptide loop closure (analytical inverse-kinematics solver)         |
+| **f3dock-flex**           | `src/f3dock-flex/`              | Hinge / shear protein-flexibility kinematics                           |
+| **f3dock-icp**            | `src/f3dock-icp/`               | Iterative Closest Point pose refinement                                |
+| **f3dock-domain**         | `src/f3dock-domain/`            | Multi-domain composition graph                                         |
 
 ### Optional Modules (compile-time flag `HAVE_LIBMOL`)
 | Module          | Directory            | Purpose                                  |

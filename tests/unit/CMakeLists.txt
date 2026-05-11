@@ -108,3 +108,9 @@ if(TARGET f3dock-domain)
     LIBS f3dock-domain
   )
 endif()
+
+# ── Header-only DockMode parser tests (no library dep) ──
+add_executable(test_dock_mode test_dock_mode.cpp)
+target_include_directories(test_dock_mode PRIVATE ${F2DOCK_INC})
+target_link_libraries(test_dock_mode PRIVATE GTest::gtest_main)
+gtest_discover_tests(test_dock_mode)
