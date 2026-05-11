@@ -30,6 +30,7 @@
 #include <string>
 #include "ElementInformation.h"
 #include "f2dock/Version.h"
+#include "f3dock/DockMode.h"
 
 using namespace std;
 
@@ -1670,6 +1671,14 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile)
 	    if (strcasecmp(val,"true")==0) p->breakDownScores = 1;
 	    else p->breakDownScores = 0;
 
+	  } else if (strcasecmp(key, "dockMode")==0) {
+	    f3dock::DockMode m;
+	    if (!f3dock::parse_dock_mode(val, &m)) {
+	      printf("Error: dockMode must be one of: f2|f2dock|rigid, f3|f3dock|flex|flexible (got '%s')\n", val);
+	      return false;
+	    }
+	    p->dockMode = static_cast<int>(m);
+
 	  } else if (strcasecmp(key, "bandwidth")==0) {
 	    dval = atof(val);
 	    if ( dval < 0 )
@@ -2045,7 +2054,13 @@ int main( int argc, char* argv[] )
     printf("Usage: F2Dock [options] [-score|saveGrid|vdw|effGridFile] parameterFile\n\n");
     printf("Options:\n");
     printf("  -h, --help     Show this help message\n");
-    printf("  -v, --version  Show version information\n\n");
+    printf("  -v, --version  Show version information\n");
+    printf("  --mode=f2|f3   Select rigid (F2Dock) or flexible (F3Dock)\n");
+    printf("                 Fast Fourier docking pipeline.\n");
+    printf("                 Default: f2 (rigid). May also be set in the\n");
+    printf("                 input file with 'dockMode f2|f3'.\n");
+    printf("  --f2dock       Shorthand for --mode=f2 (rigid).\n");
+    printf("  --f3dock       Shorthand for --mode=f3 (Flexible Fast Fourier).\n\n");
     printf("Modes:\n");
     printf("  -score         Score docking poses\n");
     printf("  saveGrid       Save grid to file\n");
@@ -2054,9 +2069,38 @@ int main( int argc, char* argv[] )
     return 0;
   }
 
+  // Strip any leading --mode=, --f2dock, --f3dock options from argv so
+  // that the legacy positional handling below (which expects either
+  // '<paramFile>' or '<-option> <paramFile>') keeps working unchanged.
+  // CLI-specified mode wins over whatever the input file says.
+  bool cliModeSet = false;
+  f3dock::DockMode cliMode = f3dock::DockMode::kF2Dock;
+  {
+    int dst = 1;
+    for (int src = 1; src < argc; ++src) {
+      const char *a = argv[src];
+      if (strcmp(a, "--f2dock") == 0) {
+        cliMode = f3dock::DockMode::kF2Dock;
+        cliModeSet = true;
+      } else if (strcmp(a, "--f3dock") == 0) {
+        cliMode = f3dock::DockMode::kF3Dock;
+        cliModeSet = true;
+      } else if (strncmp(a, "--mode=", 7) == 0) {
+        if (!f3dock::parse_dock_mode(a + 7, &cliMode)) {
+          printf("Error: --mode must be one of f2|f3 (got '%s')\n", a + 7);
+          return 1;
+        }
+        cliModeSet = true;
+      } else {
+        argv[dst++] = argv[src];
+      }
+    }
+    argc = dst;
+  }
+
   if (argc<2 || argc>3 ) {
     printf("F2Dock %s\n", F2DOCK_VERSION_STRING);
-    printf("Usage: F2Dock -score|saveGrid|vdw|effGridFile parameterFile\n");
+    printf("Usage: F2Dock [--mode=f2|f3] [-score|saveGrid|vdw|effGridFile] parameterFile\n");
     printf("       F2Dock --help for more information\n");
     return(1);
   }
@@ -2082,6 +2126,7 @@ int main( int argc, char* argv[] )
   pr.performDocking = 1;
   pr.numThreads = 4;
   pr.breakDownScores = 0;
+  pr.dockMode = static_cast<int>(f3dock::DockMode::kF2Dock);
   pr.numberOfPositions = 20000;
   pr.gridSize = 256;
   pr.gridSizeSpecified = false;
@@ -2367,6 +2412,13 @@ int main( int argc, char* argv[] )
 
   // overwrite defaults in pr with values from the parameter file
   if (! setParamFromFile( &pr, paramFileName) ) return 1;
+
+  // CLI-specified mode wins over whatever the input file said.
+  if (cliModeSet) {
+    pr.dockMode = static_cast<int>(cliMode);
+  }
+  printf("Docking mode: %s\n",
+         f3dock::to_string(static_cast<f3dock::DockMode>(pr.dockMode)));
 
 //  pr.coreCoreWeight *= ( pr.numCentersB / 3000.0 );
 

@@ -389,6 +389,12 @@ typedef struct
    
     int control;
 
+    // Selects the docking pipeline at runtime. 0 = F2Dock (rigid Fast
+    // Fourier, the default), 1 = F3Dock (Flexible Fast Fourier; enables
+    // F3Dock-derived loop-closure / flex / ICP / domain stages).
+    // See inc/f3dock/DockMode.h for the typed enum and parser.
+    int dockMode;
+
   } PARAMS_IN;
   
   class TopValues;
