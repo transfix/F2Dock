@@ -366,8 +366,9 @@ inline void TopValues::insert(double value, double realValue,
                               double delDispE, double x, double y, double z,
                               int rotationIndex, int fineRotationIndex) {
   insert(value, realValue, 0, 0, 0, unrealValue, elecValue, hbondValue,
-         hydrophobicityValue, vdWPotential, nClashes, simpComp, pGsol, pGsolH,
-         delDispE, 0, 0, 0, x, y, z, rotationIndex, fineRotationIndex, 0);
+         hydrophobicityValue, vdWPotential, nClashes, simpComp, pGsol,
+         (int)(pGsolH), delDispE, 0, 0, 0, x, y, z, rotationIndex,
+         fineRotationIndex, 0);
 }
 
 inline void TopValues::insert(int valuePosIndex) {

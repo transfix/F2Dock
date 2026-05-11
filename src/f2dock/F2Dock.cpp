@@ -90,9 +90,10 @@ void generateRandomRotationMatrix(Matrix &randRot) {
   double st = sin(theta), ct = cos(theta);
   double Sx = Vx * ct - Vy * st, Sy = Vx * st + Vy * ct;
 
-  randRot.set(Vx * Sx - ct, Vx * Sy - st, Vx * Vz, 0.0, Vy * Sx + st,
-              Vy * Sy - ct, Vy * Vz, 0.0, Vz * Sx, Vz * Sy, 1.0 - z, 0.0, 0.0,
-              0.0, 0.0, 1.0);
+  randRot.set((float)(Vx * Sx - ct), (float)(Vx * Sy - st), (float)(Vx * Vz),
+              0.0, (float)(Vy * Sx + st), (float)(Vy * Sy - ct),
+              (float)(Vy * Vz), 0.0, (float)(Vz * Sx), (float)(Vz * Sy),
+              (float)(1.0 - z), 0.0, 0.0, 0.0, 0.0, 1.0);
 }
 
 bool readRotations(char *rotationFile, PARAMS_IN *p) {

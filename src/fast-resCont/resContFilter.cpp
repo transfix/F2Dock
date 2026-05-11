@@ -673,8 +673,9 @@ void resContFilter::computeResResInteractions(Matrix transMat, int nodeS,
                                               double *interactionValueNeg) {
   double sumRad = staticAtomsOctree[nodeS].cr + movingAtomsOctree[nodeM].cr;
 
-  Vector oldPos(movingAtomsOctree[nodeM].cx, movingAtomsOctree[nodeM].cy,
-                movingAtomsOctree[nodeM].cz, 1.0);
+  Vector oldPos((float)(movingAtomsOctree[nodeM].cx),
+                (float)(movingAtomsOctree[nodeM].cy),
+                (float)(movingAtomsOctree[nodeM].cz), 1.0);
   Vector newPos = transMat * oldPos;
   double cxM = newPos[0], cyM = newPos[1], czM = newPos[2];
 
@@ -696,8 +697,8 @@ void resContFilter::computeResResInteractions(Matrix transMat, int nodeS,
     if (staticAtomsOctree[nodeS].leaf && movingAtomsOctree[nodeM].leaf) {
       for (int i = movingAtomsOctree[nodeM].atomsStartID;
            i <= movingAtomsOctree[nodeM].atomsEndID; i++) {
-        Vector oldPos(movingAtoms[i].x, movingAtoms[i].y, movingAtoms[i].z,
-                      1.0);
+        Vector oldPos((float)(movingAtoms[i].x), (float)(movingAtoms[i].y),
+                      (float)(movingAtoms[i].z), 1.0);
         Vector newPos = transMat * oldPos;
         double xM = newPos[0], yM = newPos[1], zM = newPos[2];
         int rIDM = movingAtoms[i].rID;
@@ -828,7 +829,8 @@ bool resContFilter::computeInteractionsNaively(Matrix transMat,
 
   int numClose = 0;
   for (int i = 0; i < nMovingAtoms; i++) {
-    Vector oldPos(movingAtoms[i].x, movingAtoms[i].y, movingAtoms[i].z, 1.0);
+    Vector oldPos((float)(movingAtoms[i].x), (float)(movingAtoms[i].y),
+                  (float)(movingAtoms[i].z), 1.0);
     Vector newPos = transMat * oldPos;
 
     double xM = newPos[0], yM = newPos[1], zM = newPos[2];

@@ -23,6 +23,8 @@
 
 #include "GB-rerank/pairingHeap.h"
 
+#include <cstdint>
+
 int PairingHeap::new_node(int x, VAL_TYPE k) {
   int fp;
 
@@ -57,9 +59,9 @@ void PairingHeap::free_node(int xp) {
 
 void PairingHeap::add_to_aux_area(int xp) {
   if (auxptr == NIL)
-    min_auxptr = auxptr = (*heap)[xp + LEFT] = (*heap)[xp + RIGHT] = xp;
+    min_auxptr = auxptr = (*heap)[xp + LEFT] = (int)((*heap)[xp + RIGHT] = xp);
   else {
-    int yp = (*heap)[auxptr + LEFT];
+    int yp = (int)((*heap)[auxptr + LEFT]);
 
     (*heap)[xp + LEFT] = yp;
     (*heap)[xp + RIGHT] = auxptr;
@@ -88,7 +90,7 @@ inline int PairingHeap::pairing_heap_link(int xp, int yp) {
   (*heap)[yp + LEFT] = xp;
   (*heap)[yp + RIGHT] = (*heap)[xp + CHILD];
   if ((*heap)[yp + RIGHT] != NIL)
-    (*heap)[(*heap)[yp + RIGHT] + LEFT] = yp;
+    (*heap)[(uint64_t)((*heap)[yp + RIGHT] + LEFT)] = yp;
   (*heap)[xp + CHILD] = yp;
 
   (*heap)[xp + LEFT] = (*heap)[xp + RIGHT] = NIL;
@@ -221,7 +223,7 @@ void PairingHeap::Delete_Min(int &mx, VAL_TYPE &mk) {
     mk = INF;
   } else {
     if (use_aux_trees && (auxptr != NIL)) {
-      (*heap)[(*heap)[auxptr + LEFT] + RIGHT] = NIL;
+      (*heap)[(uint64_t)((*heap)[auxptr + LEFT] + RIGHT)] = NIL;
       (*heap)[auxptr + LEFT] = NIL;
 
       auxptr = multi_pass_merge(auxptr);
@@ -233,7 +235,7 @@ void PairingHeap::Delete_Min(int &mx, VAL_TYPE &mk) {
     mx = (*heap)[root + ID];
     mk = (*heap)[root + KEY];
 
-    int xp = (*heap)[root + CHILD];
+    int xp = (int)((*heap)[root + CHILD]);
 
     free_node(root);
 
@@ -252,12 +254,12 @@ void PairingHeap::Decrease_Key(int xp, VAL_TYPE k) {
 
     if (xp != root) {
       if ((*heap)[xp + RIGHT] != NIL)
-        (*heap)[(*heap)[xp + RIGHT] + LEFT] = (*heap)[xp + LEFT];
+        (*heap)[(uint64_t)((*heap)[xp + RIGHT] + LEFT)] = (*heap)[xp + LEFT];
 
-      if ((*heap)[(*heap)[xp + LEFT] + CHILD] == xp)
-        (*heap)[(*heap)[xp + LEFT] + CHILD] = (*heap)[xp + RIGHT];
+      if ((*heap)[(uint64_t)((*heap)[xp + LEFT] + CHILD)] == xp)
+        (*heap)[(uint64_t)((*heap)[xp + LEFT] + CHILD)] = (*heap)[xp + RIGHT];
       else
-        (*heap)[(*heap)[xp + LEFT] + RIGHT] = (*heap)[xp + RIGHT];
+        (*heap)[(uint64_t)((*heap)[xp + LEFT] + RIGHT)] = (*heap)[xp + RIGHT];
 
       (*heap)[xp + LEFT] = (*heap)[xp + RIGHT] = NIL;
 
