@@ -679,9 +679,9 @@ void initializeCurvatureGrid(PARAMS_IN *pr, int pw, double maxRatio,
   cGrid->minY = minY;
   cGrid->minZ = minZ;
 
-  cGrid->dimX = dimX;
-  cGrid->dimY = dimY;
-  cGrid->dimZ = dimZ;
+  cGrid->dimX = (int)(dimX);
+  cGrid->dimY = (int)(dimY);
+  cGrid->dimZ = (int)(dimZ);
 
   cGrid->gridSpacing = pr->gridSpacing;
 
@@ -714,12 +714,12 @@ void initializeCurvatureGrid(PARAMS_IN *pr, int pw, double maxRatio,
 
       int xL, xU, yL, yU, zL, zU;
 
-      xL = floor((xc - rc) / pr->gridSpacing) - 1,
-      xU = ceil((xc + rc) / pr->gridSpacing) + 1;
-      yL = floor((yc - rc) / pr->gridSpacing) - 1,
-      yU = ceil((yc + rc) / pr->gridSpacing) + 1;
-      zL = floor((zc - rc) / pr->gridSpacing) - 1,
-      zU = ceil((zc + rc) / pr->gridSpacing) + 1;
+      xL = (int)(floor((xc - rc) / pr->gridSpacing) - 1),
+      xU = (int)(ceil((xc + rc) / pr->gridSpacing) + 1);
+      yL = (int)(floor((yc - rc) / pr->gridSpacing) - 1),
+      yU = (int)(ceil((yc + rc) / pr->gridSpacing) + 1);
+      zL = (int)(floor((zc - rc) / pr->gridSpacing) - 1),
+      zU = (int)(ceil((zc + rc) / pr->gridSpacing) + 1);
 
       // apply atom s's influence
       for (int zt = zL; zt <= zU; zt++)
@@ -764,12 +764,12 @@ double getCurvature(double x, double y, double z, PARAMS_IN *pr, int *lCount,
 
   int xL, xU, yL, yU, zL, zU;
 
-  xL = floor((xc - rc) / pr->gridSpacing) - 1,
-  xU = ceil((xc + rc) / pr->gridSpacing) + 1;
-  yL = floor((yc - rc) / pr->gridSpacing) - 1,
-  yU = ceil((yc + rc) / pr->gridSpacing) + 1;
-  zL = floor((zc - rc) / pr->gridSpacing) - 1,
-  zU = ceil((zc + rc) / pr->gridSpacing) + 1;
+  xL = (int)(floor((xc - rc) / pr->gridSpacing) - 1),
+  xU = (int)(ceil((xc + rc) / pr->gridSpacing) + 1);
+  yL = (int)(floor((yc - rc) / pr->gridSpacing) - 1),
+  yU = (int)(ceil((yc + rc) / pr->gridSpacing) + 1);
+  zL = (int)(floor((zc - rc) / pr->gridSpacing) - 1),
+  zU = (int)(ceil((zc + rc) / pr->gridSpacing) + 1);
 
   *lCount = *hCount = 0;
 
@@ -1118,9 +1118,9 @@ bool build_fks(char *type, int numCenters, double *xk, double *yk, double *zk,
     for (int i = 0; i < num_E; i++) {
       int ii = idxE[i];
 
-      pt.x = xk[ii];
-      pt.y = yk[ii];
-      pt.z = zk[ii];
+      pt.x = (float)(xk[ii]);
+      pt.y = (float)(yk[ii]);
+      pt.z = (float)(zk[ii]);
 
       skinPG->addPoint(&pt);
     }
@@ -1130,9 +1130,9 @@ bool build_fks(char *type, int numCenters, double *xk, double *yk, double *zk,
     for (int i = 0; i < num_I; i++) {
       int ii = idxI[i];
 
-      pt.x = xk[ii];
-      pt.y = yk[ii];
-      pt.z = zk[ii];
+      pt.x = (float)(xk[ii]);
+      pt.y = (float)(yk[ii]);
+      pt.z = (float)(zk[ii]);
 
       double distCutoff = staticMolHydroDistCutoff + rk[ii];
 
@@ -1478,9 +1478,9 @@ bool build_fks(char *type, int numCenters, double *xk, double *yk, double *zk,
     for (int i = 0; i < num_E; i++) {
       int ii = idxE[i];
 
-      pt.x = xk[ii];
-      pt.y = yk[ii];
-      pt.z = zk[ii];
+      pt.x = (float)(xk[ii]);
+      pt.y = (float)(yk[ii]);
+      pt.z = (float)(zk[ii]);
 
       skinPG->addPoint(&pt);
     }
@@ -1490,9 +1490,9 @@ bool build_fks(char *type, int numCenters, double *xk, double *yk, double *zk,
     for (int i = 0; i < num_I; i++) {
       int ii = idxI[i];
 
-      pt.x = xk[ii];
-      pt.y = yk[ii];
-      pt.z = zk[ii];
+      pt.x = (float)(xk[ii]);
+      pt.y = (float)(yk[ii]);
+      pt.z = (float)(zk[ii]);
 
       double distCutoff = staticMolHydroDistCutoff + rk[ii];
 
@@ -2164,7 +2164,7 @@ bool computeInterpFuncExtent(double *x1, double *y1, double *z1, float *r1,
   if (!getMaxRadius(r1, n1, r2, n2, &r_max))
     return false;
 
-  *interpFuncExtent = ceil(r_max * (numFreq / largestEdge));
+  *interpFuncExtent = (int)(ceil(r_max * (numFreq / largestEdge)));
   printf("interpFuncExtent %d\n", *interpFuncExtent);
 
   return true;
@@ -2365,7 +2365,7 @@ bool computeGridParameters(PARAMS_IN *pr, int *interpFuncExtent,
 
     if ((pr->gridSpacingSpecified) ||
         (!pr->gridSpacingSpecified && !pr->numFreqSpecified)) {
-      pr->numFreq = ceil(gridLength1D / pr->gridSpacing) + 1;
+      pr->numFreq = (int)(ceil(gridLength1D / pr->gridSpacing) + 1);
       pr->numFreq += (pr->numFreq & 1);
       for (int i = 0; i < pr->numEfficientGridSizes; i++)
         if (pr->efficientGridSizes[i] >= pr->numFreq) {
@@ -2456,7 +2456,7 @@ bool transformAndNormalize(
       xk[i] *= scale;
       yk[i] *= scale;
       zk[i] *= scale;
-      rk[i] *= scale;
+      rk[i] *= (float)(scale);
     }
   }
 
@@ -2499,7 +2499,7 @@ bool transformAndNormalize(double *xkOrig, double *ykOrig, double *zkOrig,
       xk[i] *= scale;
       yk[i] *= scale;
       zk[i] *= scale;
-      rk[i] *= scale;
+      rk[i] *= (float)(scale);
     }
   }
 
@@ -3826,7 +3826,7 @@ void elecScoreSingleConfiguration(int nA, double *xA, double *yA, double *zA,
         //            double dist = sqrt( dist2 ); //1.0 / invSqrt( dist2 );
 
         if (dist2 < (0.8 * (rA[j] + rB[i])) * (0.8 * (rA[j] + rB[i])))
-          dist2 = (0.8 * (rA[j] + rB[i])) * (0.8 * (rA[j] + rB[i]));
+          dist2 = (float)((0.8 * (rA[j] + rB[i])) * (0.8 * (rA[j] + rB[i])));
         //            if ( dist < 1.0 ) dist = 1.0;
 
         //            double cons;
@@ -6272,7 +6272,7 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
   double numFreq3 = numFreq * numFreq * numFreq;
 
   if (pr->numberOfPositions == -1)
-    pr->numberOfPositions = numFreq3;
+    pr->numberOfPositions = (int)(numFreq3);
 
   if (scoreUntransformed) {
     for (int i = 0; i < 9; i++)
@@ -6281,7 +6281,7 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
     pr->numberOfRotations = 1;
     pr->numThreads = 1;
 
-    pr->numberOfPositions = numFreq3;
+    pr->numberOfPositions = (int)(numFreq3);
   }
 
   // #ifdef DEBUG
@@ -6972,9 +6972,9 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
       centerFrequenciesB[0][i][1] = sparseProfile[0][i][1] * coreCoreWeightSqrt;
     }
 
-    translate_B[0] = -xCenter;
-    translate_B[1] = -yCenter;
-    translate_B[2] = -zCenter;
+    translate_B[0] = (float)(-xCenter);
+    translate_B[1] = (float)(-yCenter);
+    translate_B[2] = (float)(-zCenter);
 
     if (breakDownScores)
       memcpy(sparseProfile_01[0], sparseProfile[0],
@@ -6992,9 +6992,9 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
           sparseProfile[0][i][1] * coreCoreWeightSqrt;
     }
 
-    translate_A[0] = -xCenter;
-    translate_A[1] = -yCenter;
-    translate_A[2] = -zCenter;
+    translate_A[0] = (float)(-xCenter);
+    translate_A[1] = (float)(-yCenter);
+    translate_A[2] = (float)(-zCenter);
 
     if (!getCenterFrequencies(
             numCentersA, xkA, ykA, zkA, rkA, typeA, fkA, blobbiness, alpha,
@@ -7180,9 +7180,9 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
                 &zTrans))
       return -1;
 
-    translate_A[0] = xTrans;
-    translate_A[1] = yTrans;
-    translate_A[2] = zTrans;
+    translate_A[0] = (float)(xTrans);
+    translate_A[1] = (float)(yTrans);
+    translate_A[2] = (float)(zTrans);
 
     // transform A
     if (!transformAndNormalize(xkAOrig, ykAOrig, zkAOrig, radiiA, xkA, ykA, zkA,
@@ -7306,9 +7306,9 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
                 &zTrans))
       return -1;
 
-    translate_B[0] = xTrans;
-    translate_B[1] = yTrans;
-    translate_B[2] = zTrans;
+    translate_B[0] = (float)(xTrans);
+    translate_B[1] = (float)(yTrans);
+    translate_B[2] = (float)(zTrans);
 
     if (randomRotate) {
       if (!rotateAboutOrigin(xkBOrig, ykBOrig, zkBOrig, numCentersB, randRot))
@@ -7490,7 +7490,7 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
     prT[i].simpleChargeWeight = simpleChargeWeight;
     prT[i].scaleA = scale;
     prT[i].translate_A = translate_A;
-    prT[i].scaleB = scale;
+    prT[i].scaleB = (float)(scale);
     prT[i].translate_B = translate_B;
     prT[i].centerFrequenciesA = centerFrequenciesA;
     prT[i].centerElecFrequenciesA = centerElecFrequenciesA;
@@ -7880,7 +7880,7 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
   prT[0].confID = 0;
   prT[0].rotations = rotations;
   prT[0].numFreq = numFreq;
-  prT[0].scaleB = scale;
+  prT[0].scaleB = (float)(scale);
   prT[0].translate_A = translate_A;
   prT[0].translate_B = translate_B;
   prT[0].functionScaleFactor = functionScaleFactor;

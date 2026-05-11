@@ -102,18 +102,18 @@ _PI32_CONST(2, 2);
 _PI32_CONST(4, 4);
 _PI32_CONST(0x7f, 0x7f);
 
-_PS_CONST(cephes_SQRTHF, 0.707106781186547524);
-_PS_CONST(cephes_log_p0, 7.0376836292E-2);
-_PS_CONST(cephes_log_p1, -1.1514610310E-1);
-_PS_CONST(cephes_log_p2, 1.1676998740E-1);
-_PS_CONST(cephes_log_p3, -1.2420140846E-1);
-_PS_CONST(cephes_log_p4, +1.4249322787E-1);
-_PS_CONST(cephes_log_p5, -1.6668057665E-1);
-_PS_CONST(cephes_log_p6, +2.0000714765E-1);
-_PS_CONST(cephes_log_p7, -2.4999993993E-1);
-_PS_CONST(cephes_log_p8, +3.3333331174E-1);
-_PS_CONST(cephes_log_q1, -2.12194440e-4);
-_PS_CONST(cephes_log_q2, 0.693359375);
+_PS_CONST(cephes_SQRTHF, 0.707106781186547524f);
+_PS_CONST(cephes_log_p0, 7.0376836292E-2f);
+_PS_CONST(cephes_log_p1, -1.1514610310E-1f);
+_PS_CONST(cephes_log_p2, 1.1676998740E-1f);
+_PS_CONST(cephes_log_p3, -1.2420140846E-1f);
+_PS_CONST(cephes_log_p4, +1.4249322787E-1f);
+_PS_CONST(cephes_log_p5, -1.6668057665E-1f);
+_PS_CONST(cephes_log_p6, +2.0000714765E-1f);
+_PS_CONST(cephes_log_p7, -2.4999993993E-1f);
+_PS_CONST(cephes_log_p8, +3.3333331174E-1f);
+_PS_CONST(cephes_log_q1, -2.12194440e-4f);
+_PS_CONST(cephes_log_q2, 0.693359375f);
 
 #if defined(__MINGW32__)
 
@@ -182,16 +182,16 @@ v4sf log_ps(v4sf x);
 _PS_CONST(exp_hi, 88.3762626647949f);
 _PS_CONST(exp_lo, -88.3762626647949f);
 
-_PS_CONST(cephes_LOG2EF, 1.44269504088896341);
-_PS_CONST(cephes_exp_C1, 0.693359375);
-_PS_CONST(cephes_exp_C2, -2.12194440e-4);
+_PS_CONST(cephes_LOG2EF, 1.44269504088896341f);
+_PS_CONST(cephes_exp_C1, 0.693359375f);
+_PS_CONST(cephes_exp_C2, -2.12194440e-4f);
 
-_PS_CONST(cephes_exp_p0, 1.9875691500E-4);
-_PS_CONST(cephes_exp_p1, 1.3981999507E-3);
-_PS_CONST(cephes_exp_p2, 8.3334519073E-3);
-_PS_CONST(cephes_exp_p3, 4.1665795894E-2);
-_PS_CONST(cephes_exp_p4, 1.6666665459E-1);
-_PS_CONST(cephes_exp_p5, 5.0000001201E-1);
+_PS_CONST(cephes_exp_p0, 1.9875691500E-4f);
+_PS_CONST(cephes_exp_p1, 1.3981999507E-3f);
+_PS_CONST(cephes_exp_p2, 8.3334519073E-3f);
+_PS_CONST(cephes_exp_p3, 4.1665795894E-2f);
+_PS_CONST(cephes_exp_p4, 1.6666665459E-1f);
+_PS_CONST(cephes_exp_p5, 5.0000001201E-1f);
 
 v4sf exp_ps(v4sf x);
 

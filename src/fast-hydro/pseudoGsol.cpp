@@ -93,9 +93,9 @@ void pseudoGsol::processQPoints(void) {
   staticPG = new PG(10.0, xlatePG, 5.0);
 
   for (int i = 0; i < numStaticQPoints; i++) {
-    staticQPointsPG[i].x = staticQPoints[i].x;
-    staticQPointsPG[i].y = staticQPoints[i].y;
-    staticQPointsPG[i].z = staticQPoints[i].z;
+    staticQPointsPG[i].x = (float)(staticQPoints[i].x);
+    staticQPointsPG[i].y = (float)(staticQPoints[i].y);
+    staticQPointsPG[i].z = (float)(staticQPoints[i].z);
 
     staticPG->addPoint(&staticQPointsPG[i]);
   }
@@ -106,9 +106,9 @@ void pseudoGsol::processQPoints(void) {
   movingPG = new PG(10.0, xlatePG, 5.0);
 
   for (int i = 0; i < numMovingQPoints; i++) {
-    movingQPointsPG[i].x = movingQPoints[i].x;
-    movingQPointsPG[i].y = movingQPoints[i].y;
-    movingQPointsPG[i].z = movingQPoints[i].z;
+    movingQPointsPG[i].x = (float)(movingQPoints[i].x);
+    movingQPointsPG[i].y = (float)(movingQPoints[i].y);
+    movingQPointsPG[i].z = (float)(movingQPoints[i].z);
 
     movingPG->addPoint(&movingQPointsPG[i]);
   }
@@ -1137,9 +1137,9 @@ void pseudoGsol::collectPseudoGsol(int threadID, double *trans, double *transI,
            j <= staticQPointsOctree[i].qPtsEndID; j++) {
         Point p, q;
 
-        p.x = staticQPoints[j].x;
-        p.y = staticQPoints[j].y;
-        p.z = staticQPoints[j].z;
+        p.x = (float)(staticQPoints[j].x);
+        p.y = (float)(staticQPoints[j].y);
+        p.z = (float)(staticQPoints[j].z);
 
         transformPoint(p, transI, &q);
 
@@ -1161,9 +1161,9 @@ void pseudoGsol::collectPseudoGsol(int threadID, double *trans, double *transI,
            j <= movingQPointsOctree[i].qPtsEndID; j++) {
         Point p, q;
 
-        p.x = movingQPoints[j].x;
-        p.y = movingQPoints[j].y;
-        p.z = movingQPoints[j].z;
+        p.x = (float)(movingQPoints[j].x);
+        p.y = (float)(movingQPoints[j].y);
+        p.z = (float)(movingQPoints[j].z);
 
         transformPoint(p, trans, &q);
 
@@ -1185,9 +1185,9 @@ void pseudoGsol::markPotentialQPoints(int threadID, int nodeS, int nodeM,
       (sumRad + params.distanceCutoff) * (sumRad + params.distanceCutoff);
   Point P, Q;
 
-  P.x = movingQPointsOctree[nodeM].cx;
-  P.y = movingQPointsOctree[nodeM].cy;
-  P.z = movingQPointsOctree[nodeM].cz;
+  P.x = (float)(movingQPointsOctree[nodeM].cx);
+  P.y = (float)(movingQPointsOctree[nodeM].cy);
+  P.z = (float)(movingQPointsOctree[nodeM].cz);
 
   transformPoint(P, trans, &Q);
 

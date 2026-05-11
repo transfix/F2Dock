@@ -29,7 +29,7 @@ int PairingHeap::new_node(int x, VAL_TYPE k) {
 
   if (freeptr != NIL) {
     fp = freeptr;
-    freeptr = (*heap)[freeptr + CHILD];
+    freeptr = (int)((*heap)[freeptr + CHILD]);
 
     (*heap)[fp + ID] = x;
     (*heap)[fp + KEY] = k;
@@ -107,7 +107,7 @@ int PairingHeap::two_pass_merge(int xp) {
     xp1 = xp;
 
     if ((*heap)[xp1 + RIGHT] != NIL)
-      xp2 = (*heap)[xp1 + RIGHT];
+      xp2 = (int)((*heap)[xp1 + RIGHT]);
     else
       xp2 = NIL;
 
@@ -115,7 +115,7 @@ int PairingHeap::two_pass_merge(int xp) {
       xp = NIL;
     else {
       if ((*heap)[xp2 + RIGHT] != NIL)
-        xp = (*heap)[xp2 + RIGHT];
+        xp = (int)((*heap)[xp2 + RIGHT]);
       else
         xp = NIL;
     }
@@ -133,7 +133,7 @@ int PairingHeap::two_pass_merge(int xp) {
   xp = NIL;
   while (zp != NIL) {
     yp = zp;
-    zp = (*heap)[zp + RIGHT];
+    zp = (int)((*heap)[zp + RIGHT]);
 
     xp = pairing_heap_link(xp, yp);
   }
@@ -154,7 +154,7 @@ int PairingHeap::multi_pass_merge(int xp) {
       xp1 = xp;
 
       if ((*heap)[xp1 + RIGHT] != NIL)
-        xp2 = (*heap)[xp1 + RIGHT];
+        xp2 = (int)((*heap)[xp1 + RIGHT]);
       else
         xp2 = NIL;
 
@@ -162,7 +162,7 @@ int PairingHeap::multi_pass_merge(int xp) {
         xp = NIL;
       else {
         if ((*heap)[xp2 + RIGHT] != NIL)
-          xp = (*heap)[xp2 + RIGHT];
+          xp = (int)((*heap)[xp2 + RIGHT]);
         else
           xp = NIL;
       }
@@ -207,10 +207,10 @@ void PairingHeap::Find_Min(int &mx, VAL_TYPE &mk) {
   } else {
     if ((use_aux_trees == false) || (min_auxptr == NIL) ||
         ((*heap)[min_auxptr + KEY] > (*heap)[root + KEY])) {
-      mx = (*heap)[root + ID];
+      mx = (int)((*heap)[root + ID]);
       mk = (*heap)[root + KEY];
     } else {
-      mx = (*heap)[min_auxptr + ID];
+      mx = (int)((*heap)[min_auxptr + ID]);
       mk = (*heap)[min_auxptr + KEY];
     }
   }
@@ -231,7 +231,7 @@ void PairingHeap::Delete_Min(int &mx, VAL_TYPE &mk) {
       auxptr = min_auxptr = NIL;
     }
 
-    mx = (*heap)[root + ID];
+    mx = (int)((*heap)[root + ID]);
     mk = (*heap)[root + KEY];
 
     int xp = (int)((*heap)[root + CHILD]);

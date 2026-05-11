@@ -343,9 +343,9 @@ bool resContFilter::copyAtomsFromArray(int numAtomsSrc, double *atmsSrc,
     (*atmsDest)[i].y = atmsSrc[5 * i + 1];
     (*atmsDest)[i].z = atmsSrc[5 * i + 2];
 
-    (*atmsDest)[i].rID = atmsSrc[5 * i + 3];
+    (*atmsDest)[i].rID = (int)(atmsSrc[5 * i + 3]);
 
-    (*atmsDest)[i].rNum = atmsSrc[5 * i + 4];
+    (*atmsDest)[i].rNum = (int)(atmsSrc[5 * i + 4]);
   }
 
   double endT = getTime();
@@ -660,9 +660,9 @@ bool resContFilter::buildOctrees(void) {
       (distCutoff != distCutoffUsed) || (!movingAtomsOctreeBuilt))
     buildMovingAtomsOctree();
 
-  minRadiusUsed = minRadius;
+  minRadiusUsed = (int)(minRadius);
   maxLeafSizeUsed = maxLeafSize;
-  distCutoffUsed = distCutoff;
+  distCutoffUsed = (int)(distCutoff);
 
   return true;
 }

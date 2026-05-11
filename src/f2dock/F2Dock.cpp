@@ -536,18 +536,18 @@ void assignHydrophobicity(int numCenters, double *x, double *y, double *z,
 
     for (int i = 0; i < numCenters; i++)
       if (atype[i] == 'E') {
-        pt.x = x[i];
-        pt.y = y[i];
-        pt.z = z[i];
+        pt.x = (float)(x[i]);
+        pt.y = (float)(y[i]);
+        pt.z = (float)(z[i]);
 
         skinPG->addPoint(&pt);
       }
 
     for (int i = 0; i < numCenters; i++)
       if (atype[i] == 'I') {
-        pt.x = x[i];
-        pt.y = y[i];
-        pt.z = z[i];
+        pt.x = (float)(x[i]);
+        pt.y = (float)(y[i]);
+        pt.z = (float)(z[i]);
 
         //             if ( skinPG->pointsWithinRange( &pt, distCutoff ) )
         (*hydrophobicity)[i] = getHydrophobicity(
@@ -1906,7 +1906,7 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
   if (p->pseudoAtomRadius >= 0) {
     for (int j = 0; j < p->numCentersA; j++)
       if (p->typeA[j] == 'E')
-        p->radiiA[j] = p->pseudoAtomRadius;
+        p->radiiA[j] = (float)(p->pseudoAtomRadius);
   }
 
   if (p->pruneAngle > 0)

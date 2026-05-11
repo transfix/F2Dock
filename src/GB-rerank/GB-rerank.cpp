@@ -385,9 +385,9 @@ bool rerankF2DockOutput(PARAMS_IN *params, MOLECULE_INFO *staticMol,
       PG *staticPG = new PG(10.0, xlatePG, 5.0);
 
       for (int i = 0; i < staticMol->numQPoints; i++) {
-        staticQPoints[i].x = staticMol->qPoints[7 * i + 0];
-        staticQPoints[i].y = staticMol->qPoints[7 * i + 1];
-        staticQPoints[i].z = staticMol->qPoints[7 * i + 2];
+        staticQPoints[i].x = (float)(staticMol->qPoints[7 * i + 0]);
+        staticQPoints[i].y = (float)(staticMol->qPoints[7 * i + 1]);
+        staticQPoints[i].z = (float)(staticMol->qPoints[7 * i + 2]);
 
         staticPG->addPoint(&staticQPoints[i]);
       }
@@ -487,9 +487,9 @@ bool rerankF2DockOutput(PARAMS_IN *params, MOLECULE_INFO *staticMol,
         PG *movingPG = new PG(10.0, xlatePG, 5.0);
 
         for (int j = 0; j < movingMol->numQPoints; j++) {
-          movingQPoints[j].x = qPoints[7 * j + 0];
-          movingQPoints[j].y = qPoints[7 * j + 1];
-          movingQPoints[j].z = qPoints[7 * j + 2];
+          movingQPoints[j].x = (float)(qPoints[7 * j + 0]);
+          movingQPoints[j].y = (float)(qPoints[7 * j + 1]);
+          movingQPoints[j].z = (float)(qPoints[7 * j + 2]);
 
           movingPG->addPoint(&movingQPoints[j]);
         }
