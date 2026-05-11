@@ -1683,21 +1683,19 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile)
 
           } else if (strcasecmp(key, "bandwidth") == 0) {
             dval = atof(val);
-	    if ( dval < 0 )
-	      {
-		printf( "Error: bandwidth must be a non-negative real value!\n");
-		return false;
-	      }
-	    p->bandwidth = dval;
+            if (dval < 0) {
+              printf("Error: bandwidth must be a non-negative real value!\n");
+              return false;
+            }
+            p->bandwidth = dval;
 
           } else if (strcasecmp(key, "gradFactor") == 0) {
             dval = atof(val);
-	    if ( dval < 0 )
-	      {
-		printf( "Error: gradFactor must be a non-negative real value!\n");
-		return false;
-	      }
-	    p->gradFactor = dval;
+            if (dval < 0) {
+              printf("Error: gradFactor must be a non-negative real value!\n");
+              return false;
+            }
+            p->gradFactor = dval;
 
           } else if (strcasecmp(key, "curvatureWeightedStaticMol") == 0) {
             if (strcasecmp(val, "true") == 0)
@@ -1721,39 +1719,41 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile)
 
           } else if (strcasecmp(key, "curvatureWeightingRadius") == 0) {
             dval = atof(val);
-	    if ( dval < 0 )
-	      {
-		printf( "Error: %s must be a non-negative real value!\n", key );
-		return false;
-	      }
-	    p->curvatureWeightingRadius = dval;
+            if (dval < 0) {
+              printf("Error: %s must be a non-negative real value!\n", key);
+              return false;
+            }
+            p->curvatureWeightingRadius = dval;
 
           } else if (strcasecmp(key, "spreadReceptorSkin") == 0) {
-            if (strcasecmp(val, "true")==0 ) p->spreadReceptorSkin = true;
-	    else if (strcasecmp(val, "false")==0 ) p->spreadReceptorSkin = false;
-	    else  {
-		   printf( "Error: spreadReceptorSkin must be a Boolean value!\n");
-		   return false;
-	          }
+            if (strcasecmp(val, "true") == 0)
+              p->spreadReceptorSkin = true;
+            else if (strcasecmp(val, "false") == 0)
+              p->spreadReceptorSkin = false;
+            else {
+              printf("Error: spreadReceptorSkin must be a Boolean value!\n");
+              return false;
+            }
 
           } else if (strcasecmp(key, "randomRotate") == 0) {
-            if (strcasecmp(val, "true")==0 ) p->randomRotate = true;
-	    else if (strcasecmp(val, "false")==0 ) p->randomRotate = false;
-	    else  {
-		   printf( "Error: randomRotate must be a Boolean value!\n");
-		   return false;
-	          }
+            if (strcasecmp(val, "true") == 0)
+              p->randomRotate = true;
+            else if (strcasecmp(val, "false") == 0)
+              p->randomRotate = false;
+            else {
+              printf("Error: randomRotate must be a Boolean value!\n");
+              return false;
+            }
 
           } else if (strcasecmp(key, "spectrum") == 0) {
             p->spectrum = strdup(val);
           } else if (strcasecmp(key, "numRerank") == 0) {
             ival = atoi(val);
-	    if ( ival < 0 )
-	      {
-		printf( "Error: %s must be a nonegative integer!\n", key );
-		return false;
-	      }
-	    p->numRerank = ival;
+            if (ival < 0) {
+              printf("Error: %s must be a nonegative integer!\n", key);
+              return false;
+            }
+            p->numRerank = ival;
 
           } else if (strcasecmp(key, "rerank") == 0) {
             if (strcasecmp(val, "true") == 0)
@@ -1799,43 +1799,44 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile)
 
 #ifdef LIBMOL_FOUND
           else if (strcasecmp(key, "applyHbondFilter") == 0) {
-	      if ( strcasecmp( val, "true" ) == 0 ) p->applyHbondFilter = true;
-	      else if ( strcasecmp( val, "false" ) == 0 ) p->applyHbondFilter = false;
-	      else {
-		     printf( "Error: %s must be a Boolean value!\n", key);
-		     return false;
-	            }
+            if (strcasecmp(val, "true") == 0)
+              p->applyHbondFilter = true;
+            else if (strcasecmp(val, "false") == 0)
+              p->applyHbondFilter = false;
+            else {
+              printf("Error: %s must be a Boolean value!\n", key);
+              return false;
+            }
 
           } else if (strcasecmp(key, "hBondFilterWeight") == 0) {
             dval = atof(val);
-	    p->hBondFilterWeight = dval;
+            p->hBondFilterWeight = dval;
 
           }
 #endif
           else if (strcasecmp(key, "rerankerPseudoGsolWeight") == 0) {
-	    dval = atof(val);
-	    p->rerankerPseudoGsolWeight = dval;
+            dval = atof(val);
+            p->rerankerPseudoGsolWeight = dval;
 
           } else if (strcasecmp(key, "rerankerDispersionWeightHigh") == 0) {
             dval = atof(val);
-	    p->rerankerDispersionWeightHigh = dval;
+            p->rerankerDispersionWeightHigh = dval;
 
           } else if (strcasecmp(key, "rerankerDispersionWeightLow") == 0) {
             dval = atof(val);
-	    p->rerankerDispersionWeightLow = dval;
+            p->rerankerDispersionWeightLow = dval;
 
           } else if (strcasecmp(key, "rerankerF2DockScoreWeight") == 0) {
             dval = atof(val);
-	    p->rerankerF2DockScoreWeight = dval;
+            p->rerankerF2DockScoreWeight = dval;
 
           } else if (strcasecmp(key, "rerankerMinF2DockRank") == 0) {
             ival = atoi(val);
-	    if ( ival < 0 )
-	      {
-		printf( "Error: %s must be a nonegative integer!\n", key );
-		return false;
-	      }
-	    p->rerankerMinF2DockRank = ival;
+            if (ival < 0) {
+              printf("Error: %s must be a nonegative integer!\n", key);
+              return false;
+            }
+            p->rerankerMinF2DockRank = ival;
 
           } /*else if (strcasecmp(key, "vdwSmoothWidth")==0) {
             dval = atof(val);
@@ -1848,9 +1849,11 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile)
 
           }*/
           else {
-            printf("WARNING: the following line from the parameter has been ignored\n  %s\n", s);
+            printf("WARNING: the following line from the parameter has been "
+                   "ignored\n  %s\n",
+                   s);
           }
-        }
+      }
       fclose( fp );
     }
 
