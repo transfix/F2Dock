@@ -6,6 +6,7 @@ add_library(f3dock-icp STATIC
   kdtree.cpp
   icp.cpp
   icpPointToPoint.cpp
+  icpPointToPlane.cpp
 )
 
 target_include_directories(f3dock-icp
