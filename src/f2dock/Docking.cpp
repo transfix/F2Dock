@@ -2293,8 +2293,8 @@ bool computeGridParametersFromVolume(PARAMS_IN *pr, int *interpFuncExtent,
   double gridLength1D = 1.0 / (*scale);
   pr->gridSpacing = gridLength1D / (pr->numFreq - 1);
 
-  *interpFuncExtent = ceil((pr->numFreq - 1) *
-                           (pr->interpFuncExtentInAngstroms / gridLength1D));
+  *interpFuncExtent = (int)(ceil(
+      (pr->numFreq - 1) * (pr->interpFuncExtentInAngstroms / gridLength1D)));
 
   if (!pr->gridSizeSpecified || (pr->gridSize < pr->numFreq))
     pr->gridSize = 4 * pr->numFreq;
@@ -2358,8 +2358,8 @@ bool computeGridParameters(PARAMS_IN *pr, int *interpFuncExtent,
              interpFuncExtentInAngstroms);
       return false;
     }
-    *interpFuncExtent = ceil((pr->numFreq - 1) *
-                             (interpFuncExtentInAngstroms / gridLength1DVol));
+    *interpFuncExtent = (int)(ceil(
+        (pr->numFreq - 1) * (interpFuncExtentInAngstroms / gridLength1DVol)));
   } else {
     double gridLength1D = l1 + 2 * r_max + BFactor * l2;
     double interpFuncExtentInAngstroms = r_maxFactor * r_max;
@@ -2381,8 +2381,8 @@ bool computeGridParameters(PARAMS_IN *pr, int *interpFuncExtent,
 
     pr->gridSpacing = gridLength1D / (pr->numFreq - 1);
 
-    *interpFuncExtent =
-        ceil((pr->numFreq - 1) * (interpFuncExtentInAngstroms / gridLength1D));
+    *interpFuncExtent = (int)(ceil(
+        (pr->numFreq - 1) * (interpFuncExtentInAngstroms / gridLength1D)));
     *scale = 1 / gridLength1D;
 
     if (!pr->gridSizeSpecified || (pr->gridSize < pr->numFreq))
@@ -3543,8 +3543,8 @@ void rotateGrid(FFTW_complex *rotGrid, int n, NONZERO_GRIDCELLS *grid,
 
   if (cleanupOnly) {
     for (int i = 0; i < numNonzeroCells; i++) {
-      Vector oldPos((float)grid[i].x + ofs, (float)grid[i].y + ofs,
-                    (float)grid[i].z + ofs, 1.0);
+      Vector oldPos((float)(grid[i].x + ofs), (float)(grid[i].y + ofs),
+                    (float)(grid[i].z + ofs), 1.0);
       Vector newPos = rotMat * oldPos;
 
       double xf = newPos[0] - ofs, yf = newPos[1] - ofs, zf = newPos[2] - ofs;
@@ -3632,8 +3632,8 @@ void rotateElecGrid(FFTW_DATA_TYPE *rotGrid, int n, NONZERO_GRIDCELLS *grid,
 
   if (cleanupOnly) {
     for (int i = 0; i < numNonzeroCells; i++) {
-      Vector oldPos((float)grid[i].x + ofs, (float)grid[i].y + ofs,
-                    (float)grid[i].z + ofs, 1.0);
+      Vector oldPos((float)(grid[i].x + ofs), (float)(grid[i].y + ofs),
+                    (float)(grid[i].z + ofs), 1.0);
       Vector newPos = rotMat * oldPos;
 
       double xf = newPos[0] - ofs, yf = newPos[1] - ofs, zf = newPos[2] - ofs;
@@ -3821,9 +3821,9 @@ void elecScoreSingleConfiguration(int nA, double *xA, double *yA, double *zA,
 
     for (int j = 0; j < nA; j++)
       if (typeA[j] == 'I') {
-        float dist2 = (xA[j] - xxB) * (xA[j] - xxB) +
-                      (yA[j] - yyB) * (yA[j] - yyB) +
-                      (zA[j] - zzB) * (zA[j] - zzB);
+        float dist2 = (float)((xA[j] - xxB) * (xA[j] - xxB) +
+                              (yA[j] - yyB) * (yA[j] - yyB) +
+                              (zA[j] - zzB) * (zA[j] - zzB));
 
         //            double dist = sqrt( dist2 ); //1.0 / invSqrt( dist2 );
 
@@ -6330,7 +6330,7 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
   if (scoreUntransformed) {
     for (int i = 0; i < 9; i++)
-      pr->rotations[i] = (i % 4) ? 0 : 1;
+      pr->rotations[i] = (i % 4) ? 0.0f : 1.0f;
 
     pr->numberOfRotations = 1;
     pr->numThreads = 1;

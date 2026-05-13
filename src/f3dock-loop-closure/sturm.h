@@ -267,7 +267,7 @@ int buildsturm(int ord, poly *sseq)
 
   sp->coef[0] = -sp->coef[0]; /* reverse the sign */
 
-  return (sp - sseq);
+  return (int)(sp - sseq);
 }
 
 /*

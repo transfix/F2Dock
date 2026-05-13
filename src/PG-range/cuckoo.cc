@@ -114,7 +114,7 @@ void rehash(dict_ptr D, int new_size) {
 
 /*------construct_dict---------------------------------*/
 dict_ptr construct_dict(int min_size) {
-  srand(time(NULL));
+  srand((unsigned int)time(NULL));
   return alloc_dict(min_size);
 } /*construct_dict*/
 

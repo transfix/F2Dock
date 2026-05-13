@@ -2140,7 +2140,7 @@ int main(int argc, char *argv[]) {
     strcpy(paramFileName, argv[2]);
   }
 
-  srand(time(NULL));
+  srand((unsigned int)time(NULL));
 
   // data structure used to pass parameters to DockingMain
   PARAMS_IN pr;

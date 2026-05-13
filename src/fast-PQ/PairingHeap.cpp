@@ -57,9 +57,11 @@ void PairingHeap::free_node(int xp) {
 }
 
 void PairingHeap::add_to_aux_area(int xp) {
-  if (auxptr == NIL)
-    min_auxptr = auxptr = (*heap)[xp + LEFT] = (int)((*heap)[xp + RIGHT] = xp);
-  else {
+  if (auxptr == NIL) {
+    (*heap)[xp + RIGHT] = xp;
+    (*heap)[xp + LEFT] = xp;
+    min_auxptr = auxptr = xp;
+  } else {
     int yp = (int)((*heap)[auxptr + LEFT]);
 
     (*heap)[xp + LEFT] = yp;
