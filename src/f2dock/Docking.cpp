@@ -5208,23 +5208,34 @@ int saveGrid(PARAMS_IN *pr) {
     }
   } flexGuardSU{pr, pr->xkAOrig, pr->ykAOrig, pr->zkAOrig, false};
   if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
-      !pr->flexStates.empty() &&
-      (!pr->flexStates[0].hinges.empty() ||
-       !pr->flexStates[0].shears.empty())) {
-    xkAFlexSU.assign(pr->xkAOrig, pr->xkAOrig + pr->numCentersA);
-    ykAFlexSU.assign(pr->ykAOrig, pr->ykAOrig + pr->numCentersA);
-    zkAFlexSU.assign(pr->zkAOrig, pr->zkAOrig + pr->numCentersA);
-    if (!f3dock::flex::apply_flex_state(
-            pr->flexStates[0], xkAFlexSU.data(), ykAFlexSU.data(),
-            zkAFlexSU.data(), static_cast<std::size_t>(pr->numCentersA))) {
-      printf("Error: flex state 0 has a degenerate hinge axis or shear "
-             "normal.\n");
+      !pr->flexStates.empty()) {
+    if (pr->activeFlexStateIndex < 0 ||
+        static_cast<std::size_t>(pr->activeFlexStateIndex) >=
+            pr->flexStates.size()) {
+      printf("Error: activeFlexStateIndex=%d is out of range for "
+             "flexStates.size()=%zu.\n",
+             pr->activeFlexStateIndex, pr->flexStates.size());
       return -1;
     }
-    pr->xkAOrig = xkAFlexSU.data();
-    pr->ykAOrig = ykAFlexSU.data();
-    pr->zkAOrig = zkAFlexSU.data();
-    flexGuardSU.active = true;
+    const f3dock::flex::FlexState &activeState =
+        pr->flexStates[pr->activeFlexStateIndex];
+    if (!activeState.hinges.empty() || !activeState.shears.empty()) {
+      xkAFlexSU.assign(pr->xkAOrig, pr->xkAOrig + pr->numCentersA);
+      ykAFlexSU.assign(pr->ykAOrig, pr->ykAOrig + pr->numCentersA);
+      zkAFlexSU.assign(pr->zkAOrig, pr->zkAOrig + pr->numCentersA);
+      if (!f3dock::flex::apply_flex_state(
+              activeState, xkAFlexSU.data(), ykAFlexSU.data(), zkAFlexSU.data(),
+              static_cast<std::size_t>(pr->numCentersA))) {
+        printf("Error: flex state %d has a degenerate hinge axis or shear "
+               "normal.\n",
+               pr->activeFlexStateIndex);
+        return -1;
+      }
+      pr->xkAOrig = xkAFlexSU.data();
+      pr->ykAOrig = ykAFlexSU.data();
+      pr->zkAOrig = zkAFlexSU.data();
+      flexGuardSU.active = true;
+    }
   }
 
   // static molecule
@@ -6602,23 +6613,34 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
     }
   } flexGuard{pr, pr->xkAOrig, pr->ykAOrig, pr->zkAOrig, false};
   if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
-      !pr->flexStates.empty() &&
-      (!pr->flexStates[0].hinges.empty() ||
-       !pr->flexStates[0].shears.empty())) {
-    xkAFlex.assign(pr->xkAOrig, pr->xkAOrig + pr->numCentersA);
-    ykAFlex.assign(pr->ykAOrig, pr->ykAOrig + pr->numCentersA);
-    zkAFlex.assign(pr->zkAOrig, pr->zkAOrig + pr->numCentersA);
-    if (!f3dock::flex::apply_flex_state(
-            pr->flexStates[0], xkAFlex.data(), ykAFlex.data(), zkAFlex.data(),
-            static_cast<std::size_t>(pr->numCentersA))) {
-      printf("Error: flex state 0 has a degenerate hinge axis or shear "
-             "normal.\n");
+      !pr->flexStates.empty()) {
+    if (pr->activeFlexStateIndex < 0 ||
+        static_cast<std::size_t>(pr->activeFlexStateIndex) >=
+            pr->flexStates.size()) {
+      printf("Error: activeFlexStateIndex=%d is out of range for "
+             "flexStates.size()=%zu.\n",
+             pr->activeFlexStateIndex, pr->flexStates.size());
       return -1;
     }
-    pr->xkAOrig = xkAFlex.data();
-    pr->ykAOrig = ykAFlex.data();
-    pr->zkAOrig = zkAFlex.data();
-    flexGuard.active = true;
+    const f3dock::flex::FlexState &activeState =
+        pr->flexStates[pr->activeFlexStateIndex];
+    if (!activeState.hinges.empty() || !activeState.shears.empty()) {
+      xkAFlex.assign(pr->xkAOrig, pr->xkAOrig + pr->numCentersA);
+      ykAFlex.assign(pr->ykAOrig, pr->ykAOrig + pr->numCentersA);
+      zkAFlex.assign(pr->zkAOrig, pr->zkAOrig + pr->numCentersA);
+      if (!f3dock::flex::apply_flex_state(
+              activeState, xkAFlex.data(), ykAFlex.data(), zkAFlex.data(),
+              static_cast<std::size_t>(pr->numCentersA))) {
+        printf("Error: flex state %d has a degenerate hinge axis or shear "
+               "normal.\n",
+               pr->activeFlexStateIndex);
+        return -1;
+      }
+      pr->xkAOrig = xkAFlex.data();
+      pr->ykAOrig = ykAFlex.data();
+      pr->zkAOrig = zkAFlex.data();
+      flexGuard.active = true;
+    }
   }
 
   // static molecule
@@ -6638,9 +6660,7 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
   if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
       pr->flexStates.size() > 1) {
-    printf("Note: %zu flex states configured, but the rotation/translation "
-           "loop is not yet wired for multi-state docking. Only state 0 is "
-           "being scored in this run.\n",
+    printf("Scoring flex state %d of %zu.\n", pr->activeFlexStateIndex,
            pr->flexStates.size());
   }
 
@@ -7903,6 +7923,12 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
           sol.m_clusterPenalty = clusterPenalty;
 #ifdef RERANK_DEBUG
           sol.m_ConformationIndex = clusterPenalty;
+#else
+          // Tag the pose with the flex state it came from so the CLI's
+          // outer multi-state loop can attribute each row of the
+          // top-N output to its source receptor conformation. In
+          // F2Dock rigid mode this is always 0.
+          sol.m_ConformationIndex = pr->activeFlexStateIndex;
 #endif
           sol.m_Value = (-sol.m_Value) * (1 - 0.10 * clusterPenalty);
 
@@ -7922,6 +7948,10 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
           globalTopValuesT->extractMin(sol);
 
           sol.m_Value = -sol.m_Value;
+#ifndef RERANK_DEBUG
+          // Same flex-state tagging as the clustering branch above.
+          sol.m_ConformationIndex = pr->activeFlexStateIndex;
+#endif
 
           globalTopValues->updateTopValues(sol);
         }
