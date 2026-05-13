@@ -187,4 +187,246 @@ TEST(F3DockFlexSampler, ParseParamRejectsNegativeNumSteps) {
   EXPECT_FALSE(ok);
 }
 
+TEST(F3DockFlexSampler, DegenerateShearNormalIsRejected) {
+  FlexSamplingConfig cfg;
+  ShearPlaneSpec s;
+  s.plane_normal = {0.0, 0.0, 0.0};
+  s.shear_direction = {1.0, 0.0, 0.0};
+  s.num_steps = 1;
+  cfg.shears.push_back(s);
+
+  std::vector<FlexState> states;
+  EXPECT_FALSE(FlexSampler::enumerate(cfg, &states));
+  EXPECT_TRUE(states.empty());
+}
+
+TEST(F3DockFlexSampler, DisabledShear_DegenerateNormalIsTolerated) {
+  // num_steps == 0 means the shear contributes no states; the degenerate
+  // normal should not trip validation because the knob is never used.
+  FlexSamplingConfig cfg;
+  ShearPlaneSpec s;
+  s.plane_normal = {0.0, 0.0, 0.0};
+  s.num_steps = 0;
+  cfg.shears.push_back(s);
+
+  std::vector<FlexState> states;
+  ASSERT_TRUE(FlexSampler::enumerate(cfg, &states));
+  ASSERT_EQ(states.size(), 1u);
+  EXPECT_TRUE(states[0].hinges.empty());
+  EXPECT_TRUE(states[0].shears.empty());
+}
+
+TEST(F3DockFlexSampler, NonZeroMinAngleAndStep) {
+  // Verify the sweep math: angle_k == min_angle + k*step, not 0 + k*step.
+  FlexSamplingConfig cfg;
+  HingeAxisSpec h;
+  h.axis_direction = {0.0, 0.0, 1.0};
+  h.min_angle_radians = 0.5;
+  h.step_radians = 0.1;
+  h.num_steps = 3; // 0.5, 0.6, 0.7
+  cfg.hinges.push_back(h);
+
+  std::vector<FlexState> states;
+  ASSERT_TRUE(FlexSampler::enumerate(cfg, &states));
+  ASSERT_EQ(states.size(), 3u);
+  EXPECT_DOUBLE_EQ(states[0].hinges[0].angle_radians, 0.5);
+  EXPECT_DOUBLE_EQ(states[1].hinges[0].angle_radians, 0.6);
+  EXPECT_DOUBLE_EQ(states[2].hinges[0].angle_radians, 0.7);
+}
+
+TEST(F3DockFlexSampler, MultipleHingesCrossProduct) {
+  // Two hinges with different radices: 3 * 2 = 6 states; the second
+  // hinge advances fastest (lexicographic, hinges-major order).
+  FlexSamplingConfig cfg;
+
+  HingeAxisSpec h1;
+  h1.axis_direction = {0.0, 0.0, 1.0};
+  h1.min_angle_radians = 0.0;
+  h1.step_radians = 1.0;
+  h1.num_steps = 3; // 0, 1, 2
+  cfg.hinges.push_back(h1);
+
+  HingeAxisSpec h2;
+  h2.axis_direction = {1.0, 0.0, 0.0};
+  h2.min_angle_radians = 0.0;
+  h2.step_radians = 10.0;
+  h2.num_steps = 2; // 0, 10
+  cfg.hinges.push_back(h2);
+
+  EXPECT_EQ(cfg.state_count(), 6u);
+
+  std::vector<FlexState> states;
+  ASSERT_TRUE(FlexSampler::enumerate(cfg, &states));
+  ASSERT_EQ(states.size(), 6u);
+
+  const double kExpected[6][2] = {
+      {0.0, 0.0}, {0.0, 10.0}, {1.0, 0.0},
+      {1.0, 10.0}, {2.0, 0.0}, {2.0, 10.0},
+  };
+  for (std::size_t i = 0; i < 6u; ++i) {
+    ASSERT_EQ(states[i].hinges.size(), 2u);
+    EXPECT_EQ(states[i].state_id, i);
+    EXPECT_DOUBLE_EQ(states[i].hinges[0].angle_radians, kExpected[i][0]);
+    EXPECT_DOUBLE_EQ(states[i].hinges[1].angle_radians, kExpected[i][1]);
+  }
+
+  // State 0 must remain the identity for parity with rigid mode.
+  EXPECT_DOUBLE_EQ(states[0].hinges[0].angle_radians, 0.0);
+  EXPECT_DOUBLE_EQ(states[0].hinges[1].angle_radians, 0.0);
+}
+
+TEST(F3DockFlexSampler, MixedHingeAndShearOrdering) {
+  // Confirm the documented hinges-then-shears layout in FlexState.
+  FlexSamplingConfig cfg;
+
+  HingeAxisSpec h;
+  h.axis_direction = {0.0, 0.0, 1.0};
+  h.step_radians = 1.0;
+  h.num_steps = 2;
+  cfg.hinges.push_back(h);
+
+  ShearPlaneSpec s;
+  s.plane_normal = {0.0, 0.0, 1.0};
+  s.shear_direction = {1.0, 0.0, 0.0};
+  s.step = 0.5;
+  s.num_steps = 2;
+  cfg.shears.push_back(s);
+
+  std::vector<FlexState> states;
+  ASSERT_TRUE(FlexSampler::enumerate(cfg, &states));
+  ASSERT_EQ(states.size(), 4u);
+  for (const auto &st : states) {
+    EXPECT_EQ(st.hinges.size(), 1u);
+    EXPECT_EQ(st.shears.size(), 1u);
+  }
+}
+
+TEST(F3DockFlexSampler, EnumerateClearsExistingOutput) {
+  // Callers may reuse a buffer across runs; enumerate() must overwrite,
+  // not append.
+  FlexSamplingConfig cfg;
+  HingeAxisSpec h;
+  h.axis_direction = {0.0, 0.0, 1.0};
+  h.step_radians = 1.0;
+  h.num_steps = 2;
+  cfg.hinges.push_back(h);
+
+  std::vector<FlexState> states(7); // bogus contents
+  ASSERT_TRUE(FlexSampler::enumerate(cfg, &states));
+  EXPECT_EQ(states.size(), 2u);
+}
+
+TEST(F3DockFlexSampler, EnumerateOnDegenerateInputClearsOutput) {
+  // Failure path must leave `out` empty (not the prior contents).
+  FlexSamplingConfig cfg;
+  HingeAxisSpec h;
+  h.axis_direction = {0.0, 0.0, 0.0};
+  h.num_steps = 1;
+  cfg.hinges.push_back(h);
+
+  std::vector<FlexState> states(5);
+  EXPECT_FALSE(FlexSampler::enumerate(cfg, &states));
+  EXPECT_TRUE(states.empty());
+}
+
+TEST(F3DockFlexSampler, ParseParamIsCaseInsensitive) {
+  FlexSamplingConfig cfg;
+  bool ok = false;
+  // Mixed case for both keys mirrors how the parameter file is read.
+  EXPECT_TRUE(FlexSampler::parse_param(
+      "FlExHiNgEaXiS", "0 0 0 0 0 1 0 0.1 2", &cfg, &ok));
+  EXPECT_TRUE(ok);
+  ASSERT_EQ(cfg.hinges.size(), 1u);
+
+  ok = false;
+  EXPECT_TRUE(FlexSampler::parse_param(
+      "FLEXSHEARPLANE", "0 0 1 1 0 0 0 0.1 2", &cfg, &ok));
+  EXPECT_TRUE(ok);
+  EXPECT_EQ(cfg.shears.size(), 1u);
+}
+
+TEST(F3DockFlexSampler, ParseParamRejectsNegativeShearNumSteps) {
+  FlexSamplingConfig cfg;
+  bool ok = true;
+  const bool consumed = FlexSampler::parse_param(
+      "flexShearPlane", "0 0 1 1 0 0 0 0.1 -3", &cfg, &ok);
+  EXPECT_TRUE(consumed);
+  EXPECT_FALSE(ok);
+  EXPECT_TRUE(cfg.shears.empty());
+}
+
+TEST(F3DockFlexSampler, ParseParamRejectsTrailingGarbage) {
+  FlexSamplingConfig cfg;
+  bool ok = true;
+  const bool consumed = FlexSampler::parse_param(
+      "flexHingeAxis", "0 0 0 0 0 1 0 0.1 2 extra", &cfg, &ok);
+  EXPECT_TRUE(consumed);
+  EXPECT_FALSE(ok);
+  EXPECT_TRUE(cfg.hinges.empty());
+}
+
+TEST(F3DockFlexSampler, ParseParamRejectsNullValue) {
+  FlexSamplingConfig cfg;
+  bool ok = true;
+  const bool consumed = FlexSampler::parse_param(
+      "flexHingeAxis", nullptr, &cfg, &ok);
+  EXPECT_TRUE(consumed);
+  EXPECT_FALSE(ok);
+}
+
+TEST(F3DockFlexSampler, ParseParamGuardsNullArguments) {
+  FlexSamplingConfig cfg;
+  bool ok = false;
+  EXPECT_FALSE(FlexSampler::parse_param(nullptr, "x", &cfg, &ok));
+  EXPECT_FALSE(FlexSampler::parse_param("flexHingeAxis", "x", nullptr, &ok));
+  EXPECT_FALSE(
+      FlexSampler::parse_param("flexHingeAxis", "x", &cfg, nullptr));
+}
+
+TEST(F3DockFlexSampler, ParseParamAppendsAcrossInvocations) {
+  // Multiple parameter-file lines should accumulate hinges/shears.
+  FlexSamplingConfig cfg;
+  bool ok = false;
+  EXPECT_TRUE(FlexSampler::parse_param(
+      "flexHingeAxis", "0 0 0 0 0 1 0 0.5 2", &cfg, &ok));
+  EXPECT_TRUE(ok);
+  EXPECT_TRUE(FlexSampler::parse_param(
+      "flexHingeAxis", "1 0 0 1 0 0 0 0.5 2", &cfg, &ok));
+  EXPECT_TRUE(ok);
+  EXPECT_TRUE(FlexSampler::parse_param(
+      "flexShearPlane", "0 0 1 1 0 0 0 0.1 3", &cfg, &ok));
+  EXPECT_TRUE(ok);
+
+  EXPECT_EQ(cfg.hinges.size(), 2u);
+  EXPECT_EQ(cfg.shears.size(), 1u);
+  EXPECT_EQ(cfg.state_count(), 2u * 2u * 3u);
+}
+
+TEST(F3DockFlexSampler, ZeroNumStepsKnobIsSkippedInCrossProduct) {
+  // A disabled hinge mixed in with enabled ones must not multiply
+  // the state count by 0; it should be skipped entirely.
+  FlexSamplingConfig cfg;
+
+  HingeAxisSpec h_off;
+  h_off.axis_direction = {0.0, 0.0, 1.0};
+  h_off.num_steps = 0;
+  cfg.hinges.push_back(h_off);
+
+  HingeAxisSpec h_on;
+  h_on.axis_direction = {0.0, 0.0, 1.0};
+  h_on.step_radians = 1.0;
+  h_on.num_steps = 4;
+  cfg.hinges.push_back(h_on);
+
+  EXPECT_EQ(cfg.state_count(), 4u);
+
+  std::vector<FlexState> states;
+  ASSERT_TRUE(FlexSampler::enumerate(cfg, &states));
+  ASSERT_EQ(states.size(), 4u);
+  for (const auto &st : states) {
+    // Only the enabled hinge contributes a HingeSpec.
+    EXPECT_EQ(st.hinges.size(), 1u);
+  }
+}
+
 } // namespace
