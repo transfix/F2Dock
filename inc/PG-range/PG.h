@@ -54,7 +54,7 @@ struct Point {
     dx = a.x - b.x;
     dy = a.y - b.y;
     dz = a.z - b.z;
-    res = dx * dx + dy * dy + dz * dz;
+    res = (float)(dx * dx + dy * dy + dz * dz);
     return res;
   }
 };

@@ -63,9 +63,9 @@ vector<Point *> PG::range(Point *q, double delta) {
 
   cout << "Point = " << q->x << " " << q->y << " " << q->z << " " << endl;
 
-  p.x += TRANSLATE;
-  p.y += TRANSLATE;
-  p.z += TRANSLATE;
+  p.x += (float)(TRANSLATE);
+  p.y += (float)(TRANSLATE);
+  p.z += (float)(TRANSLATE);
 
   int l = (int)((p.z - delta) / DIM);
   int h = (int)((p.z + delta) / DIM);
@@ -133,9 +133,9 @@ vector<Point *> PG::range(Point *q, double delta) {
 bool PG::pointsWithinRange(Point *q, double delta) {
   Point p = *q;
 
-  p.x += TRANSLATE;
-  p.y += TRANSLATE;
-  p.z += TRANSLATE;
+  p.x += (float)(TRANSLATE);
+  p.y += (float)(TRANSLATE);
+  p.z += (float)(TRANSLATE);
 
   int l = (int)((p.z - delta) / DIM);
   int h = (int)((p.z + delta) / DIM);
@@ -201,9 +201,9 @@ bool PG::pointsWithinRange(Point *q, double delta) {
 int PG::countPointsWithinRange(Point *q, double delta) {
   Point p = *q;
 
-  p.x += TRANSLATE;
-  p.y += TRANSLATE;
-  p.z += TRANSLATE;
+  p.x += (float)(TRANSLATE);
+  p.y += (float)(TRANSLATE);
+  p.z += (float)(TRANSLATE);
 
   int l = (int)((p.z - delta) / DIM);
   int h = (int)((p.z + delta) / DIM);
@@ -274,9 +274,9 @@ void PG::addPoint(Point *a) {
 
   Point center = *a;
 
-  center.x += TRANSLATE;
-  center.y += TRANSLATE;
-  center.z += TRANSLATE;
+  center.x += (float)(TRANSLATE);
+  center.y += (float)(TRANSLATE);
+  center.z += (float)(TRANSLATE);
   //  double radius = a->getr();
 
   int cz = (int)center.z / DIM;
@@ -333,9 +333,9 @@ void PG::removePoint(Point *a) {
 
   Point center = *a;
 
-  center.x += TRANSLATE;
-  center.y += TRANSLATE;
-  center.z += TRANSLATE;
+  center.x += (float)(TRANSLATE);
+  center.y += (float)(TRANSLATE);
+  center.z += (float)(TRANSLATE);
   //  double radius = a->getr();
 
   cout << "REMOVING AN ATOM " << endl;
