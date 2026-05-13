@@ -1821,9 +1821,21 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
 
       }*/
       else {
-        printf("WARNING: the following line from the parameter has been "
-               "ignored\n  %s\n",
-               s);
+        // Flex-sampling parameters are handled here so they live in
+        // f3dock-flex rather than this monster if/else. parse_param
+        // returns true iff the key belongs to that subsystem; `ok`
+        // then reports whether the value was well-formed.
+        bool flex_ok = false;
+        if (f3dock::flex::FlexSampler::parse_param(key, val, &p->flexSampling,
+                                                   &flex_ok)) {
+          if (!flex_ok) {
+            return false;
+          }
+        } else {
+          printf("WARNING: the following line from the parameter has been "
+                 "ignored\n  %s\n",
+                 s);
+        }
       }
     }
     fclose(fp);

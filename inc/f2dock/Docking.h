@@ -63,6 +63,8 @@
 #include "vol/RAWIV.h"
 #include "ValuePosition3D.h"
 
+#include "f3dock/flex/FlexSampler.h"
+
 #include <pthread.h>
 #include <stdarg.h>
 
@@ -450,6 +452,13 @@ typedef struct {
   // F3Dock-derived loop-closure / flex / ICP / domain stages).
   // See inc/f3dock/DockMode.h for the typed enum and parser.
   int dockMode;
+
+  // Hinge / shear flex-sampling configuration consumed when dockMode
+  // == kF3Dock. When all sweeps are disabled (the default), the
+  // sampler emits exactly one identity flex state, so F3Dock-mode
+  // results match F2Dock-mode results.
+  // See inc/f3dock/flex/FlexSampler.h for the parser and enumerator.
+  f3dock::flex::FlexSamplingConfig flexSampling;
 
 } PARAMS_IN;
 
