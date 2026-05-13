@@ -1653,6 +1653,14 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
         }
         p->dockMode = static_cast<int>(m);
 
+      } else if (strcasecmp(key, "flexMaxStates") == 0) {
+        ival = atoi(val);
+        if (ival <= 0) {
+          printf("Error: flexMaxStates must be a positive integer!\n");
+          return false;
+        }
+        p->flexMaxStates = ival;
+
       } else if (strcasecmp(key, "bandwidth") == 0) {
         dval = atof(val);
         if (dval < 0) {
@@ -2123,6 +2131,7 @@ int main(int argc, char *argv[]) {
   pr.numThreads = 4;
   pr.breakDownScores = 0;
   pr.dockMode = static_cast<int>(f3dock::DockMode::kF2Dock);
+  pr.flexMaxStates = 4096;
   pr.numberOfPositions = 20000;
   pr.gridSize = 256;
   pr.gridSizeSpecified = false;
@@ -2466,6 +2475,32 @@ int main(int argc, char *argv[]) {
   }
   printf("Docking mode: %s\n",
          f3dock::to_string(static_cast<f3dock::DockMode>(pr.dockMode)));
+
+  // F3Dock mode: enumerate hinge/shear flex states up front so the FFT
+  // scoring loop can iterate `pr.flexStates` unconditionally. With no
+  // sweeps configured this is a single identity state, keeping F3Dock
+  // results identical to F2Dock results.
+  if (pr.dockMode == static_cast<int>(f3dock::DockMode::kF3Dock)) {
+    const std::size_t n_states = pr.flexSampling.state_count();
+    const std::size_t cap = static_cast<std::size_t>(pr.flexMaxStates);
+    if (n_states > cap) {
+      printf("Error: flex sampling would emit %zu states (hinges=%zu, "
+             "shears=%zu), exceeding flexMaxStates=%zu. Reduce the "
+             "sweep or raise flexMaxStates.\n",
+             n_states, pr.flexSampling.hinges.size(),
+             pr.flexSampling.shears.size(), cap);
+      return 1;
+    }
+    if (!f3dock::flex::FlexSampler::enumerate(pr.flexSampling,
+                                              &pr.flexStates)) {
+      printf("Error: flex sampling configuration is malformed "
+             "(zero-length axis or shear direction on an enabled sweep).\n");
+      return 1;
+    }
+    printf("Flex sampling: %zu state(s) [hinges=%zu, shears=%zu]\n",
+           pr.flexStates.size(), pr.flexSampling.hinges.size(),
+           pr.flexSampling.shears.size());
+  }
 
   //  pr.coreCoreWeight *= ( pr.numCentersB / 3000.0 );
 

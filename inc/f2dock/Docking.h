@@ -460,6 +460,20 @@ typedef struct {
   // See inc/f3dock/flex/FlexSampler.h for the parser and enumerator.
   f3dock::flex::FlexSamplingConfig flexSampling;
 
+  // Enumerated flex states produced from `flexSampling` at F2Dock
+  // startup when dockMode == kF3Dock. Empty in F2Dock (rigid) mode.
+  // In F3Dock mode this always contains at least one entry (the
+  // identity state at index 0), so the downstream FFT scoring loop
+  // can iterate this vector unconditionally.
+  std::vector<f3dock::flex::FlexState> flexStates;
+
+  // Safety upper bound on `flexSampling.state_count()`. If the parsed
+  // configuration would emit more states than this, F2Dock refuses to
+  // run with a clear error rather than silently scheduling a
+  // combinatorially huge sweep. Tunable via the `flexMaxStates` key
+  // in the parameter file. Defaults to 4096.
+  int flexMaxStates;
+
 } PARAMS_IN;
 
 class TopValues;
