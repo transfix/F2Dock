@@ -1,6 +1,6 @@
 # F3Dock to F2Dock Migration Matrix
 
-This matrix captures a second-pass triage of F3Dock capabilities for incremental porting into modern F2Dock.
+This matrix captures incremental porting of F3Dock capabilities into modern F2Dock. It is the source of truth for what has landed, what is in progress, and what is deferred.
 
 ## Naming and runtime mode
 
@@ -29,24 +29,22 @@ dockMode f2     # or: f2dock, rigid
 dockMode f3     # or: f3dock, flex, flexible
 ```
 
-The active mode is printed at startup (`Docking mode: F2Dock (rigid)` / `Docking mode: F3Dock (flexible)`). Defining and parsing the value lives in [inc/f3dock/DockMode.h](inc/f3dock/DockMode.h); unit tests in [tests/unit/test_dock_mode.cpp](tests/unit/test_dock_mode.cpp).
+The active mode is printed at startup (`Docking mode: F2Dock (rigid)` / `Docking mode: F3Dock (flexible)`). Defining and parsing the value lives in [inc/f3dock/DockMode.h](../inc/f3dock/DockMode.h); unit tests in [tests/unit/test_dock_mode.cpp](../tests/unit/test_dock_mode.cpp).
 
 All F3Dock-derived stages (`f3dock-loop-closure`, `f3dock-flex`, `f3dock-icp`, `f3dock-domain`) are gated to run **only** when `dockMode == kF3Dock`. Existing F2Dock workflows behave identically with no input changes.
 
-## Capability matrix
+## Capability matrix — pending work
+
+Completed capabilities have moved to the [Completed work](#completed-work) section below. The matrix here lists only items that still need engineering effort.
 
 | Capability | Scientific Value | Effort | Risk | Recommended Action |
 |---|---|---:|---:|---|
-| Tripeptide loop closure core (Coutsias polynomial solver) | High for local flexibility and constrained loop sampling | Medium | Medium | Port now as optional module (`f3dock-loop-closure`) with unit tests |
-| Hinge bending / shear kinematics (`ProteinFlexibility`) | High for domain motion exploration | High | High | Phase 2: port behind feature flag after loop-closure API stabilizes |
-| Domain graph modeling (`DomainComplex`) | Medium-High for flexible docking workflows | High | High | Phase 3 candidate; requires architecture adaptation |
-| ICP alignment (`libicp`) | Medium for refinement and re-scoring | Medium | Medium | Prototype as independent utility library in Phase 2 |
+| Hinge bending / shear kinematics **runtime integration** | High for domain motion exploration | Medium | Medium | **Phase 3 (next)**: wire `f3dock::flex::FlexKinematics` into the F3Dock pre-FFT sampling loop in `F2Dock.cpp`; add integration test |
+| Domain graph modeling **runtime integration** | Medium-High for flexible docking workflows | High | High | **Phase 4**: wire `f3dock::domain::DomainGraph` into multi-domain pose composition; needs scoring-loop refactor |
 | Blurmaps / GOA molecular surface stack | Medium | High | High | Defer until baseline flexible pipeline lands |
 | PRGN / extra geometry stack | Medium | High | High | Defer; extract only needed pieces once use-cases are clear |
-| NFFT-based acceleration paths | Medium-High (for some workloads) | High | High | Keep optional; add dependency detection first, do not hard-require |
-| LAPACK-backed math extensions | Medium | Low-Medium | Low-Medium | Enable optional linking in science stack now |
-| Eigen-based linear algebra utilities | Medium | Low-Medium | Low | Enable optional linking in science stack now |
-| Full F3Dock executable behavior parity | Very High long-term | Very High | Very High | Multi-phase roadmap, not a single PR |
+| NFFT-based acceleration paths | Medium-High (for some workloads) | High | High | Keep optional; dependency detection already in place, do not hard-require |
+| Full F3Dock executable behavior parity | Very High long-term | Very High | Very High | Tracked as the sum of Phases 3 + 4 + deferred items above |
 
 ## Porting Principles
 
@@ -54,46 +52,81 @@ All F3Dock-derived stages (`f3dock-loop-closure`, `f3dock-flex`, `f3dock-icp`, `
 2. Add deterministic unit tests before integrating solver outputs into docking flows.
 3. Maintain current F2Dock integration regression suite as a release gate.
 4. Introduce new scientific dependencies as optional, never mandatory.
+5. Use libcvc (currently v3.2.0) as the single source of truth for volume I/O.
 
-## Current Phase (implemented in this branch)
+## Completed work
+
+### Phase 1 — Tripeptide loop closure (PR #7, merged)
 
 - Added experimental `f3dock-loop-closure` static library.
-- Ported tripeptide loop-closure core solver into isolated module.
-- Added stable wrapper API in `inc/f3dock/loop_closure/LoopClosureSolver.h`.
-- Added unit tests for feasible and infeasible closure constraints.
-- Added optional scientific stack discovery (`Eigen3`, `LAPACK`, `NFFT`).
+- Ported tripeptide loop-closure core solver (Coutsias polynomial) into isolated module.
+- Stable wrapper API in [inc/f3dock/loop_closure/LoopClosureSolver.h](../inc/f3dock/loop_closure/LoopClosureSolver.h).
+- Unit tests for feasible and infeasible closure constraints.
+- Optional scientific stack discovery (`Eigen3`, `LAPACK`, `NFFT`).
+- DockMode runtime flag (`kF2Dock` / `kF3Dock`) with CLI + input-file parsing.
 
-## Phase 2 Progress (current incremental port)
+### Phase 2 — ICP + flex/domain scaffolds (PR #7, merged)
 
-- Added experimental `f3dock-icp` static library (point-to-point ICP prototype).
+- Added experimental `f3dock-icp` static library (point-to-point ICP).
 - Imported `libicp` core components (`matrix`, `kdtree`, point-to-point ICP loop).
-- Added wrapper API in `inc/f3dock/icp/IcpAligner.h`.
-- Added deterministic unit tests for rigid alignment recovery and input validation.
-- Added experimental `f3dock-flex` scaffold for hinge/shear kinematics helpers.
-- Added deterministic unit tests for hinge rotation and planar shear behavior.
+- Wrapper API in [inc/f3dock/icp/IcpAligner.h](../inc/f3dock/icp/IcpAligner.h).
+- Deterministic unit tests for rigid alignment recovery and input validation.
+- Added experimental `f3dock-flex` scaffold for hinge/shear kinematics.
+- Deterministic unit tests for hinge rotation and planar shear behavior.
 - Added experimental `f3dock-domain` scaffold for domain-graph transform composition.
-- Added deterministic unit tests for world-transform chaining and cycle rejection.
+- Deterministic unit tests for world-transform chaining and cycle rejection.
 
-## Phase 2 Completion (libicp parity)
+### Phase 2 completion — libicp parity (PR #7, merged)
 
-- Imported point-to-plane ICP (`libicp::IcpPointToPlane`) including
-  PCA-based normal estimation from the model point cloud.
-- Extended `IcpAligner` with `alignPointToPlane(...)` mirroring the
-  point-to-point API, gated by a minimum neighbor count (>= 3).
-- Added unit tests for surface-fit convergence and input validation
-  (too-few points, too-small neighborhoods).
+- Imported point-to-plane ICP (`libicp::IcpPointToPlane`) including PCA-based normal estimation from the model point cloud.
+- Extended `IcpAligner` with `alignPointToPlane(...)` mirroring the point-to-point API, gated by a minimum neighbor count (>= 3).
+- Unit tests for surface-fit convergence and input validation (too-few points, too-small neighborhoods).
 
-## Phase 3.5 (libcvc volume I/O adoption)
+### Phase 3.5 — libcvc volume I/O adoption (PR #7 + #10, merged)
 
-- Replaced the hand-rolled binary RAWIV reader/writer in
-  `src/vol/RAWIV.cpp` with calls to `cvc::volume`,
-  `cvc::volume_file_info`, `cvc::bounding_box`, and `cvc::dimension`
-  from libcvc (v3.1.0). Endian handling, header packing, and per-voxel
-  type marshalling now flow through libcvc's volume I/O stack.
-- Public API of `inc/vol/RAWIV.h` (writeGrid, readRAWIVHeader,
-  readShapeCompGrid, readElecGrid) is preserved, so existing F2Dock
-  callers (e.g. `Docking.cpp`) compile unchanged.
-- The legacy `RAWIVHeader` struct, `bigEndian()` helper, and SWAP
-  macros were removed from the header — they are no longer needed.
-- `src/vol/CMakeLists.txt` now links `cvc::cvc` PUBLIC on the `vol`
-  target so consumers transitively get libcvc's include paths.
+- Replaced the hand-rolled binary RAWIV reader/writer in [src/vol/RAWIV.cpp](../src/vol/RAWIV.cpp) with calls to `cvc::volume`, `cvc::volume_file_info`, `cvc::bounding_box`, and `cvc::dimension` from libcvc. Endian handling, header packing, and per-voxel type marshalling now flow through libcvc's volume I/O stack.
+- Public API of [inc/vol/RAWIV.h](../inc/vol/RAWIV.h) (`writeGrid`, `readRAWIVHeader`, `readShapeCompGrid`, `readElecGrid`) is preserved, so existing F2Dock callers (e.g. `Docking.cpp`) compile unchanged.
+- Legacy `RAWIVHeader` struct, `bigEndian()` helper, and SWAP macros removed.
+- `src/vol/CMakeLists.txt` links `cvc::cvc` PUBLIC on the `vol` target.
+- libcvc bumped to **v3.2.0** (PR #10), picking up SDF / mesher coverage and prebuilt-archive consumption.
+
+### Build / CI hardening (PRs #9, #11, #12, #13, #14, merged)
+
+- Prebuilt libcvc release archives preferred over source build (PR #9).
+- Duplicate "Compute artifact metadata" release step removed (PR #11).
+- vcpkg cached on Windows; install step retries to absorb gmp/automake mirror flakes (PR #12).
+- Full-tree clang-format + CI enforcement (PR #13).
+- MSVC C4305 / C4244 narrowing warnings silenced in F2Dock sources (PR #14, + follow-up branch `fix/windows-warnings-2`).
+
+## Roadmap — Phases 3 & 4
+
+### Phase 3 (next) — hinge/shear runtime integration
+
+Goal: when `dockMode == kF3Dock`, generate flex-perturbed receptor poses via `f3dock::flex::FlexKinematics` and feed them into the FFT scoring loop.
+
+Concrete tasks:
+1. Add a `FlexSamplingConfig` block to `PARAMS_IN` (hinge axes, angle grid, shear specs) with input-file parsing.
+2. In `F2Dock.cpp`, before the main rotation/translation loop, generate the flex-perturbed copies of the receptor atom set when `kF3Dock` is active. F2Dock mode skips this branch entirely.
+3. Extend the per-pose result record with a `flex_state_id` so post-filter / re-rank stages can group results.
+4. Integration test: small two-domain receptor + ligand, assert that turning hinge sampling on produces strictly more candidate poses than off, and that with hinge angle = 0 the top hit equals the rigid-mode top hit.
+
+Risk: low-medium. `FlexKinematics` is pure, deterministic, and already tested. The integration risk is in the loop bookkeeping.
+
+### Phase 4 — domain-graph runtime integration
+
+Goal: replace the implicit single-rigid-body receptor with a multi-domain composition driven by `f3dock::domain::DomainGraph`.
+
+Concrete tasks:
+1. Define an input-file syntax for declaring receptor domains and inter-domain joints (likely a sidecar `.domain` JSON).
+2. Replace the receptor's flat atom array with a per-domain partition; compose world transforms via the existing `DomainGraph`.
+3. Refactor the FFT scoring loop so each candidate pose is a *vector* of domain transforms rather than a single 6-DoF transform.
+4. Wire `IcpAligner` (point-to-plane) into a refinement pass on the top-N domain-composed poses.
+5. Integration test: a hinge-joined two-domain receptor against a rigid ligand, comparing F3Dock-mode top hit against a pre-computed reference.
+
+Risk: high. This is the scoring-loop refactor that the original F3Dock executable was built around; expect this to span multiple PRs.
+
+### Deferred until after Phase 4
+
+- Blurmaps / GOA molecular surface stack.
+- PRGN / extra geometry stack.
+- NFFT-accelerated scoring paths (dependency detection is already in place; only enable behind an explicit flag after Phase 4 lands).
