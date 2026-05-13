@@ -8188,6 +8188,47 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
   return 0;
 }
 
-int scoreUntransformed(PARAMS_IN *pr) { return dockingMain(pr, true); }
+// F3Dock flex sampling: in F3Dock mode with a non-empty `flexStates`
+// vector, iterate the states here and invoke `dockingMain` once per
+// state. Each iteration sets `pr->activeFlexStateIndex` so the
+// dockingMain-side `FlexReceptorGuard` (see dockingMain) applies the
+// matching hinge/shear perturbation to a working copy of the
+// receptor coordinates. In F2Dock (rigid) mode or with an empty
+// state vector this runs exactly once and produces output
+// bit-identical to the single-call path. Centralizing the loop here
+// (rather than in the CLI) means library callers also get the
+// multi-state behaviour for free, and creates a single seam for a
+// follow-up perf hoist that partitions dockingMain into
+// state-invariant setup and per-state body.
+//
+// TODO(perf, phase3 close-out #2): partition dockingMain into
+// (1) state-invariant setup (allocations, build_fks for B,
+//     computeElecKernel, B-side gridding/collectNonzeroGridCells,
+//     FFTW plan creation),
+// (2) per-state body (FlexReceptorGuard, build_fks for A, A-side
+//     getCenterFrequencies/filters init, the threaded rotation
+//     loop, output aggregation),
+// (3) state-invariant teardown.
+// The per-iteration savings come from skipping (1) and (3) on
+// states > 0.
+static int runFlexStates(PARAMS_IN *pr, bool scoreUntransformed) {
+  const std::size_t n_active_states =
+      (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
+       !pr->flexStates.empty())
+          ? pr->flexStates.size()
+          : static_cast<std::size_t>(1);
+  for (std::size_t s = 0; s < n_active_states; ++s) {
+    pr->activeFlexStateIndex = static_cast<int>(s);
+    if (n_active_states > 1) {
+      printf("\n=== Flex state %zu / %zu ===\n", s + 1, n_active_states);
+    }
+    int rc = dockingMain(pr, scoreUntransformed);
+    if (rc != 0)
+      return rc;
+  }
+  return 0;
+}
 
-int dock(PARAMS_IN *pr) { return dockingMain(pr, false); }
+int scoreUntransformed(PARAMS_IN *pr) { return runFlexStates(pr, true); }
+
+int dock(PARAMS_IN *pr) { return runFlexStates(pr, false); }

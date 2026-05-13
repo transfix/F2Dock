@@ -2536,38 +2536,18 @@ int main(int argc, char *argv[]) {
 #endif
   // printf("BNUMTHREAD = %p, %d\n", &pr, pr.numThreads);
 
-  // F3Dock outer flex-state loop. In F2Dock (rigid) mode, or in
-  // F3Dock mode with a single identity state, this runs exactly once
-  // and produces output bit-identical to the single-call path. With
-  // multiple flex states each call to dockingMain applies one state
-  // to the receptor and emits its own top-N table, with every pose
-  // tagged via ValuePosition3D::m_ConformationIndex so the source
-  // state of each row is recoverable.
-  const std::size_t n_active_states =
-      (pr.dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
-       !pr.flexStates.empty())
-          ? pr.flexStates.size()
-          : static_cast<std::size_t>(1);
+  // F3Dock flex sampling is now driven inside `dock()` /
+  // `scoreUntransformed()` (see Docking.cpp::runFlexStates). The CLI
+  // just hands off `pr` and the entry point iterates `pr.flexStates`
+  // internally, producing one tagged top-N block per state.
 
   // do the docking
   if (argc == 2) {
-    for (std::size_t s = 0; s < n_active_states; ++s) {
-      pr.activeFlexStateIndex = static_cast<int>(s);
-      if (n_active_states > 1) {
-        printf("\n=== Flex state %zu / %zu ===\n", s + 1, n_active_states);
-      }
-      dock(&pr);
-    }
+    dock(&pr);
   } else {
-    if (strcasecmp(argv[1], "-score") == 0) {
-      for (std::size_t s = 0; s < n_active_states; ++s) {
-        pr.activeFlexStateIndex = static_cast<int>(s);
-        if (n_active_states > 1) {
-          printf("\n=== Flex state %zu / %zu ===\n", s + 1, n_active_states);
-        }
-        scoreUntransformed(&pr);
-      }
-    } else if (strcasecmp(argv[1], "-savegrid") == 0)
+    if (strcasecmp(argv[1], "-score") == 0)
+      scoreUntransformed(&pr);
+    else if (strcasecmp(argv[1], "-savegrid") == 0)
       saveGrid(&pr);
     else if (strcasecmp(argv[1], "-effGridFile") == 0)
       computeEffGrid(pr.minEffGridSize, pr.maxEffGridSize);
