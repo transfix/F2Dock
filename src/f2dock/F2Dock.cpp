@@ -1833,9 +1833,35 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
         // f3dock-flex rather than this monster if/else. parse_param
         // returns true iff the key belongs to that subsystem; `ok`
         // then reports whether the value was well-formed.
+        //
+        // Note: the surrounding parser uses strtok on `s` with a
+        // space delimiter, so `val` only holds the first space-
+        // delimited token. Multi-token flex parameters (e.g.
+        // flexHingeAxis expects 9 numbers) need the full remainder
+        // of the original line. Recover it from `line` (the
+        // unmodified copy) by skipping the key and the separating
+        // whitespace, then trim trailing CR/LF.
+        char full_val_buf[2000];
+        const char *full_val = val;
+        {
+          const std::size_t key_len = key != nullptr ? strlen(key) : 0;
+          const char *cursor = line + key_len;
+          while (*cursor == ' ' || *cursor == '\t')
+            ++cursor;
+          if (*cursor != '\0') {
+            strncpy(full_val_buf, cursor, sizeof(full_val_buf) - 1);
+            full_val_buf[sizeof(full_val_buf) - 1] = '\0';
+            std::size_t len = strlen(full_val_buf);
+            while (len > 0 && (full_val_buf[len - 1] == '\n' ||
+                               full_val_buf[len - 1] == '\r')) {
+              full_val_buf[--len] = '\0';
+            }
+            full_val = full_val_buf;
+          }
+        }
         bool flex_ok = false;
-        if (f3dock::flex::FlexSampler::parse_param(key, val, &p->flexSampling,
-                                                   &flex_ok)) {
+        if (f3dock::flex::FlexSampler::parse_param(
+                key, full_val, &p->flexSampling, &flex_ok)) {
           if (!flex_ok) {
             return false;
           }

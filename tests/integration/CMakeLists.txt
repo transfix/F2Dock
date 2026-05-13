@@ -60,6 +60,23 @@ add_f2dock_integration_case(
   REL_TOL  1e-5
 )
 
+# Phase 3 F3Dock multi-state regression: same complex as 1A2K but with
+# the F3Dock outer flex-state loop enabled (one z-axis hinge, two
+# non-zero steps -> 3 states total including identity). Verifies that
+# dockingMain is correctly re-entered once per state, that A-side
+# (receptor) coordinates are perturbed per state, and that pose
+# records are tagged with the originating flex state id. The
+# committed baseline encodes the expected three per-state result
+# tables in sequence.
+add_f2dock_integration_case(
+  1A2K_flex
+  INPUT    "${CMAKE_CURRENT_SOURCE_DIR}/inputs/1A2K_flex_smoke.inp"
+  EXPECTED "${CMAKE_CURRENT_SOURCE_DIR}/expected/1A2K_flex_smoke_out.txt"
+  ROWS     50
+  ABS_TOL  1e-3
+  REL_TOL  1e-5
+)
+
 if(TARGET F2DockServer)
   add_test(
     NAME integration_F2DockServer
