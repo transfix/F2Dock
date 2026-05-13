@@ -5281,10 +5281,10 @@ int saveGrid(PARAMS_IN *pr) {
 
   smoothingFunction = new Gaussian(alpha, interpFuncExtent, (int)(n), gridSize);
   std::cout << "typeA " << typeA << " typeB " << typeB << " numCentersA "
-            << numCentersA << " "
-            << "numCentersB " << numCentersB << " A origin " << *xkAOrig << " "
-            << *ykAOrig << " " << *zkAOrig << " B origin " << *xkBOrig << " "
-            << *ykBOrig << " " << *zkBOrig << std::endl;
+            << numCentersA << " " << "numCentersB " << numCentersB
+            << " A origin " << *xkAOrig << " " << *ykAOrig << " " << *zkAOrig
+            << " B origin " << *xkBOrig << " " << *ykBOrig << " " << *zkBOrig
+            << std::endl;
 
   if (!build_fks(typeA, numCentersA, xkAOrig, ykAOrig, zkAOrig, radiiA,
                  chargesA, hbondTypeA, NULL, &fkA, 1, &fkAElec, 1, &fkAHbond, 0,
