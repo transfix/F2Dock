@@ -39,12 +39,12 @@ Completed capabilities have moved to the [Completed work](#completed-work) secti
 
 | Capability | Scientific Value | Effort | Risk | Recommended Action |
 |---|---|---:|---:|---|
-| Hinge bending / shear kinematics **runtime integration** | High for domain motion exploration | Medium | Medium | **Phase 3 (next)**: wire `f3dock::flex::FlexKinematics` into the F3Dock pre-FFT sampling loop in `F2Dock.cpp`; add integration test |
+| Phase 3 follow-ups: real `.f2d` integration test, B-side gridding hoist | Medium | Low-Medium | Low | **Phase 3 close-out (in progress)**: add a `tests/1A2K_L_U.{pqr,f2d}` integration test with a non-identity flex state asserting the flex top-pose differs from rigid; factor the B-side (ligand-side, state-invariant) work (FFT-Kernel construction, `transformAndNormalize` on B, gridding / `griddingElec` for B, `getCenterFrequencies` on B, ligand-side filter object construction) out of `dockingMain` so the outer multi-state loop only repeats the A-side (receptor, flex-perturbed) work, saving O(N_states - 1) redundant ligand passes |
 | Domain graph modeling **runtime integration** | Medium-High for flexible docking workflows | High | High | **Phase 4**: wire `f3dock::domain::DomainGraph` into multi-domain pose composition; needs scoring-loop refactor |
 | Blurmaps / GOA molecular surface stack | Medium | High | High | Defer until baseline flexible pipeline lands |
 | PRGN / extra geometry stack | Medium | High | High | Defer; extract only needed pieces once use-cases are clear |
 | NFFT-based acceleration paths | Medium-High (for some workloads) | High | High | Keep optional; dependency detection already in place, do not hard-require |
-| Full F3Dock executable behavior parity | Very High long-term | Very High | Very High | Tracked as the sum of Phases 3 + 4 + deferred items above |
+| Full F3Dock executable behavior parity | Very High long-term | Very High | Very High | Tracked as the sum of remaining Phase 3 close-out + Phase 4 + deferred items above |
 
 ## Porting Principles
 
@@ -98,19 +98,38 @@ Completed capabilities have moved to the [Completed work](#completed-work) secti
 - Full-tree clang-format + CI enforcement (PR #13).
 - MSVC C4305 / C4244 narrowing warnings silenced in F2Dock sources (PR #14, + follow-up branch `fix/windows-warnings-2`).
 
-## Roadmap — Phases 3 & 4
+### Phase 3 — hinge/shear runtime integration (PRs #17–#20, merged)
 
-### Phase 3 (next) — hinge/shear runtime integration
+Goal: when `dockMode == kF3Dock`, generate flex-perturbed receptor poses via `f3dock::flex::FlexKinematics` and feed them into the FFT scoring loop. Landed across four stacked PRs:
 
-Goal: when `dockMode == kF3Dock`, generate flex-perturbed receptor poses via `f3dock::flex::FlexKinematics` and feed them into the FFT scoring loop.
+- **PR #17** — `FlexSamplingConfig` block added to `PARAMS_IN` (hinge axes, angle grid, shear specs). Input-file and CLI parsing wired in; pure-data, no runtime use yet.
+- **PR #18** — Startup flex-state enumeration: when `kF3Dock` is active, the `FlexSamplingConfig` is expanded into a deterministic list of `FlexState`s at `dockingMain` entry, gated behind the dock-mode check so F2Dock callers are untouched.
+- **PR #19** — Apply flex state 0 (identity) to the receptor in `dockingMain`. Each enumerated state produces a per-state receptor atom array (`f3dock::flex::applyState`); the outer scoring infrastructure consumes the deformed coordinates instead of the raw receptor.
+- **PR #20** — Filter init flex-aware via RAII pr-pointer swap. The per-pose forbidden / clash / hydrophobicity filters initialise against the per-state deformed receptor (not the raw rigid receptor) via a scoped pointer swap so the rest of `dockingMain` reads from the active state without invasive parameter threading.
 
-Concrete tasks:
-1. Add a `FlexSamplingConfig` block to `PARAMS_IN` (hinge axes, angle grid, shear specs) with input-file parsing.
-2. In `F2Dock.cpp`, before the main rotation/translation loop, generate the flex-perturbed copies of the receptor atom set when `kF3Dock` is active. F2Dock mode skips this branch entirely.
-3. Extend the per-pose result record with a `flex_state_id` so post-filter / re-rank stages can group results.
-4. Integration test: small two-domain receptor + ligand, assert that turning hinge sampling on produces strictly more candidate poses than off, and that with hinge angle = 0 the top hit equals the rigid-mode top hit.
+After these four PRs, F3Dock mode runs the rigid scoring pipeline once per flex state with full filter coverage. The outer multi-state loop and per-pose state attribution land in PR #21.
 
-Risk: low-medium. `FlexKinematics` is pure, deterministic, and already tested. The integration risk is in the loop bookkeeping.
+### Phase 3 close-out — outer multi-state loop + per-pose state attribution (PR #21, in review)
+
+- Outer loop in `dockingMain` iterating over every enumerated `FlexState`.
+- Per-pose result records tagged with `flex_state_id` so post-filter / re-rank stages can group by state.
+- Integration test currently asserts that `kF2Dock` and `kF3Dock` with a trivial single-state config produce identical top hits.
+
+Pending follow-ups tracked in the pending-work matrix above:
+
+- Real `.f2d` complex integration test using `tests/1A2K_L_U.{pqr,f2d}` with a non-identity flex state, asserting the flex top-pose strictly differs from the rigid top-pose.
+- Performance optimisation to factor B-side (ligand-side) gridding out of the per-state outer loop: `build_fks` for the ligand, ligand-side `transformAndNormalize`, ligand `gridding` + `griddingElec`, FFT-Kernel construction for B, `getCenterFrequencies` on B, and ligand-side filter object construction all only depend on the rigid ligand inputs (the flex perturbation is applied to the receptor / A-side only). Hoisting them out of `dockingMain`'s per-call work avoids O(N_states - 1) redundant ligand passes.
+
+## Roadmap — remaining phases
+
+### Phase 3 close-out (in progress)
+
+Work in branch `feature/f3dock-phase3-followups` once PR #21 merges:
+
+1. **Real-complex integration test** — use `tests/1A2K_L_U.pqr` / `tests/1A2K_L_U.f2d` with a non-trivial hinge axis + non-zero angle grid. Assert:
+   - `kF3Dock` with the non-identity config produces a top-pose whose 6-DoF transform differs measurably from the rigid `kF2Dock` top-pose.
+   - `kF3Dock` with a single identity state still recovers the rigid top-pose (regression guard).
+2. **B-side gridding hoist** — `dockingMain` is re-entered once per flex state by the outer loop in `F2Dock.cpp`'s `main`. The per-call A-side work (receptor `build_fks`, `transformAndNormalize`, `gridding`, `griddingElec`, FFT-Kernel construction, filter init) is genuinely state-dependent because the flex perturbation lives on the A-side coordinates (`pr->xkAOrig` etc.). The B-side (ligand) inputs are rigid across the entire run, so the equivalent B-side work currently repeats N_states times for no gain. Move B-side preparation either (a) into a one-shot setup function called once before the outer loop and cached on `pr`, or (b) by relocating the outer flex loop into `dockingMain` after the B-side prep. Expected win: ~`(N_states - 1) * t_Bside` per docking run.
 
 ### Phase 4 — domain-graph runtime integration
 
