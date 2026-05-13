@@ -5186,6 +5186,47 @@ int saveGrid(PARAMS_IN *pr) {
   FFTW_DATA_TYPE *elecGridB = (FFTW_DATA_TYPE *)FFTW_malloc(
       (size_t)(sizeof(FFTW_DATA_TYPE) * numFreq3));
 
+  // F3Dock flex sampling (Phase 3): see the main dockingMain path for
+  // the full rationale. Same RAII swap-and-restore pattern -- when
+  // flex state 0 is non-identity, perturb pr->xkAOrig/ykAOrig/zkAOrig
+  // for the duration of this call so the score-untransformed path,
+  // its filter inits, and any helpers reached through pr all see the
+  // same receptor coordinates.
+  std::vector<double> xkAFlexSU, ykAFlexSU, zkAFlexSU;
+  struct FlexReceptorGuardSU {
+    PARAMS_IN *pr;
+    double *origX;
+    double *origY;
+    double *origZ;
+    bool active;
+    ~FlexReceptorGuardSU() {
+      if (active) {
+        pr->xkAOrig = origX;
+        pr->ykAOrig = origY;
+        pr->zkAOrig = origZ;
+      }
+    }
+  } flexGuardSU{pr, pr->xkAOrig, pr->ykAOrig, pr->zkAOrig, false};
+  if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
+      !pr->flexStates.empty() &&
+      (!pr->flexStates[0].hinges.empty() ||
+       !pr->flexStates[0].shears.empty())) {
+    xkAFlexSU.assign(pr->xkAOrig, pr->xkAOrig + pr->numCentersA);
+    ykAFlexSU.assign(pr->ykAOrig, pr->ykAOrig + pr->numCentersA);
+    zkAFlexSU.assign(pr->zkAOrig, pr->zkAOrig + pr->numCentersA);
+    if (!f3dock::flex::apply_flex_state(
+            pr->flexStates[0], xkAFlexSU.data(), ykAFlexSU.data(),
+            zkAFlexSU.data(), static_cast<std::size_t>(pr->numCentersA))) {
+      printf("Error: flex state 0 has a degenerate hinge axis or shear "
+             "normal.\n");
+      return -1;
+    }
+    pr->xkAOrig = xkAFlexSU.data();
+    pr->ykAOrig = ykAFlexSU.data();
+    pr->zkAOrig = zkAFlexSU.data();
+    flexGuardSU.active = true;
+  }
+
   // static molecule
   double *xkAOrig = pr->xkAOrig;
   double *ykAOrig = pr->ykAOrig;
@@ -5196,33 +5237,6 @@ int saveGrid(PARAMS_IN *pr) {
   float *radiiA = pr->radiiA;
   float *chargesA = pr->chargesA;
   char *fileNameA = pr->staticMoleculeF2d;
-
-  // F3Dock flex sampling (Phase 3): when flex state 0 contains a
-  // non-identity hinge/shear, apply it to a working copy of the
-  // receptor coordinates and rebind the local pointers so every
-  // subsequent build_fks / center / transformAndNormalize call below
-  // sees the perturbed atom set. F2Dock rigid mode (or F3Dock mode
-  // with no sweeps configured) leaves the receptor untouched, so
-  // baseline parity with rigid docking is preserved.
-  std::vector<double> xkAFlexSU, ykAFlexSU, zkAFlexSU;
-  if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
-      !pr->flexStates.empty() &&
-      (!pr->flexStates[0].hinges.empty() ||
-       !pr->flexStates[0].shears.empty())) {
-    xkAFlexSU.assign(xkAOrig, xkAOrig + numCentersA);
-    ykAFlexSU.assign(ykAOrig, ykAOrig + numCentersA);
-    zkAFlexSU.assign(zkAOrig, zkAOrig + numCentersA);
-    if (!f3dock::flex::apply_flex_state(
-            pr->flexStates[0], xkAFlexSU.data(), ykAFlexSU.data(),
-            zkAFlexSU.data(), static_cast<std::size_t>(numCentersA))) {
-      printf("Error: flex state 0 has a degenerate hinge axis or shear "
-             "normal.\n");
-      return -1;
-    }
-    xkAOrig = xkAFlexSU.data();
-    ykAOrig = ykAFlexSU.data();
-    zkAOrig = zkAFlexSU.data();
-  }
 
   // moving molecule
   double *xkBOrig = pr->xkBOrig;
@@ -6559,6 +6573,54 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
   std::vector<double *> sortedPeaks(numThreads);
 
+  // F3Dock flex sampling (Phase 3): when flex state 0 contains a
+  // non-identity hinge/shear, apply it to a working copy of the
+  // receptor coordinates and swap them into pr->{xk,yk,zk}AOrig for
+  // the lifetime of this dockingMain call. Every downstream consumer
+  // -- the local xkAOrig/ykAOrig/zkAOrig aliases below, the filter
+  // init routines (initClashFilter, initPseudoGsolFilter,
+  // initDispersionFilter, initLJFilter, initForbiddenVolumeFilter,
+  // initHBondFilter) that read pr->xkAOrig directly, plus any other
+  // helpers reached through pr -- therefore all see the same
+  // perturbed receptor.
+  //
+  // FlexReceptorGuard restores the original pr pointers in its
+  // destructor so every return path is safe.
+  std::vector<double> xkAFlex, ykAFlex, zkAFlex;
+  struct FlexReceptorGuard {
+    PARAMS_IN *pr;
+    double *origX;
+    double *origY;
+    double *origZ;
+    bool active;
+    ~FlexReceptorGuard() {
+      if (active) {
+        pr->xkAOrig = origX;
+        pr->ykAOrig = origY;
+        pr->zkAOrig = origZ;
+      }
+    }
+  } flexGuard{pr, pr->xkAOrig, pr->ykAOrig, pr->zkAOrig, false};
+  if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
+      !pr->flexStates.empty() &&
+      (!pr->flexStates[0].hinges.empty() ||
+       !pr->flexStates[0].shears.empty())) {
+    xkAFlex.assign(pr->xkAOrig, pr->xkAOrig + pr->numCentersA);
+    ykAFlex.assign(pr->ykAOrig, pr->ykAOrig + pr->numCentersA);
+    zkAFlex.assign(pr->zkAOrig, pr->zkAOrig + pr->numCentersA);
+    if (!f3dock::flex::apply_flex_state(
+            pr->flexStates[0], xkAFlex.data(), ykAFlex.data(), zkAFlex.data(),
+            static_cast<std::size_t>(pr->numCentersA))) {
+      printf("Error: flex state 0 has a degenerate hinge axis or shear "
+             "normal.\n");
+      return -1;
+    }
+    pr->xkAOrig = xkAFlex.data();
+    pr->ykAOrig = ykAFlex.data();
+    pr->zkAOrig = zkAFlex.data();
+    flexGuard.active = true;
+  }
+
   // static molecule
   double *xkAOrig = pr->xkAOrig;
   double *ykAOrig = pr->ykAOrig;
@@ -6573,39 +6635,6 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 
   while (typeA[_numCentersA] == 'I')
     _numCentersA++;
-
-  // F3Dock flex sampling (Phase 3): when flex state 0 contains a
-  // non-identity hinge/shear, apply it to a working copy of the
-  // receptor coordinates and rebind the local pointers so every
-  // subsequent build_fks / center / transformAndNormalize / gridding
-  // call below sees the perturbed atom set. F2Dock rigid mode (or
-  // F3Dock mode with no sweeps configured) leaves the receptor
-  // untouched, so baseline parity with rigid docking is preserved.
-  //
-  // Note: filter init routines (initPseudoGsolFilter, initDispersionFilter,
-  // initClashFilter) consume pr->xkAOrig directly rather than the local
-  // pointer and currently see the un-perturbed coords. Wiring those
-  // filters to the active flex state is a follow-up; multi-state outer
-  // looping is also a follow-up.
-  std::vector<double> xkAFlex, ykAFlex, zkAFlex;
-  if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
-      !pr->flexStates.empty() &&
-      (!pr->flexStates[0].hinges.empty() ||
-       !pr->flexStates[0].shears.empty())) {
-    xkAFlex.assign(xkAOrig, xkAOrig + numCentersA);
-    ykAFlex.assign(ykAOrig, ykAOrig + numCentersA);
-    zkAFlex.assign(zkAOrig, zkAOrig + numCentersA);
-    if (!f3dock::flex::apply_flex_state(
-            pr->flexStates[0], xkAFlex.data(), ykAFlex.data(), zkAFlex.data(),
-            static_cast<std::size_t>(numCentersA))) {
-      printf("Error: flex state 0 has a degenerate hinge axis or shear "
-             "normal.\n");
-      return -1;
-    }
-    xkAOrig = xkAFlex.data();
-    ykAOrig = ykAFlex.data();
-    zkAOrig = zkAFlex.data();
-  }
 
   if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
       pr->flexStates.size() > 1) {
