@@ -260,8 +260,7 @@ TEST(F3DockFlexSampler, MultipleHingesCrossProduct) {
   ASSERT_EQ(states.size(), 6u);
 
   const double kExpected[6][2] = {
-      {0.0, 0.0}, {0.0, 10.0}, {1.0, 0.0},
-      {1.0, 10.0}, {2.0, 0.0}, {2.0, 10.0},
+      {0.0, 0.0}, {0.0, 10.0}, {1.0, 0.0}, {1.0, 10.0}, {2.0, 0.0}, {2.0, 10.0},
   };
   for (std::size_t i = 0; i < 6u; ++i) {
     ASSERT_EQ(states[i].hinges.size(), 2u);
@@ -333,14 +332,14 @@ TEST(F3DockFlexSampler, ParseParamIsCaseInsensitive) {
   FlexSamplingConfig cfg;
   bool ok = false;
   // Mixed case for both keys mirrors how the parameter file is read.
-  EXPECT_TRUE(FlexSampler::parse_param(
-      "FlExHiNgEaXiS", "0 0 0 0 0 1 0 0.1 2", &cfg, &ok));
+  EXPECT_TRUE(FlexSampler::parse_param("FlExHiNgEaXiS", "0 0 0 0 0 1 0 0.1 2",
+                                       &cfg, &ok));
   EXPECT_TRUE(ok);
   ASSERT_EQ(cfg.hinges.size(), 1u);
 
   ok = false;
-  EXPECT_TRUE(FlexSampler::parse_param(
-      "FLEXSHEARPLANE", "0 0 1 1 0 0 0 0.1 2", &cfg, &ok));
+  EXPECT_TRUE(FlexSampler::parse_param("FLEXSHEARPLANE", "0 0 1 1 0 0 0 0.1 2",
+                                       &cfg, &ok));
   EXPECT_TRUE(ok);
   EXPECT_EQ(cfg.shears.size(), 1u);
 }
@@ -368,8 +367,8 @@ TEST(F3DockFlexSampler, ParseParamRejectsTrailingGarbage) {
 TEST(F3DockFlexSampler, ParseParamRejectsNullValue) {
   FlexSamplingConfig cfg;
   bool ok = true;
-  const bool consumed = FlexSampler::parse_param(
-      "flexHingeAxis", nullptr, &cfg, &ok);
+  const bool consumed =
+      FlexSampler::parse_param("flexHingeAxis", nullptr, &cfg, &ok);
   EXPECT_TRUE(consumed);
   EXPECT_FALSE(ok);
 }
@@ -379,22 +378,21 @@ TEST(F3DockFlexSampler, ParseParamGuardsNullArguments) {
   bool ok = false;
   EXPECT_FALSE(FlexSampler::parse_param(nullptr, "x", &cfg, &ok));
   EXPECT_FALSE(FlexSampler::parse_param("flexHingeAxis", "x", nullptr, &ok));
-  EXPECT_FALSE(
-      FlexSampler::parse_param("flexHingeAxis", "x", &cfg, nullptr));
+  EXPECT_FALSE(FlexSampler::parse_param("flexHingeAxis", "x", &cfg, nullptr));
 }
 
 TEST(F3DockFlexSampler, ParseParamAppendsAcrossInvocations) {
   // Multiple parameter-file lines should accumulate hinges/shears.
   FlexSamplingConfig cfg;
   bool ok = false;
-  EXPECT_TRUE(FlexSampler::parse_param(
-      "flexHingeAxis", "0 0 0 0 0 1 0 0.5 2", &cfg, &ok));
+  EXPECT_TRUE(FlexSampler::parse_param("flexHingeAxis", "0 0 0 0 0 1 0 0.5 2",
+                                       &cfg, &ok));
   EXPECT_TRUE(ok);
-  EXPECT_TRUE(FlexSampler::parse_param(
-      "flexHingeAxis", "1 0 0 1 0 0 0 0.5 2", &cfg, &ok));
+  EXPECT_TRUE(FlexSampler::parse_param("flexHingeAxis", "1 0 0 1 0 0 0 0.5 2",
+                                       &cfg, &ok));
   EXPECT_TRUE(ok);
-  EXPECT_TRUE(FlexSampler::parse_param(
-      "flexShearPlane", "0 0 1 1 0 0 0 0.1 3", &cfg, &ok));
+  EXPECT_TRUE(FlexSampler::parse_param("flexShearPlane", "0 0 1 1 0 0 0 0.1 3",
+                                       &cfg, &ok));
   EXPECT_TRUE(ok);
 
   EXPECT_EQ(cfg.hinges.size(), 2u);
