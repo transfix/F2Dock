@@ -474,6 +474,15 @@ typedef struct {
   // in the parameter file. Defaults to 4096.
   int flexMaxStates;
 
+  // Index into `flexStates` selecting which state the current
+  // dockingMain invocation should apply to the receptor. The CLI
+  // outer loop in F2Dock.cpp advances this value across successive
+  // `dock` / `scoreUntransformed` calls so each call scores one flex
+  // state. Defaults to 0 (the identity state in F3Dock mode, the
+  // only state in F2Dock mode). Ignored when `flexStates` is empty
+  // or when `dockMode != kF3Dock`.
+  int activeFlexStateIndex;
+
 } PARAMS_IN;
 
 class TopValues;
