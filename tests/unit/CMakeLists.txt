@@ -104,6 +104,10 @@ if(TARGET f3dock-flex)
     SOURCES test_f3dock_flex_sampler.cpp
     LIBS f3dock-flex
   )
+  f2dock_add_test(test_f3dock_flex_apply
+    SOURCES test_f3dock_flex_apply.cpp
+    LIBS f3dock-flex
+  )
 endif()
 
 if(TARGET f3dock-domain)
