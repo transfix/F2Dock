@@ -63,6 +63,7 @@
 #include "vol/RAWIV.h"
 #include "ValuePosition3D.h"
 
+#include "f3dock/domain/DomainSpec.h"
 #include "f3dock/flex/FlexSampler.h"
 
 #include <pthread.h>
@@ -482,6 +483,19 @@ typedef struct {
   // only state in F2Dock mode). Ignored when `flexStates` is empty
   // or when `dockMode != kF3Dock`.
   int activeFlexStateIndex;
+
+  // Optional receptor multi-domain configuration consumed when
+  // dockMode == kF3Dock. When empty (the default), the receptor is
+  // treated as a single implicit rigid body and the existing rigid
+  // pipeline is unchanged. See inc/f3dock/domain/DomainSpec.h for
+  // the parser and the parameter-file syntax (`receptorDomain`,
+  // `receptorJointFixed`, `receptorJointHinge`).
+  //
+  // Phase 4 task 1 (this field): syntax + validation only. Phase 4
+  // tasks 2-3 will partition the receptor atom array per
+  // `DomainSpec` and drive a per-domain transform vector through the
+  // FFT scoring loop.
+  f3dock::domain::ReceptorDomainConfig receptorDomains;
 
 } PARAMS_IN;
 
