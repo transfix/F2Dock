@@ -119,6 +119,10 @@ if(TARGET f3dock-domain)
     SOURCES test_f3dock_domain_spec.cpp
     LIBS f3dock-domain
   )
+  f2dock_add_test(test_f3dock_domain_partition
+    SOURCES test_f3dock_domain_partition.cpp
+    LIBS f3dock-domain
+  )
 endif()
 
 # ── Header-only DockMode parser tests (no library dep) ──

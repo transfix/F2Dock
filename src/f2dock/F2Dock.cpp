@@ -2005,6 +2005,29 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
   if (!decodeSpectrum(p))
     return false;
 
+  // Phase 4 task 2: validate the optional receptor domain partition
+  // against the loaded receptor and build the rest-pose DomainGraph.
+  // Both data structures live on PARAMS_IN for task 3 to consume; we
+  // do nothing else with them at runtime yet. When no domains are
+  // declared the partition is empty and the graph is left untouched,
+  // preserving the legacy single-rigid-body path bit-for-bit.
+  if (p->receptorDomains.enabled()) {
+    std::string err;
+    if (!p->receptorDomainPartition.build(
+            p->receptorDomains, static_cast<std::size_t>(p->numCentersA),
+            &err)) {
+      printf("Error: receptor domain partition rejected: %s\n", err.c_str());
+      return false;
+    }
+    if (!p->receptorDomains.build_graph(&p->receptorDomainGraph, &err)) {
+      printf("Error: receptor domain graph rejected: %s\n", err.c_str());
+      return false;
+    }
+    printf("Receptor domain partition: %zu domain(s), %zu atom(s) total\n",
+           p->receptorDomains.domains.size(),
+           p->receptorDomainPartition.size());
+  }
+
   return true;
 }
 
