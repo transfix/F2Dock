@@ -36,8 +36,6 @@ void ExpectPointNear(const Point3 &a, const Point3 &b, double eps = kEps) {
 
 } // namespace
 
-
-
 // ─────────────────────────────────────────────────────────────────────
 // Defaults / enablement
 // ─────────────────────────────────────────────────────────────────────
@@ -70,8 +68,8 @@ TEST(DomainSpecParser, ParsesReceptorDomain) {
 TEST(DomainSpecParser, ReceptorDomainIsCaseInsensitive) {
   ReceptorDomainConfig cfg;
   bool ok = false;
-  EXPECT_TRUE(DomainSpecParser::parse_param("ReCePtOrDoMaIn", "1 0 10", &cfg,
-                                            &ok));
+  EXPECT_TRUE(
+      DomainSpecParser::parse_param("ReCePtOrDoMaIn", "1 0 10", &cfg, &ok));
   EXPECT_TRUE(ok);
   EXPECT_EQ(cfg.domains.size(), 1u);
 }
@@ -100,8 +98,8 @@ TEST(DomainSpecParser, RejectsInvertedRange) {
 TEST(DomainSpecParser, ParsesReceptorJointFixed) {
   ReceptorDomainConfig cfg;
   bool ok = false;
-  EXPECT_TRUE(DomainSpecParser::parse_param("receptorJointFixed", "1 2", &cfg,
-                                            &ok));
+  EXPECT_TRUE(
+      DomainSpecParser::parse_param("receptorJointFixed", "1 2", &cfg, &ok));
   EXPECT_TRUE(ok);
   ASSERT_EQ(cfg.joints.size(), 1u);
   EXPECT_EQ(cfg.joints[0].parent_id, 1);
@@ -113,8 +111,8 @@ TEST(DomainSpecParser, ParsesReceptorJointHinge) {
   ReceptorDomainConfig cfg;
   bool ok = false;
   // parent=1 child=2 axis_point=(1,0,0) axis_dir=(0,0,1) initAngle=0
-  EXPECT_TRUE(DomainSpecParser::parse_param(
-      "receptorJointHinge", "1 2 1 0 0 0 0 1 0", &cfg, &ok));
+  EXPECT_TRUE(DomainSpecParser::parse_param("receptorJointHinge",
+                                            "1 2 1 0 0 0 0 1 0", &cfg, &ok));
   EXPECT_TRUE(ok);
   ASSERT_EQ(cfg.joints.size(), 1u);
   const JointSpec &j = cfg.joints[0];
@@ -140,10 +138,10 @@ TEST(DomainSpecParser, RejectsNullInputs) {
   ReceptorDomainConfig cfg;
   bool ok = true;
   EXPECT_FALSE(DomainSpecParser::parse_param(nullptr, "x", &cfg, &ok));
-  EXPECT_FALSE(DomainSpecParser::parse_param("receptorDomain", "x", nullptr,
-                                             &ok));
-  EXPECT_FALSE(DomainSpecParser::parse_param("receptorDomain", "x", &cfg,
-                                             nullptr));
+  EXPECT_FALSE(
+      DomainSpecParser::parse_param("receptorDomain", "x", nullptr, &ok));
+  EXPECT_FALSE(
+      DomainSpecParser::parse_param("receptorDomain", "x", &cfg, nullptr));
 }
 
 // ─────────────────────────────────────────────────────────────────────
