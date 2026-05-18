@@ -1,5 +1,7 @@
 #include "f3dock/domain/DomainSpec.h"
 
+#include "f3dock/util/StringUtil.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -8,13 +10,7 @@
 #include <sstream>
 #include <string>
 
-#if defined(_MSC_VER)
-#include <string.h>
-#define F3DOCK_STRCASECMP _stricmp
-#else
-#include <strings.h>
-#define F3DOCK_STRCASECMP strcasecmp
-#endif
+
 
 namespace f3dock {
 namespace domain {
@@ -230,7 +226,9 @@ bool DomainSpecParser::parse_param(const char *key, const char *value,
     return false;
   }
 
-  if (F3DOCK_STRCASECMP(key, "receptorDomain") == 0) {
+  const std::string_view key_sv(key);
+
+  if (f3dock::util::iequals(key_sv, "receptorDomain")) {
     double v[3] = {0};
     if (!parse_doubles(value, v, 3)) {
       std::printf("Error: receptorDomain expects 3 integers: "
@@ -254,7 +252,7 @@ bool DomainSpecParser::parse_param(const char *key, const char *value,
     return true;
   }
 
-  if (F3DOCK_STRCASECMP(key, "receptorJointFixed") == 0) {
+  if (f3dock::util::iequals(key_sv, "receptorJointFixed")) {
     double v[2] = {0};
     if (!parse_doubles(value, v, 2)) {
       std::printf("Error: receptorJointFixed expects 2 integers: "
@@ -271,7 +269,7 @@ bool DomainSpecParser::parse_param(const char *key, const char *value,
     return true;
   }
 
-  if (F3DOCK_STRCASECMP(key, "receptorJointHinge") == 0) {
+  if (f3dock::util::iequals(key_sv, "receptorJointHinge")) {
     double v[9] = {0};
     if (!parse_doubles(value, v, 9)) {
       std::printf("Error: receptorJointHinge expects 9 numbers: "
@@ -297,4 +295,4 @@ bool DomainSpecParser::parse_param(const char *key, const char *value,
 } // namespace domain
 } // namespace f3dock
 
-#undef F3DOCK_STRCASECMP
+
