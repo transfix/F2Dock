@@ -1,5 +1,7 @@
 #include "f3dock/flex/FlexSampler.h"
 
+#include "f3dock/util/StringUtil.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -172,13 +174,7 @@ bool FlexSampler::parse_param(const char *key, const char *value,
     return false;
   }
 
-#if defined(_MSC_VER)
-#define F3DOCK_STRCASECMP _stricmp
-#else
-#define F3DOCK_STRCASECMP strcasecmp
-#endif
-
-  if (F3DOCK_STRCASECMP(key, "flexHingeAxis") == 0) {
+  if (f3dock::util::iequals(key, "flexHingeAxis")) {
     double v[9] = {0};
     if (!parse_doubles(value, v, 9)) {
       std::printf("Error: flexHingeAxis expects 9 numbers: "
@@ -202,7 +198,7 @@ bool FlexSampler::parse_param(const char *key, const char *value,
     return true;
   }
 
-  if (F3DOCK_STRCASECMP(key, "flexShearPlane") == 0) {
+  if (f3dock::util::iequals(key, "flexShearPlane")) {
     double v[9] = {0};
     if (!parse_doubles(value, v, 9)) {
       std::printf("Error: flexShearPlane expects 9 numbers: "
@@ -225,8 +221,6 @@ bool FlexSampler::parse_param(const char *key, const char *value,
     *ok = true;
     return true;
   }
-
-#undef F3DOCK_STRCASECMP
 
   return false;
 }
