@@ -5238,6 +5238,55 @@ int saveGrid(PARAMS_IN *pr) {
     }
   }
 
+  // Phase 4 task 3: apply the active receptor-domain hinge state on
+  // top of the (possibly flex-perturbed) coordinates. With no domain
+  // sweeps the path collapses to a no-op (state 0 == rest pose,
+  // partition disabled), preserving F2Dock parity.
+  std::vector<double> xkADomainSU, ykADomainSU, zkADomainSU;
+  if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
+      !pr->domainStates.empty() && pr->receptorDomainPartition.enabled()) {
+    if (pr->activeDomainStateIndex < 0 ||
+        static_cast<std::size_t>(pr->activeDomainStateIndex) >=
+            pr->domainStates.size()) {
+      printf("Error: activeDomainStateIndex=%d is out of range for "
+             "domainStates.size()=%zu.\n",
+             pr->activeDomainStateIndex, pr->domainStates.size());
+      return -1;
+    }
+    const f3dock::domain::DomainState &activeDomain =
+        pr->domainStates[pr->activeDomainStateIndex];
+    if (!activeDomain.hinge_angles.empty()) {
+      f3dock::domain::DomainGraph stateGraph;
+      std::string err;
+      if (!f3dock::domain::build_graph_with_state(
+              pr->receptorDomains, activeDomain, &stateGraph, &err)) {
+        printf("Error: failed to build domain state %zu graph: %s\n",
+               static_cast<std::size_t>(activeDomain.state_id), err.c_str());
+        return -1;
+      }
+      xkADomainSU.assign(pr->xkAOrig, pr->xkAOrig + pr->numCentersA);
+      ykADomainSU.assign(pr->ykAOrig, pr->ykAOrig + pr->numCentersA);
+      zkADomainSU.assign(pr->zkAOrig, pr->zkAOrig + pr->numCentersA);
+      std::vector<double> outX(pr->numCentersA), outY(pr->numCentersA),
+          outZ(pr->numCentersA);
+      if (!pr->receptorDomainPartition.apply(stateGraph, xkADomainSU.data(),
+                                             ykADomainSU.data(),
+                                             zkADomainSU.data(), outX.data(),
+                                             outY.data(), outZ.data(), &err)) {
+        printf("Error: failed to apply domain state %zu: %s\n",
+               static_cast<std::size_t>(activeDomain.state_id), err.c_str());
+        return -1;
+      }
+      xkADomainSU = std::move(outX);
+      ykADomainSU = std::move(outY);
+      zkADomainSU = std::move(outZ);
+      pr->xkAOrig = xkADomainSU.data();
+      pr->ykAOrig = ykADomainSU.data();
+      pr->zkAOrig = zkADomainSU.data();
+      flexGuardSU.active = true;
+    }
+  }
+
   // static molecule
   double *xkAOrig = pr->xkAOrig;
   double *ykAOrig = pr->ykAOrig;
@@ -6639,6 +6688,53 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
       pr->xkAOrig = xkAFlex.data();
       pr->ykAOrig = ykAFlex.data();
       pr->zkAOrig = zkAFlex.data();
+      flexGuard.active = true;
+    }
+  }
+
+  // Phase 4 task 3: apply the active receptor-domain hinge state on
+  // top of the (possibly flex-perturbed) coordinates. See the
+  // matching block in the scoreUntransformed path for details.
+  std::vector<double> xkADomain, ykADomain, zkADomain;
+  if (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
+      !pr->domainStates.empty() && pr->receptorDomainPartition.enabled()) {
+    if (pr->activeDomainStateIndex < 0 ||
+        static_cast<std::size_t>(pr->activeDomainStateIndex) >=
+            pr->domainStates.size()) {
+      printf("Error: activeDomainStateIndex=%d is out of range for "
+             "domainStates.size()=%zu.\n",
+             pr->activeDomainStateIndex, pr->domainStates.size());
+      return -1;
+    }
+    const f3dock::domain::DomainState &activeDomain =
+        pr->domainStates[pr->activeDomainStateIndex];
+    if (!activeDomain.hinge_angles.empty()) {
+      f3dock::domain::DomainGraph stateGraph;
+      std::string err;
+      if (!f3dock::domain::build_graph_with_state(
+              pr->receptorDomains, activeDomain, &stateGraph, &err)) {
+        printf("Error: failed to build domain state %zu graph: %s\n",
+               static_cast<std::size_t>(activeDomain.state_id), err.c_str());
+        return -1;
+      }
+      xkADomain.assign(pr->xkAOrig, pr->xkAOrig + pr->numCentersA);
+      ykADomain.assign(pr->ykAOrig, pr->ykAOrig + pr->numCentersA);
+      zkADomain.assign(pr->zkAOrig, pr->zkAOrig + pr->numCentersA);
+      std::vector<double> outX(pr->numCentersA), outY(pr->numCentersA),
+          outZ(pr->numCentersA);
+      if (!pr->receptorDomainPartition.apply(
+              stateGraph, xkADomain.data(), ykADomain.data(), zkADomain.data(),
+              outX.data(), outY.data(), outZ.data(), &err)) {
+        printf("Error: failed to apply domain state %zu: %s\n",
+               static_cast<std::size_t>(activeDomain.state_id), err.c_str());
+        return -1;
+      }
+      xkADomain = std::move(outX);
+      ykADomain = std::move(outY);
+      zkADomain = std::move(outZ);
+      pr->xkAOrig = xkADomain.data();
+      pr->ykAOrig = ykADomain.data();
+      pr->zkAOrig = zkADomain.data();
       flexGuard.active = true;
     }
   }
@@ -8212,19 +8308,26 @@ int dockingMain(PARAMS_IN *pr, bool scoreUntransformed) {
 // The per-iteration savings come from skipping (1) and (3) on
 // states > 0.
 static int runFlexStates(PARAMS_IN *pr, bool scoreUntransformed) {
-  const std::size_t n_active_states =
-      (pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock) &&
-       !pr->flexStates.empty())
-          ? pr->flexStates.size()
-          : static_cast<std::size_t>(1);
-  for (std::size_t s = 0; s < n_active_states; ++s) {
+  const bool f3 = pr->dockMode == static_cast<int>(f3dock::DockMode::kF3Dock);
+  const std::size_t n_flex_states = (f3 && !pr->flexStates.empty())
+                                        ? pr->flexStates.size()
+                                        : static_cast<std::size_t>(1);
+  const std::size_t n_domain_states = (f3 && !pr->domainStates.empty())
+                                          ? pr->domainStates.size()
+                                          : static_cast<std::size_t>(1);
+  const bool log_states = (n_flex_states * n_domain_states) > 1;
+  for (std::size_t s = 0; s < n_flex_states; ++s) {
     pr->activeFlexStateIndex = static_cast<int>(s);
-    if (n_active_states > 1) {
-      printf("\n=== Flex state %zu / %zu ===\n", s + 1, n_active_states);
+    for (std::size_t d = 0; d < n_domain_states; ++d) {
+      pr->activeDomainStateIndex = static_cast<int>(d);
+      if (log_states) {
+        printf("\n=== Flex state %zu / %zu, domain state %zu / %zu ===\n",
+               s + 1, n_flex_states, d + 1, n_domain_states);
+      }
+      int rc = dockingMain(pr, scoreUntransformed);
+      if (rc != 0)
+        return rc;
     }
-    int rc = dockingMain(pr, scoreUntransformed);
-    if (rc != 0)
-      return rc;
   }
   return 0;
 }

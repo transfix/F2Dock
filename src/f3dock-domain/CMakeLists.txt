@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 add_library(f3dock-domain STATIC
   DomainGraph.cpp
   DomainPartition.cpp
+  DomainSampler.cpp
   DomainSpec.cpp
 )
 

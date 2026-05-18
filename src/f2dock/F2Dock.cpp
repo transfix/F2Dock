@@ -1661,6 +1661,14 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
         }
         p->flexMaxStates = ival;
 
+      } else if (strcasecmp(key, "domainMaxStates") == 0) {
+        ival = atoi(val);
+        if (ival <= 0) {
+          printf("Error: domainMaxStates must be a positive integer!\n");
+          return false;
+        }
+        p->domainMaxStates = ival;
+
       } else if (strcasecmp(key, "bandwidth") == 0) {
         dval = atof(val);
         if (dval < 0) {
@@ -1873,9 +1881,17 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
               return false;
             }
           } else {
-            printf("WARNING: the following line from the parameter has been "
-                   "ignored\n  %s\n",
-                   s);
+            bool dom_sample_ok = false;
+            if (f3dock::domain::DomainSampler::parse_param(
+                    key, full_val, &p->domainSampling, &dom_sample_ok)) {
+              if (!dom_sample_ok) {
+                return false;
+              }
+            } else {
+              printf("WARNING: the following line from the parameter has been "
+                     "ignored\n  %s\n",
+                     s);
+            }
           }
         }
       }
@@ -2190,6 +2206,8 @@ int main(int argc, char *argv[]) {
   pr.dockMode = static_cast<int>(f3dock::DockMode::kF2Dock);
   pr.flexMaxStates = 4096;
   pr.activeFlexStateIndex = 0;
+  pr.domainMaxStates = 4096;
+  pr.activeDomainStateIndex = 0;
   pr.numberOfPositions = 20000;
   pr.gridSize = 256;
   pr.gridSizeSpecified = false;
@@ -2558,6 +2576,29 @@ int main(int argc, char *argv[]) {
     printf("Flex sampling: %zu state(s) [hinges=%zu, shears=%zu]\n",
            pr.flexStates.size(), pr.flexSampling.hinges.size(),
            pr.flexSampling.shears.size());
+  }
+
+  // F3Dock mode: enumerate per-joint receptor-domain hinge sweeps so
+  // the scoring loop iterates `pr.domainStates` alongside
+  // `pr.flexStates`. With no sweeps configured this is a single
+  // rest-pose state, leaving the rigid receptor path untouched.
+  if (pr.dockMode == static_cast<int>(f3dock::DockMode::kF3Dock)) {
+    const std::size_t n_states = pr.domainSampling.state_count();
+    const std::size_t cap = static_cast<std::size_t>(pr.domainMaxStates);
+    if (n_states > cap) {
+      printf("Error: domain sampling would emit %zu states (hinges=%zu), "
+             "exceeding domainMaxStates=%zu. Reduce the sweep or raise "
+             "domainMaxStates.\n",
+             n_states, pr.domainSampling.hinges.size(), cap);
+      return 1;
+    }
+    if (!f3dock::domain::DomainSampler::enumerate(pr.domainSampling,
+                                                  &pr.domainStates)) {
+      printf("Error: domain sampling configuration is malformed.\n");
+      return 1;
+    }
+    printf("Domain sampling: %zu state(s) [hinges=%zu]\n",
+           pr.domainStates.size(), pr.domainSampling.hinges.size());
   }
 
   //  pr.coreCoreWeight *= ( pr.numCentersB / 3000.0 );

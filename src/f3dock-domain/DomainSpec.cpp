@@ -1,5 +1,6 @@
 #include "f3dock/domain/DomainSpec.h"
 
+#include "f3dock/domain/DomainSampler.h"
 #include "f3dock/util/StringUtil.h"
 
 #include <cmath>
@@ -199,6 +200,108 @@ bool ReceptorDomainConfig::build_graph(DomainGraph *graph,
       }
       t = hinge_transform(j.axis_point, j.axis_direction,
                           j.initial_angle_radians);
+    } else {
+      t = RigidTransform::identity();
+    }
+    if (!tmp.setParent(j.child_id, j.parent_id, t)) {
+      if (error != nullptr) {
+        std::ostringstream os;
+        os << "failed to attach receptor domain " << j.child_id << " to parent "
+           << j.parent_id << " (cycle or unknown id)";
+        *error = os.str();
+      }
+      return false;
+    }
+  }
+
+  *graph = std::move(tmp);
+  return true;
+}
+
+bool build_graph_with_state(const ReceptorDomainConfig &config,
+                            const DomainState &state, DomainGraph *graph,
+                            std::string *error) {
+  if (graph == nullptr) {
+    if (error != nullptr) {
+      *error = "build_graph_with_state called with null graph";
+    }
+    return false;
+  }
+
+  // Validate that every override references a real hinge joint in
+  // the rest-pose configuration. We reject overrides that target
+  // non-hinge joints or non-existent (parent, child) pairs so that
+  // bad input files fail at config time rather than silently doing
+  // nothing.
+  for (const auto &ov : state.hinge_angles) {
+    bool matched = false;
+    for (const auto &j : config.joints) {
+      if (j.parent_id == ov.parent_id && j.child_id == ov.child_id) {
+        if (j.type != JointType::Hinge) {
+          if (error != nullptr) {
+            std::ostringstream os;
+            os << "domain state " << state.state_id << " overrides joint ("
+               << ov.parent_id << " -> " << ov.child_id
+               << ") which is not a hinge";
+            *error = os.str();
+          }
+          return false;
+        }
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      if (error != nullptr) {
+        std::ostringstream os;
+        os << "domain state " << state.state_id << " overrides unknown joint ("
+           << ov.parent_id << " -> " << ov.child_id << ")";
+        *error = os.str();
+      }
+      return false;
+    }
+  }
+
+  std::string local_err;
+  if (config.find_root(&local_err) < 0) {
+    if (error != nullptr) {
+      *error = local_err;
+    }
+    return false;
+  }
+
+  DomainGraph tmp;
+  for (const auto &d : config.domains) {
+    if (!tmp.addDomain(d.id)) {
+      if (error != nullptr) {
+        std::ostringstream os;
+        os << "failed to add receptor domain " << d.id;
+        *error = os.str();
+      }
+      return false;
+    }
+  }
+
+  for (const auto &j : config.joints) {
+    RigidTransform t;
+    if (j.type == JointType::Hinge) {
+      if (!nonzero_axis(j.axis_direction)) {
+        if (error != nullptr) {
+          std::ostringstream os;
+          os << "receptor hinge joint (" << j.parent_id << " -> " << j.child_id
+             << ") has zero-length axis direction";
+          *error = os.str();
+        }
+        return false;
+      }
+      double angle = j.initial_angle_radians;
+      for (const auto &ov : state.hinge_angles) {
+        if (ov.parent_id == j.parent_id && ov.child_id == j.child_id) {
+          angle = ov.angle_radians;
+          break;
+        }
+      }
+      t = hinge_transform(j.axis_point, j.axis_direction, angle);
     } else {
       t = RigidTransform::identity();
     }
