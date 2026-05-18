@@ -75,14 +75,15 @@ include(FetchContent)
 #   3. FetchContent_Declare(GIT_REPOSITORY ...) and build from source.
 #
 # F2Dock links cvc::xmlrpc (XML-RPC support used by F2DockServer). When
-# the prebuilt archive does not ship cvc::xmlrpc, strategies 1 and 2 are
-# rejected and we fall through to the source build. libcvc <= 3.1.1
-# does NOT ship xmlrpc in its release artifacts, so today this always
-# falls through to strategy 3; once libcvc starts publishing
-# cvc::xmlrpc the prebuilt path activates automatically.
-set(LIBCVC_TAG     "v3.2.0" CACHE STRING "libcvc release tag to consume")
-set(LIBCVC_VERSION "3.2.0"  CACHE STRING "libcvc package version to look up")
-set(LIBCVC_GIT_SHA "4af186a0641191b82ec3ea4799e81465c274c52c"
+# the prebuilt archive does not ship cvc::xmlrpc, or when no prebuilt
+# archive has been published for the requested tag at all, strategies
+# 1 and 2 are rejected and we fall through to the source build (which
+# in turn pulls libcvc-deps for the heavy science stack, including
+# NFFT). The source path is the supported way to consume a libcvc
+# release that does not yet have platform binaries attached.
+set(LIBCVC_TAG     "v3.2.1" CACHE STRING "libcvc release tag to consume")
+set(LIBCVC_VERSION "3.2.1"  CACHE STRING "libcvc package version to look up")
+set(LIBCVC_GIT_SHA "86c6224a36eedf30645abbca711dfa43b7a87545"
     CACHE STRING "libcvc commit SHA used when falling through to source build")
 option(LIBCVC_FORCE_SOURCE "Skip prebuilt libcvc and always build from source" OFF)
 set(LIBCVC_NEEDS_XMLRPC TRUE)
@@ -93,6 +94,10 @@ set(CVC_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
 set(CVC_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
 set(CVC_BUILD_VOLROVER3 OFF CACHE BOOL "" FORCE)
 set(CVC_USING_XMLRPC ON CACHE BOOL "" FORCE)
+# F2Dock does not load MRC volumes. Disable libcvc's IMOD MRC path so the
+# source build does not require libiimod (only shipped via libcvc-deps as
+# of libcvc 3.2.1).
+set(CVC_USING_IMOD_MRC OFF CACHE BOOL "" FORCE)
 
 function(_libcvc_check_usable out_var)
   set(${out_var} FALSE PARENT_SCOPE)
