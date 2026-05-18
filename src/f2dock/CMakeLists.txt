@@ -52,6 +52,10 @@ if(TARGET f3dock-flex)
   list(APPEND F2DOCK_LINK_LIBS f3dock-flex)
 endif()
 
+if(TARGET f3dock-domain)
+  list(APPEND F2DOCK_LINK_LIBS f3dock-domain)
+endif()
+
 
 ADD_EXECUTABLE (F2Dock ${SOURCE_FILES} ${INCLUDE_FILES})
 

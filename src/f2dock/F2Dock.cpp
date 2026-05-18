@@ -1866,9 +1866,17 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
             return false;
           }
         } else {
-          printf("WARNING: the following line from the parameter has been "
-                 "ignored\n  %s\n",
-                 s);
+          bool domain_ok = false;
+          if (f3dock::domain::DomainSpecParser::parse_param(
+                  key, full_val, &p->receptorDomains, &domain_ok)) {
+            if (!domain_ok) {
+              return false;
+            }
+          } else {
+            printf("WARNING: the following line from the parameter has been "
+                   "ignored\n  %s\n",
+                   s);
+          }
         }
       }
     }

@@ -52,7 +52,7 @@ Completed capabilities have moved to the [Completed work](#completed-work) secti
 2. Add deterministic unit tests before integrating solver outputs into docking flows.
 3. Maintain current F2Dock integration regression suite as a release gate.
 4. Introduce new scientific dependencies as optional, never mandatory.
-5. Use libcvc (currently v3.2.0) as the single source of truth for volume I/O.
+5. Use libcvc (currently v3.2.1) as the single source of truth for volume I/O.
 
 ## Completed work
 
@@ -138,7 +138,7 @@ Work merged via PR #22 (`feature/f3dock-phase3-followups`) and PR #23 (`feature/
 Goal: replace the implicit single-rigid-body receptor with a multi-domain composition driven by `f3dock::domain::DomainGraph`.
 
 Concrete tasks:
-1. Define an input-file syntax for declaring receptor domains and inter-domain joints (likely a sidecar `.domain` JSON).
+1. ~~Define an input-file syntax for declaring receptor domains and inter-domain joints.~~ **Landed.** `ReceptorDomainConfig`, `DomainSpec`, and `JointSpec` live in [inc/f3dock/domain/DomainSpec.h](../inc/f3dock/domain/DomainSpec.h); `DomainSpecParser::parse_param` accepts three new parameter-file keys (`receptorDomain id firstAtom lastAtom`, `receptorJointFixed parentId childId`, `receptorJointHinge parentId childId ax ay az dx dy dz initAngleRad`), validation (duplicate ids, unknown domains, multi-parent, multi-root) plus `build_graph()` populating a `DomainGraph` with rest-pose joint transforms (Rodrigues rotation about an arbitrary axis line for hinges). `PARAMS_IN::receptorDomains` carries the parsed config; it has no runtime effect yet (atom partitioning + scoring-loop refactor are task 2 / task 3). Unit tests in [tests/unit/test_f3dock_domain_spec.cpp](../tests/unit/test_f3dock_domain_spec.cpp). Diverges from the original "likely a sidecar .domain JSON" suggestion because adding a JSON dependency for this small a schema isn't worth it; the inline parameter-file keys match the existing `flexHingeAxis` / `flexShearPlane` pattern.
 2. Replace the receptor's flat atom array with a per-domain partition; compose world transforms via the existing `DomainGraph`.
 3. Refactor the FFT scoring loop so each candidate pose is a *vector* of domain transforms rather than a single 6-DoF transform.
 4. Wire `IcpAligner` (point-to-plane) into a refinement pass on the top-N domain-composed poses.
