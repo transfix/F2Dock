@@ -948,12 +948,12 @@ inline void pseudoGsol::transformPoint(double x, double y, double z,
 }
 
 inline void pseudoGsol::transformPoint(Point p, double *transMat, Point *np) {
-  np->x =
-      transMat[0] * p.x + transMat[1] * p.y + transMat[2] * p.z + transMat[3];
-  np->y =
-      transMat[4] * p.x + transMat[5] * p.y + transMat[6] * p.z + transMat[7];
-  np->z =
-      transMat[8] * p.x + transMat[9] * p.y + transMat[10] * p.z + transMat[11];
+  np->x = (float)(transMat[0] * p.x + transMat[1] * p.y + transMat[2] * p.z +
+                  transMat[3]);
+  np->y = (float)(transMat[4] * p.x + transMat[5] * p.y + transMat[6] * p.z +
+                  transMat[7]);
+  np->z = (float)(transMat[8] * p.x + transMat[9] * p.y + transMat[10] * p.z +
+                  transMat[11]);
 }
 
 double pseudoGsol::computeXlateForPG(int numStQPoints, QPOINT *stQPoints,

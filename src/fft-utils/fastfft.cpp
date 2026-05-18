@@ -95,9 +95,9 @@ void gridding(int M, double *x, double *y, double *z, float *r, char *type,
     // influence; observe that xL, xU, yL, yU, zL, zU \in [ -n/2, n/2 )
     int xL, xU, yL, yU, zL, zU;
 
-    xL = floor(xc) - m, xU = (int)(ceil(xc) + m);
-    yL = floor(yc) - m, yU = (int)(ceil(yc) + m);
-    zL = floor(zc) - m, zU = (int)(ceil(zc) + m);
+    xL = (int)(floor(xc) - m), xU = (int)(ceil(xc) + m);
+    yL = (int)(floor(yc) - m), yU = (int)(ceil(yc) + m);
+    zL = (int)(floor(zc) - m), zU = (int)(ceil(zc) + m);
 
     // apply atom s's influence
     for (int zt = zL; zt <= zU; zt++)

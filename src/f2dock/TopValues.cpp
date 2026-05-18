@@ -69,7 +69,7 @@ int TopValues::getCurrentNumberOfPositions() {
 
 int TopValues::getGridSize() { return m_GridSize; }
 
-int TopValues::getCurMin() { return m_CurMin; }
+int TopValues::getCurMin() { return (int)(m_CurMin); }
 
 inline void TopValues::deleteMin() {
   if (m_CurrentNumberOfPositions > 0) {

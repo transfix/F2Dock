@@ -279,9 +279,9 @@ void PG::addPoint(Point *a) {
   center.z += (float)(TRANSLATE);
   //  double radius = a->getr();
 
-  int cz = (int)center.z / DIM;
-  int cy = (int)center.y / DIM;
-  int cx = (int)center.x / DIM;
+  int cz = (int)((int)center.z / DIM);
+  int cy = (int)((int)center.y / DIM);
+  int cx = (int)((int)center.x / DIM);
   RangeTuple<plane *> temp;
   plane *p;
   line *l;
@@ -339,9 +339,9 @@ void PG::removePoint(Point *a) {
   //  double radius = a->getr();
 
   cout << "REMOVING AN ATOM " << endl;
-  int cz = (int)center.z / DIM;
-  int cy = (int)center.y / DIM;
-  int cx = (int)center.x / DIM;
+  int cz = (int)((int)center.z / DIM);
+  int cy = (int)((int)center.y / DIM);
+  int cx = (int)((int)center.x / DIM);
 
   vector<RangeTuple<plane *>> P = g.RR.report(cz, cz);
   if (P.empty()) {

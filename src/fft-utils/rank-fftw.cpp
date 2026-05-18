@@ -241,7 +241,7 @@ int rankFFTWSizesByTime(int minSize, int maxSize) {
     return MEMORY_ALLOCATION_FAILED;
   }
 
-  srand(time(NULL));
+  srand((unsigned int)time(NULL));
 
 #ifdef FFTW_SINGLE_PRECISION
   printf("# Measuring 3D FFTW performance on single precision floats\n");
