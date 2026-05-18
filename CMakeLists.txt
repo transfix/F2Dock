@@ -94,6 +94,10 @@ set(CVC_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
 set(CVC_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
 set(CVC_BUILD_VOLROVER3 OFF CACHE BOOL "" FORCE)
 set(CVC_USING_XMLRPC ON CACHE BOOL "" FORCE)
+# F2Dock does not load MRC volumes. Disable libcvc's IMOD MRC path so the
+# source build does not require libiimod (only shipped via libcvc-deps as
+# of libcvc 3.2.1).
+set(CVC_USING_IMOD_MRC OFF CACHE BOOL "" FORCE)
 
 function(_libcvc_check_usable out_var)
   set(${out_var} FALSE PARENT_SCOPE)
