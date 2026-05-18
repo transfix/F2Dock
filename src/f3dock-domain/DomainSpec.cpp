@@ -10,8 +10,6 @@
 #include <sstream>
 #include <string>
 
-
-
 namespace f3dock {
 namespace domain {
 
@@ -207,9 +205,8 @@ bool ReceptorDomainConfig::build_graph(DomainGraph *graph,
     if (!tmp.setParent(j.child_id, j.parent_id, t)) {
       if (error != nullptr) {
         std::ostringstream os;
-        os << "failed to attach receptor domain " << j.child_id
-           << " to parent " << j.parent_id
-           << " (cycle or unknown id)";
+        os << "failed to attach receptor domain " << j.child_id << " to parent "
+           << j.parent_id << " (cycle or unknown id)";
         *error = os.str();
       }
       return false;
@@ -294,5 +291,3 @@ bool DomainSpecParser::parse_param(const char *key, const char *value,
 
 } // namespace domain
 } // namespace f3dock
-
-
