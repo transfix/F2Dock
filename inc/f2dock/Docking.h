@@ -63,6 +63,8 @@
 #include "vol/RAWIV.h"
 #include "ValuePosition3D.h"
 
+#include "f3dock/domain/DomainGraph.h"
+#include "f3dock/domain/DomainPartition.h"
 #include "f3dock/domain/DomainSpec.h"
 #include "f3dock/flex/FlexSampler.h"
 
@@ -491,11 +493,14 @@ typedef struct {
   // the parser and the parameter-file syntax (`receptorDomain`,
   // `receptorJointFixed`, `receptorJointHinge`).
   //
-  // Phase 4 task 1 (this field): syntax + validation only. Phase 4
-  // tasks 2-3 will partition the receptor atom array per
-  // `DomainSpec` and drive a per-domain transform vector through the
-  // FFT scoring loop.
+  // Phase 4 task 1: syntax + validation. Phase 4 task 2 (these
+  // companion fields): per-domain atom partition + rest-pose domain
+  // graph, populated after the receptor is loaded so callers can
+  // resolve any atom -> world transform. Phase 4 task 3 will drive a
+  // per-domain transform vector through the FFT scoring loop.
   f3dock::domain::ReceptorDomainConfig receptorDomains;
+  f3dock::domain::DomainPartition receptorDomainPartition;
+  f3dock::domain::DomainGraph receptorDomainGraph;
 
 } PARAMS_IN;
 

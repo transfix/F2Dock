@@ -82,8 +82,16 @@ include(FetchContent)
 # NFFT). The source path is the supported way to consume a libcvc
 # release that does not yet have platform binaries attached.
 set(LIBCVC_TAG     "v3.2.1" CACHE STRING "libcvc release tag to consume")
-set(LIBCVC_VERSION "3.2.1"  CACHE STRING "libcvc package version to look up")
-set(LIBCVC_GIT_SHA "86c6224a36eedf30645abbca711dfa43b7a87545"
+# Package version that libcvc reports via cvcConfigVersion.cmake. The v3.2.1
+# release artifacts still carry the 3.2.0 project version baked at build
+# time (the bump shipped in #64 was tagged but not re-versioned in the
+# CMake project() call). Keep the find_package() version match aligned
+# with what's actually inside the prebuilt archive so the prebuilt path
+# does not silently fall through to a from-source build.
+set(LIBCVC_VERSION "3.2.0"  CACHE STRING "libcvc package version to look up")
+set(LIBCVC_ARCHIVE_VERSION "${LIBCVC_VERSION}"
+    CACHE STRING "Version string embedded in the prebuilt archive filename")
+set(LIBCVC_GIT_SHA "08c15b5e244564469a34cddb6cdea00c87add906"
     CACHE STRING "libcvc commit SHA used when falling through to source build")
 option(LIBCVC_FORCE_SOURCE "Skip prebuilt libcvc and always build from source" OFF)
 set(LIBCVC_NEEDS_XMLRPC TRUE)
@@ -140,7 +148,7 @@ if(NOT _libcvc_usable AND NOT LIBCVC_FORCE_SOURCE)
     set(_libcvc_cfg "release")
   endif()
   if(DEFINED _libcvc_plat)
-    set(_libcvc_archive "libcvc-${LIBCVC_VERSION}-${_libcvc_plat}-${_libcvc_cfg}.${_libcvc_ext}")
+    set(_libcvc_archive "libcvc-${LIBCVC_ARCHIVE_VERSION}-${_libcvc_plat}-${_libcvc_cfg}.${_libcvc_ext}")
     set(_libcvc_url     "https://github.com/transfix/libcvc/releases/download/${LIBCVC_TAG}/${_libcvc_archive}")
     set(_libcvc_stage   "${CMAKE_BINARY_DIR}/libcvc-prebuilt")
     set(_libcvc_cfgfile "${_libcvc_stage}/lib/cmake/cvc/cvcConfig.cmake")
