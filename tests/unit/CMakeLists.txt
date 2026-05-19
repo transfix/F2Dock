@@ -135,6 +135,13 @@ if(TARGET f3dock-domain)
   )
 endif()
 
+if(TARGET f3dock-nfft)
+  f2dock_add_test(test_f3dock_nfft_fast_gaussian_sum
+    SOURCES test_f3dock_nfft_fast_gaussian_sum.cpp
+    LIBS f3dock-nfft
+  )
+endif()
+
 # ── Header-only DockMode parser tests (no library dep) ──
 add_executable(test_dock_mode test_dock_mode.cpp)
 target_include_directories(test_dock_mode PRIVATE ${F2DOCK_INC})
