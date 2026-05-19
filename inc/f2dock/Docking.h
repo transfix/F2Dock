@@ -516,6 +516,18 @@ typedef struct {
   int domainMaxStates;
   int activeDomainStateIndex;
 
+  // Phase 4 task 4: post-FFT point-to-plane ICP refinement on the
+  // top-N final poses. Disabled by default; when enabled, each of
+  // the top `icpRefineTopN` poses (ranked by overall score) has its
+  // rotation/translation refined against the receptor point cloud
+  // before the pose is written to the .out file. Leaves rigid
+  // F2Dock-mode runs bit-for-bit identical when `icpRefineEnabled`
+  // is false.
+  bool icpRefineEnabled;
+  int icpRefineTopN;
+  double icpRefineInlierDist;
+  int icpRefineNumNeighbors;
+
 } PARAMS_IN;
 
 class TopValues;

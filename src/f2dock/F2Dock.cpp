@@ -1669,6 +1669,41 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
         }
         p->domainMaxStates = ival;
 
+      } else if (strcasecmp(key, "icpRefine") == 0) {
+        if (strcasecmp(val, "true") == 0)
+          p->icpRefineEnabled = true;
+        else if (strcasecmp(val, "false") == 0)
+          p->icpRefineEnabled = false;
+        else {
+          printf("Error: %s must be a Boolean value!\n", key);
+          return false;
+        }
+
+      } else if (strcasecmp(key, "icpRefineTopN") == 0) {
+        ival = atoi(val);
+        if (ival <= 0) {
+          printf("Error: icpRefineTopN must be a positive integer!\n");
+          return false;
+        }
+        p->icpRefineTopN = ival;
+
+      } else if (strcasecmp(key, "icpRefineInlierDist") == 0) {
+        dval = atof(val);
+        if (dval < 0) {
+          printf("Error: icpRefineInlierDist must be a non-negative real "
+                 "value!\n");
+          return false;
+        }
+        p->icpRefineInlierDist = dval;
+
+      } else if (strcasecmp(key, "icpRefineNumNeighbors") == 0) {
+        ival = atoi(val);
+        if (ival < 3) {
+          printf("Error: icpRefineNumNeighbors must be >= 3!\n");
+          return false;
+        }
+        p->icpRefineNumNeighbors = ival;
+
       } else if (strcasecmp(key, "bandwidth") == 0) {
         dval = atof(val);
         if (dval < 0) {
@@ -2208,6 +2243,10 @@ int main(int argc, char *argv[]) {
   pr.activeFlexStateIndex = 0;
   pr.domainMaxStates = 4096;
   pr.activeDomainStateIndex = 0;
+  pr.icpRefineEnabled = false;
+  pr.icpRefineTopN = 10;
+  pr.icpRefineInlierDist = 5.0;
+  pr.icpRefineNumNeighbors = 10;
   pr.numberOfPositions = 20000;
   pr.gridSize = 256;
   pr.gridSizeSpecified = false;

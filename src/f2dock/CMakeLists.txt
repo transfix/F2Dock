@@ -56,6 +56,10 @@ if(TARGET f3dock-domain)
   list(APPEND F2DOCK_LINK_LIBS f3dock-domain)
 endif()
 
+if(TARGET f3dock-icp)
+  list(APPEND F2DOCK_LINK_LIBS f3dock-icp)
+endif()
+
 
 ADD_EXECUTABLE (F2Dock ${SOURCE_FILES} ${INCLUDE_FILES})
 
