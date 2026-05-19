@@ -1,0 +1,41 @@
+staticMolecule tests/1A2K_R_U_1.7.f2d
+movingMolecule tests/1A2K_L_U.f2d
+staticMoleculePQR tests/1A2K_R_U.pqr
+movingMoleculePQR tests/1A2K_L_U.pqr
+staticMoleculeQUAD tests/1A2K_R_U.quad
+movingMoleculeQUAD tests/1A2K_L_U.quad
+rmsdAtoms tests/1A2K_rmsd_backbone_unbound_10.0.txt
+outFile tests/integration/expected/1A2K_domain_smoke_out.txt
+
+rotFile deg15.mtx
+numRot 54
+effGridFile fftw-rank.txt
+
+complexType G
+numSolutions 200
+rerank true
+numRerank 50
+
+breakDownScores true
+
+numThreads 1
+
+# Phase 4 task 5: hinge-joined two-domain receptor against a rigid
+# ligand. The 1A2K receptor (3895 atoms) is split into two halves at
+# atom 1948, joined by a z-axis hinge through the origin. A 2-state
+# sweep (0 deg, 5 deg) exercises the f3-mode cross-product loop
+# n_flex_states x n_domain_states (here 1 x 2 = 2). Verifies that:
+#   * dockMode f3 with a domainSampling cross-product runs dockingMain
+#     once per domain state
+#   * DomainPartition::apply mutates the receptor atoms belonging to
+#     the rotated domain (id=1) while the root domain (id=0) is
+#     untouched
+#   * pose rows from non-identity domain states differ from those of
+#     the identity state (visible in the committed baseline as
+#     distinct trans/rotation entries across the two per-state result
+#     tables)
+dockMode f3
+receptorDomain 0 0 1948
+receptorDomain 1 1948 3895
+receptorJointHinge 0 1  0 0 0  0 0 1  0.0
+receptorJointHingeSweep 0 1  0.0 0.0872664626 2
