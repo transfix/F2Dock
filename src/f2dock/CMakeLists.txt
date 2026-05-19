@@ -60,6 +60,15 @@ if(TARGET f3dock-icp)
   list(APPEND F2DOCK_LINK_LIBS f3dock-icp)
 endif()
 
+# Phase 5 task 1: pull in the optional scientific stack INTERFACE
+# target so F2Dock's startup diagnostic can compile-time detect
+# F2DOCK_HAVE_NFFT (and future F2DOCK_HAVE_* macros). The INTERFACE
+# target adds nothing to the link line when the optional deps are
+# not present.
+if(TARGET f3dock_science_stack)
+  list(APPEND F2DOCK_LINK_LIBS f3dock_science_stack)
+endif()
+
 
 ADD_EXECUTABLE (F2Dock ${SOURCE_FILES} ${INCLUDE_FILES})
 
