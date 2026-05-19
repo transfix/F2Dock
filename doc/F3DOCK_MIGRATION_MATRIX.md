@@ -41,9 +41,9 @@ Completed capabilities have moved to the [Completed work](#completed-work) secti
 |---|---|---:|---:|---|
 | Phase 3 follow-ups: real `.f2d` integration test, B-side gridding hoist | Medium | Low-Medium | Low | **Phase 3 close-out (landed)**: real-complex flex integration test landed via PR #22 (`tests/integration/inputs/1A2K_flex_smoke.inp` + baseline, 2-state hinge over `1A2K`); flex-state loop relocated from the CLI into `dock()` / `scoreUntransformed()` (`runFlexStates` in `Docking.cpp`) so library callers also get multi-state behaviour and there is a single seam for a future partition of `dockingMain` into state-invariant setup + per-state body + teardown (tracked as a `TODO(perf)` on `runFlexStates`). |
 | Domain graph modeling **runtime integration** | Medium-High for flexible docking workflows | High | High | **Phase 4**: wire `f3dock::domain::DomainGraph` into multi-domain pose composition; needs scoring-loop refactor |
-| Blurmaps / GOA molecular surface stack | Medium | High | High | Defer until baseline flexible pipeline lands |
-| PRGN / extra geometry stack | Medium | High | High | Defer; extract only needed pieces once use-cases are clear |
-| NFFT-based acceleration paths | Medium-High (for some workloads) | High | High | Keep optional; dependency detection already in place, do not hard-require |
+| Blurmaps / GOA molecular surface stack | Medium | Low-Medium | Low | **Consume from libcvc** when a concrete F2Dock use-case lands; push gaps upstream rather than vendoring a second copy. |
+| PRGN / extra geometry stack | Medium | Low-Medium | Low-Medium | **Consume from libcvc** as needed; push gaps upstream. Tracked under Phase 5 below as the libcvc geometry consumer task. |
+| NFFT-based acceleration paths | Medium-High (for some workloads) | Medium | Medium | Phase 5 below. Optional, behind an explicit input-file flag; dependency detection already in place, do not hard-require. |
 | Full F3Dock executable behavior parity | Very High long-term | Very High | Very High | Tracked as the sum of remaining Phase 3 close-out + Phase 4 + deferred items above |
 
 ## Porting Principles
@@ -146,8 +146,17 @@ Concrete tasks:
 
 Risk: high. This was the scoring-loop refactor that the original F3Dock executable was built around; ended up spanning PRs #24, #27, #28, #29, and the domain-integration test PR — all five Phase 4 tasks have now landed on `master`.
 
-### Deferred until after Phase 4
+### Phase 5 — optional acceleration and libcvc-backed geometry
 
-- Blurmaps / GOA molecular surface stack.
-- PRGN / extra geometry stack.
-- NFFT-accelerated scoring paths (dependency detection is already in place; only enable behind an explicit flag after Phase 4 lands).
+Guiding principle (per the project owner): F2Dock should not vendor a second copy of geometry / surface code that already lives, or that we want to live, in libcvc. The remaining "deferred" items therefore split along two axes:
+
+- **Acceleration knob, owned by F2Dock**: NFFT-backed fast Gaussian sums for the electrostatics / pseudoatom-skin gridding. The dependency is already wired into the optional `f3dock_science_stack` INTERFACE target (`F2DOCK_HAVE_NFFT` macro, `PkgConfig::NFFT` link), so this is a code-only task gated behind an explicit input-file flag.
+- **Geometry / surface stacks, owned by libcvc**: Blurmaps / GOA molecular surface generation and the PRGN geometry pieces are *not* ported into F2Dock. When a concrete F2Dock pipeline needs one of them, F2Dock should `find_package(cvc CONFIG)` a libcvc target that exposes the capability and depend on that. Missing capabilities are filed and patched upstream in libcvc (which F2Dock already pins via `LIBCVC_TAG`).
+
+Concrete tasks:
+1. **NFFT acceleration plumbing** — surface an `nfftAccelerate` input-file flag (default off) parsed into `PARAMS_IN`; print a one-line startup diagnostic (`NFFT acceleration: requested=on/off available=yes/no active=...`); reject `nfftAccelerate true` with a clear message when `F2DOCK_HAVE_NFFT` is not defined at compile time. No scoring-path change yet. Unit test the parse + diagnostic.
+2. **`f3dock-nfft` fast Gaussian sum wrapper** — new optional static library exposing `f3dock::nfft::fast_gaussian_sum(centers, weights, sigma, query_points, out)` backed by NFFT3's fastsum module; built only when `F2DOCK_HAVE_NFFT=1`. Deterministic unit tests compare against the direct O(N·M) sum for small N, M (tolerance ~1e-6) and assert single-point identity.
+3. **NFFT in the electrostatics gridding path** — when `nfftAccelerate=true` and the library is available, route the elec-grid construction in `Docking.cpp` through `fast_gaussian_sum` instead of the current rasterize-then-FFT path. Integration test: add an `1A2K_nfft_smoke` case that exercises the flag and asserts the top-50 rows match the non-NFFT baseline within a loosened tolerance (the algorithms are numerically distinct, not bit-identical).
+4. **libcvc geometry consumer** — audit which concrete F2Dock pipelines still rely on legacy `Blurmaps` / `GOA` / `PRGN` semantics (surface generation, signed-distance fields, mesh I/O) and replace each with a call into libcvc (`cvc::SDF`, `cvc::Geometry`, etc.). File upstream issues for any capability libcvc does not yet expose; do not vendor a parallel copy.
+
+Risk: medium. Task 3 is the only one that touches the scoring numerics and lands behind an explicit opt-in flag; task 4 is mostly link-graph plumbing that is exercised by existing integration baselines.

@@ -528,6 +528,15 @@ typedef struct {
   double icpRefineInlierDist;
   int icpRefineNumNeighbors;
 
+  // Phase 5 task 1: opt-in NFFT acceleration for downstream
+  // scoring paths. Currently a no-op aside from startup diagnostics
+  // and the configure-time availability check; subsequent PRs wire
+  // it into the electrostatics gridding once `f3dock-nfft` lands.
+  // The flag is rejected at parse time when the build does not
+  // have `F2DOCK_HAVE_NFFT` defined, so misconfigured inputs fail
+  // fast instead of silently running the non-accelerated path.
+  bool nfftAccelerate;
+
 } PARAMS_IN;
 
 class TopValues;

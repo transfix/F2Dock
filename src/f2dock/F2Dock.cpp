@@ -1704,6 +1704,25 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
         }
         p->icpRefineNumNeighbors = ival;
 
+      } else if (strcasecmp(key, "nfftAccelerate") == 0) {
+        if (strcasecmp(val, "true") == 0) {
+#ifdef F2DOCK_HAVE_NFFT
+          p->nfftAccelerate = true;
+#else
+          printf("Error: nfftAccelerate=true requested but this F2Dock "
+                 "build was configured without NFFT support "
+                 "(F2DOCK_HAVE_NFFT undefined). Rebuild with the optional "
+                 "f3dock_science_stack enabled and libnfft3 available, or "
+                 "set nfftAccelerate=false.\n");
+          return false;
+#endif
+        } else if (strcasecmp(val, "false") == 0) {
+          p->nfftAccelerate = false;
+        } else {
+          printf("Error: %s must be a Boolean value!\n", key);
+          return false;
+        }
+
       } else if (strcasecmp(key, "bandwidth") == 0) {
         dval = atof(val);
         if (dval < 0) {
@@ -2247,6 +2266,7 @@ int main(int argc, char *argv[]) {
   pr.icpRefineTopN = 10;
   pr.icpRefineInlierDist = 5.0;
   pr.icpRefineNumNeighbors = 10;
+  pr.nfftAccelerate = false;
   pr.numberOfPositions = 20000;
   pr.gridSize = 256;
   pr.gridSizeSpecified = false;
@@ -2590,6 +2610,23 @@ int main(int argc, char *argv[]) {
   }
   printf("Docking mode: %s\n",
          f3dock::to_string(static_cast<f3dock::DockMode>(pr.dockMode)));
+
+  // Phase 5 task 1: report NFFT acceleration plumbing state. Three
+  // axes are reported so input authors and CI logs can distinguish
+  // "feature off by default" from "feature requested but build does
+  // not have the optional dependency":
+  //   requested = the value parsed out of the input file / default
+  //   available = whether F2DOCK_HAVE_NFFT was defined at compile time
+  //   active    = requested && available (the gating used downstream)
+#ifdef F2DOCK_HAVE_NFFT
+  const bool nfft_available = true;
+#else
+  const bool nfft_available = false;
+#endif
+  const bool nfft_active = pr.nfftAccelerate && nfft_available;
+  printf("NFFT acceleration: requested=%s available=%s active=%s\n",
+         pr.nfftAccelerate ? "on" : "off", nfft_available ? "yes" : "no",
+         nfft_active ? "yes" : "no");
 
   // F3Dock mode: enumerate hinge/shear flex states up front so the FFT
   // scoring loop can iterate `pr.flexStates` unconditionally. With no
