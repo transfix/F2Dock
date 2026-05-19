@@ -23,6 +23,7 @@
 #include "Docking.h"
 
 #include "TopValues.h"
+#include "f2dock/IcpRefine.h"
 #include "f3dock/DockMode.h"
 #include "f3dock/flex/FlexApply.h"
 #include <vector>
@@ -2810,6 +2811,40 @@ void printIntermediateStats(FILE *fp, int rmsdToReport, int rmsdGood,
     //          rmsd = baseComplex->getRMSD( transformation,
     //          unboundLigandAtomList[ c ], unboundLigandInterfaceAtomIndex[ c
     //          ] );
+
+    // Phase 4 task 4: optional point-to-plane ICP refinement on the
+    // top-N final poses. Disabled by default; when enabled, refine
+    // the rotation/translation in `transformation` in place before
+    // it is written to the .out file.
+    if (pr->pri && pr->pri->icpRefineEnabled &&
+        (n + 1) <= pr->pri->icpRefineTopN) {
+      std::array<std::array<double, 3>, 3> Rpose;
+      std::array<double, 3> tpose;
+      for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+          Rpose[i][j] = transformation.get(i, j);
+        }
+        tpose[i] = transformation.get(i, 3);
+      }
+      f2dock::IcpRefineConfig cfg;
+      cfg.enabled = true;
+      cfg.top_n = pr->pri->icpRefineTopN;
+      cfg.inlier_distance = pr->pri->icpRefineInlierDist;
+      cfg.num_neighbors = pr->pri->icpRefineNumNeighbors;
+      const auto refined = f2dock::refine_pose_point_to_plane(
+          pr->xkAOrig, pr->ykAOrig, pr->zkAOrig, pr->numCentersA, pr->xkBOrig,
+          pr->ykBOrig, pr->zkBOrig, pr->numCentersB, &Rpose, &tpose, cfg);
+      if (refined.refined) {
+        for (int i = 0; i < 3; ++i) {
+          for (int j = 0; j < 3; ++j) {
+            transformation.set(i, j, static_cast<float>(Rpose[i][j]));
+          }
+          transformation.set(i, 3, static_cast<float>(tpose[i]));
+        }
+        printf("ICP refine rank=%d rmsd_before=%.4f rmsd_after=%.4f\n", n + 1,
+               refined.rmsd_before, refined.rmsd_after);
+      }
+    }
 
     if (!breakDownScores) {
       double riv = rv + iv * unrealWeight;

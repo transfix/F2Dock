@@ -93,6 +93,12 @@ if(TARGET f3dock-icp)
     SOURCES test_f3dock_icp.cpp
     LIBS f3dock-icp
   )
+  f2dock_add_test(test_f2dock_icp_refine
+    SOURCES
+      test_f2dock_icp_refine.cpp
+      ${CMAKE_SOURCE_DIR}/src/f2dock/IcpRefine.cpp
+    LIBS f3dock-icp
+  )
 endif()
 
 if(TARGET f3dock-flex)
