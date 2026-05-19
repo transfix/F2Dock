@@ -77,6 +77,26 @@ add_f2dock_integration_case(
   REL_TOL  1e-5
 )
 
+# Phase 4 F3Dock domain-graph regression: same complex as 1A2K but
+# with the receptor split into two halves at atom 1948 and joined by
+# a z-axis hinge through the origin, swept across two angles
+# (0 deg, 5 deg) via receptorJointHingeSweep. Verifies that:
+#   * dockMode f3 with a domainSampling cross-product runs dockingMain
+#     once per (flex_state, domain_state) pair (here 1 x 2 = 2 states)
+#   * DomainPartition::apply mutates the rotated child domain's atoms
+#     before each FFT pass while the root domain remains fixed
+#   * pose rows from non-identity domain states diverge from the
+#     identity-state results (visible in the committed baseline as
+#     two distinct per-state result tables)
+add_f2dock_integration_case(
+  1A2K_domain
+  INPUT    "${CMAKE_CURRENT_SOURCE_DIR}/inputs/1A2K_domain_smoke.inp"
+  EXPECTED "${CMAKE_CURRENT_SOURCE_DIR}/expected/1A2K_domain_smoke_out.txt"
+  ROWS     50
+  ABS_TOL  1e-3
+  REL_TOL  1e-5
+)
+
 if(TARGET F2DockServer)
   add_test(
     NAME integration_F2DockServer
