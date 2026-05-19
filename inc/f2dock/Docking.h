@@ -65,6 +65,7 @@
 
 #include "f3dock/domain/DomainGraph.h"
 #include "f3dock/domain/DomainPartition.h"
+#include "f3dock/domain/DomainSampler.h"
 #include "f3dock/domain/DomainSpec.h"
 #include "f3dock/flex/FlexSampler.h"
 
@@ -501,6 +502,19 @@ typedef struct {
   f3dock::domain::ReceptorDomainConfig receptorDomains;
   f3dock::domain::DomainPartition receptorDomainPartition;
   f3dock::domain::DomainGraph receptorDomainGraph;
+
+  // Phase 4 task 3: hinge-joint sweep over the receptor domain
+  // graph. Disabled by default; when one or more
+  // `receptorJointHingeSweep` keys are present in the parameter
+  // file, `domainStates` is populated at startup with the cross
+  // product of per-joint angle grids. F3Dock-mode scoring then
+  // iterates `flexStates x domainStates`, with state 0 of each
+  // vector being the rest pose so the no-sweep case is bit-for-bit
+  // identical to the previous behaviour.
+  f3dock::domain::DomainSamplingConfig domainSampling;
+  std::vector<f3dock::domain::DomainState> domainStates;
+  int domainMaxStates;
+  int activeDomainStateIndex;
 
 } PARAMS_IN;
 
