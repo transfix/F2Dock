@@ -121,7 +121,7 @@ jobs:
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$(brew --prefix boost)" >> $GITHUB_ENV
 
-      # ── libcvc-deps bundle (Linux + macOS) ──
+      # ── libcvc-deps bundle (Linux only) ──
       # Pulls a prebuilt dep bundle (FFTW + NFFT3 among others) from
       # the libcvc-deps release page. F2Dock's CMakeLists detects NFFT
       # via pkg_check_modules; pointing PKG_CONFIG_PATH and
@@ -129,8 +129,13 @@ jobs:
       # links libnfft3 into f3dock_science_stack. On miss the action
       # returns an empty path and the build falls back to the system
       # FFTW (no NFFT, same as before).
+      #
+      # macOS is intentionally excluded here: the macos-arm64 bundle
+      # ships its own Boost which shadows brew's and triggers Boost
+      # multi_array concept-check failures inside libcvc's sources.
+      # Re-enable once that compatibility is resolved upstream.
       - name: Fetch libcvc-deps
-        if: runner.os != 'Windows'
+        if: runner.os == 'Linux'
         id: libcvc-deps
         uses: ./.github/actions/fetch-libcvc-deps
         with:
