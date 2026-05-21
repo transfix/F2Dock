@@ -121,6 +121,27 @@ jobs:
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$(brew --prefix boost)" >> $GITHUB_ENV
 
+      # ── libcvc-deps bundle (Linux only) ──
+      # Pulls a prebuilt dep bundle (FFTW + NFFT3 among others) from
+      # the libcvc-deps release page. F2Dock's CMakeLists detects NFFT
+      # via pkg_check_modules; pointing PKG_CONFIG_PATH and
+      # CMAKE_PREFIX_PATH at the bundle activates F2DOCK_HAVE_NFFT and
+      # links libnfft3 into f3dock_science_stack. On miss the action
+      # returns an empty path and the build falls back to the system
+      # FFTW (no NFFT, same as before).
+      #
+      # macOS is intentionally excluded here: the macos-arm64 bundle
+      # ships its own Boost which shadows brew's and triggers Boost
+      # multi_array concept-check failures inside libcvc's sources.
+      # Re-enable once that compatibility is resolved upstream.
+      - name: Fetch libcvc-deps
+        if: runner.os == 'Linux'
+        id: libcvc-deps
+        uses: ./.github/actions/fetch-libcvc-deps
+        with:
+          build_type: Release
+          link: shared
+
       # ── Windows dependencies (vcpkg) ──
       # cgal pulls gmp, which fetches gmp-6.3.0.tar.xz from a GNU mirror
       # that times out roughly 1-in-3 cold runs. We mitigate with:
@@ -197,6 +218,24 @@ jobs:
           integration_tests=OFF
           if [ "${{ matrix.integration }}" = "true" ]; then
             integration_tests=ON
+          fi
+          # If libcvc-deps was fetched successfully, expose its
+          # include/lib/pkgconfig trees so pkg_check_modules(NFFT) and
+          # any future find_package() calls pick it up. Existing
+          # CMAKE_PREFIX_PATH (e.g. brew Boost root) is preserved.
+          deps_path="${{ steps.libcvc-deps.outputs.path }}"
+          if [ -n "$deps_path" ]; then
+            export CMAKE_PREFIX_PATH="$deps_path${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}"
+            export PKG_CONFIG_PATH="$deps_path/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+            # Persist for subsequent build/test steps so the dynamic
+            # loader can resolve libnfft3.so / libfftw3.so etc.
+            echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
+            echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"     >> "$GITHUB_ENV"
+            if [ "$RUNNER_OS" = "macOS" ]; then
+              echo "DYLD_LIBRARY_PATH=$deps_path/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+            else
+              echo "LD_LIBRARY_PATH=$deps_path/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"       >> "$GITHUB_ENV"
+            fi
           fi
           cmake_args=(
             -B build
