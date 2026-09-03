@@ -46,6 +46,23 @@ Completed capabilities have moved to the [Completed work](#completed-work) secti
 | NFFT-based acceleration paths | Medium-High (for some workloads) | Medium | Medium | Phase 5 below. Optional, behind an explicit input-file flag; dependency detection already in place, do not hard-require. |
 | Full F3Dock executable behavior parity | Very High long-term | Very High | Very High | Tracked as the sum of remaining Phase 3 close-out + Phase 4 + deferred items above |
 
+## Licensing constraint on the ICP path
+
+`libicp` (`inc/libicp/`, `src/f3dock-icp/`) is **GPL-2.0-or-later** while F2Dock
+is LGPL-2.1-only, so the whole `f3dock-icp` target -- including UT Austin's own
+`IcpAligner` wrapper, which has nothing to wrap without it -- sits behind
+`-DF2DOCK_ENABLE_GPL_COMPONENTS=ON` and is **not built by default**. The
+`icpRefine` parameter is rejected with an explanation in a default build, and
+`f2dock::refine_pose_point_to_plane` compiles to a no-op returning
+`refined == false`. Everything described under Phase 2 and Phase 4 task 4 below
+is therefore accurate but only reachable in a GPL build.
+
+The same applies to the sparse FFT (`sparsefft3`) behind `useSparseFFT`; the
+default build uses dense FFTW, which produces the same scores.
+
+Any future F3Dock parity work that reaches for `IcpAligner` needs either that
+build flag or a permissively-licensed ICP. See [THIRD-PARTY.md](../THIRD-PARTY.md).
+
 ## Porting Principles
 
 1. Keep legacy-derived code optional and isolated behind build options.
