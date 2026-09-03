@@ -175,6 +175,8 @@ doc/              Parameter and dependency documentation
 ## License
 
 [GNU Lesser General Public License v2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html)
+only. The full text is in [`LICENSE`](LICENSE), and it is what CPack ships in
+generated packages.
 
 ## Contact
 
