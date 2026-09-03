@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+// SPDX-License-Identifier: LGPL-2.1-only
 //
 // Unit tests for f3dock::DockMode parsing and stringification.
 
