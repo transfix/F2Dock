@@ -121,17 +121,23 @@ include(FetchContent)
 # in turn pulls libcvc-deps for the heavy science stack, including
 # NFFT). The source path is the supported way to consume a libcvc
 # release that does not yet have platform binaries attached.
-set(LIBCVC_TAG     "v3.2.1" CACHE STRING "libcvc release tag to consume")
-# Package version that libcvc reports via cvcConfigVersion.cmake. The v3.2.1
-# release artifacts still carry the 3.2.0 project version baked at build
-# time (the bump shipped in #64 was tagged but not re-versioned in the
-# CMake project() call). Keep the find_package() version match aligned
-# with what's actually inside the prebuilt archive so the prebuilt path
-# does not silently fall through to a from-source build.
-set(LIBCVC_VERSION "3.2.0"  CACHE STRING "libcvc package version to look up")
+set(LIBCVC_TAG     "v3.3.0" CACHE STRING "libcvc release tag to consume")
+# Version the find_package() calls in strategies 1 and 2 match against. It
+# doubles as a compatibility floor: libcvc 3.3.0 moved its public headers into
+# subdirectories (cvc/app.h -> cvc/core/app.h, cvc/volume.h ->
+# cvc/volume/volume.h, ...) and dropped the CVC_NAMESPACE macro, both of which
+# src/vol/RAWIV.cpp now depends on. Asking for 3.3.0 makes an older installed
+# or prebuilt libcvc fail the version check and fall through to the source
+# build rather than fail to compile.
+set(LIBCVC_VERSION "3.3.0"  CACHE STRING "libcvc package version to look up")
 set(LIBCVC_ARCHIVE_VERSION "${LIBCVC_VERSION}"
     CACHE STRING "Version string embedded in the prebuilt archive filename")
-set(LIBCVC_GIT_SHA "08c15b5e244564469a34cddb6cdea00c87add906"
+# Ahead of v3.3.0 by the CGAL 6 fix (transfix/libcvc#324): reg3data.h defined a
+# function-like `error(x)` macro at file scope, which rewrites CGAL 6's
+# Static_filter_error::error() and breaks every macOS and Windows build now
+# that Homebrew and vcpkg ship CGAL 6.2. v3.3.0 itself still has the macro, so
+# the source path has to be pinned past the tag.
+set(LIBCVC_GIT_SHA "72faa8bf308623410e9c39ccf49c19ef65f2717b"
     CACHE STRING "libcvc commit SHA used when falling through to source build")
 option(LIBCVC_FORCE_SOURCE "Skip prebuilt libcvc and always build from source" OFF)
 set(LIBCVC_NEEDS_XMLRPC TRUE)
