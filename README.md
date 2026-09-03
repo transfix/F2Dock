@@ -37,6 +37,35 @@ cmake --build build --parallel
 
 Executables are placed in `build/bin/`.
 
+#### Optional GPL components
+
+Two vendored modules are GPL-2.0-or-later while F2Dock itself is LGPL-2.1-only,
+so they are **not built by default**:
+
+| Module | Feature it backs | Upstream |
+|---|---|---|
+| `sparsefft3` | `useSparseFFT` — sparse 3-D FFT | MIT 2000, modified at CVC Lab |
+| `libicp` | `icpRefine` — point-to-plane pose refinement | Andreas Geiger, KIT |
+
+The default build uses the **dense FFTW** transform instead of the sparse one.
+It is slower, and it produces the same scores. `icpRefine` is unavailable.
+Both parameters are rejected with an explanatory message rather than silently
+ignored, and the binary prints which modules it contains at startup:
+
+```
+GPL components: sparseFFT=no libicp=no (build licence: LGPL-2.1-only)
+FFT path: dense (FFTW)
+```
+
+To build them:
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DF2DOCK_ENABLE_GPL_COMPONENTS=ON
+```
+
+The resulting binary is a combined work covered by the GNU GPL v2 or later,
+**not** by F2Dock's LGPL-2.1. See [THIRD-PARTY.md](THIRD-PARTY.md).
+
 ### Run
 
 ```
@@ -94,6 +123,8 @@ numThreads       4
 | `rerank` / `numRerank` | Enable GB-Rerank rescoring and number of top poses to rescore |
 | `outFile` | Output file for ranked docking poses |
 | `numThreads` | Number of CPU threads |
+| `useSparseFFT` | Sparse FFT instead of dense FFTW. Requires `-DF2DOCK_ENABLE_GPL_COMPONENTS=ON`; see [Optional GPL components](#optional-gpl-components) |
+| `icpRefine` | Point-to-plane ICP refinement of the top poses. Requires `-DF2DOCK_ENABLE_GPL_COMPONENTS=ON` |
 
 All file paths are relative to the current working directory.  See [doc/params/](doc/params/) for the full parameter reference.
 
@@ -160,7 +191,7 @@ src/
   GB-rerank/      GB-Rerank standalone rescoring tool
   hbondFilter/    Hydrogen-bond post-filter
   math/           Pairing heap, spherical harmonics
-  libmol/         Molecule I/O (PDB/PQR/F2D)
+  libmol/         Molecule I/O (PDB/PQR/F2D) -- not built; see THIRD-PARTY.md
   utils/          Parameter parsing, timers
 inc/              Headers (mirrors src/ structure)
 tests/unit/       Google Test suite
@@ -177,6 +208,10 @@ doc/              Parameter and dependency documentation
 [GNU Lesser General Public License v2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html)
 only. The full text is in [`LICENSE`](LICENSE), and it is what CPack ships in
 generated packages.
+
+Vendored third-party code, its licences, and which of it the default build
+compiles are inventoried in [THIRD-PARTY.md](THIRD-PARTY.md). Two entries there
+are unresolved and are flagged as such.
 
 ## Contact
 

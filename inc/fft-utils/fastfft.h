@@ -26,7 +26,7 @@
 #include "fftw3.h"
 #include "fftwPrecision.h"
 #include "math/SmoothingFunction.h"
-#include "sparsefft3.h"
+#include "sparsefft3-api.h"
 
 void gridding(int M, double *x, double *y, double *z, float *r, char *type,
               FFTW_complex *f, double blobbiness, int n, int m, bool smoothSkin,

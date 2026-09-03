@@ -32,6 +32,43 @@ include( SetupFFTW )
 
 SetupFFTW()
 
+# ── Optional GPL components ──────────────────────────────────────────
+# F2Dock itself is LGPL-2.1-only (see LICENSE). Two vendored modules are
+# not:
+#
+#   inc/fft-utils/sparsefft3*.h, src/fft-utils/sparsefft3*.cpp
+#       GPL-2.0-or-later (MIT 2000, modified at CVC Lab) -- the sparse
+#       3-D FFT used by the `useSparseFFT` parameter.
+#   inc/libicp/*.h, src/f3dock-icp/{icp,icpPointToPoint,icpPointToPlane,
+#   matrix}.cpp
+#       GPL-2.0-or-later (Andreas Geiger, KIT) -- the ICP solver behind
+#       the `icpRefine` parameter. src/f3dock-icp/kdtree.cpp is AFL-1.1
+#       and references a LICENSE file that is not in the tree.
+#
+# Linking either into F2Dock makes the resulting binary a combined work
+# covered by the GPL, which is not what this project distributes. They are
+# therefore OFF by default. With the option OFF the sources are not
+# compiled and not linked, `useSparseFFT` is forced off in favour of the
+# dense FFTW path, and `icpRefine` is a no-op.
+#
+# Turning this ON produces a GPL-2.0-or-later binary. Do not ship the
+# result under F2Dock's own licence. See THIRD-PARTY.md.
+option(F2DOCK_ENABLE_GPL_COMPONENTS
+  "Build the GPL-licensed sparse FFT and libicp modules. The resulting binary is covered by the GPL, not the LGPL."
+  OFF)
+
+if(F2DOCK_ENABLE_GPL_COMPONENTS)
+  message(WARNING
+    "F2DOCK_ENABLE_GPL_COMPONENTS=ON: sparsefft3 and libicp are GPL-2.0-or-later. "
+    "The F2Dock binary produced by this build is a combined work covered by the "
+    "GNU GPL v2 or later, not by F2Dock's own LGPL-2.1. See THIRD-PARTY.md.")
+else()
+  message(STATUS
+    "F2Dock: GPL components disabled (default). Sparse FFT and ICP refinement "
+    "are unavailable; the dense FFTW transform is used. "
+    "Re-run with -DF2DOCK_ENABLE_GPL_COMPONENTS=ON to build them.")
+endif()
+
 option(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL "Build experimental features ported from F3Dock" ON)
 option(F2DOCK_ENABLE_F3DOCK_SCIENCE_STACK "Discover optional scientific dependencies for F3Dock ports" ON)
 
@@ -210,6 +247,14 @@ configure_file(
   "${CMAKE_BINARY_DIR}/inc/f2dock/Version.h"
   @ONLY)
 include_directories("${CMAKE_BINARY_DIR}/inc")
+
+# Applied here rather than beside the option() above so the definitions reach
+# F2Dock's own targets (src/ and tests/unit/, which compiles IcpRefine.cpp
+# directly) without leaking into the libcvc subproject that FetchContent adds
+# between the two points.
+if(F2DOCK_ENABLE_GPL_COMPONENTS)
+  add_compile_definitions(F2DOCK_WITH_SPARSEFFT=1 F2DOCK_WITH_LIBICP=1)
+endif()
 
 add_subdirectory (src)
 
