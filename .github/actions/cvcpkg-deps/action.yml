@@ -61,6 +61,12 @@ runs:
         link: ${{ inputs.link }}
         prefix: ${{ inputs.prefix }}
         include_host_tools: 'true'
+        # The catalog does not yet carry every component for every tuple this
+        # matrix builds (googletest is published for linux-release and both
+        # windows configs, but not linux-debug or macOS). Build the gap from
+        # the pinned recipe source rather than failing a lane for a reason
+        # F2Dock's own diff cannot cause or fix.
+        fallback_to_source: 'true'
         python_version: ${{ inputs.python-version }}
 
     - name: Export prefix to the job
