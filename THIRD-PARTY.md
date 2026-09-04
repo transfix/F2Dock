@@ -191,6 +191,69 @@ default. No action needed.
 Permissive and LGPL-compatible. It does shadow the system `fftw3.h`, which is a
 maintenance hazard independent of licensing.
 
+### The library behind that header is the largest open licensing question
+
+The *header* is BSD-2. **The library is GPL-2.0-or-later**, and the cvcpkg
+recipe agrees (`recipes/fftw3/recipe.yaml`: `license: GPL-2.0-or-later`).
+`SetupFFTW()` is called unconditionally at `CMakeLists.txt:32` and `FFTW_LIB`
+is linked unconditionally, so **every F2Dock binary is a combined work with
+GPL code** — independently of the vendored `sparsefft3` and `libicp` this file
+already covers, and not fixed by gating those off. Under the usual reading,
+dynamic linking does not change that.
+
+That makes an FFT-provider swap the load-bearing item for LGPL status, not an
+optimisation. The swap itself is small: F2Dock's whole FFTW surface is already
+funnelled through the `FFTW_*` macros in `inc/fft-utils/fftwPrecision.h`, and
+amounts to `plan_dft_3d` (11 sites), `plan_dft_1d` (5), `plan_dft_r2c_3d` (4),
+`plan_dft_c2r_3d` (3), `plan_dft_2d` (2), plus `execute`/`destroy_plan`/
+`malloc`/`free`. No threads, no guru interface, no wisdom, no advanced plans.
+
+**Measured, so the trade is a number rather than a guess.** PocketFFT
+(BSD-3-Clause, the transform NumPy and SciPy use) against FFTW 3, double
+precision, 3-D complex-to-complex, plan-once/execute-many, on this workstation:
+
+| N | FFTW s/exec | PocketFFT s/exec | ratio | max abs diff |
+|---|---|---|---|---|
+| 64 | 0.00295 | 0.00435 | 1.47x | 5.8e-13 |
+| 100 | 0.01507 | 0.02280 | 1.51x | 1.6e-12 |
+| **120** (F2Dock's real `numFreq`) | **0.03535** | **0.04640** | **1.31x** | 2.3e-12 |
+| 128 | 0.03444 | 0.06339 | 1.84x | 2.2e-12 |
+| 200 | 0.17976 | 0.22878 | 1.27x | 4.9e-12 |
+| 256 | 0.36164 | 0.59289 | 1.64x | 7.3e-12 |
+
+Numerically the two agree to float64 round-off, so PocketFFT is a valid drop-in
+on correctness. On speed, the honest figure is *throughput at equal core
+count*, because F2Dock parallelises over rotations with single-threaded
+transforms rather than threading inside one. Measuring W concurrent
+single-threaded transforms at N=120:
+
+| workers | FFTW (xf/s) | PocketFFT (xf/s) | FFTW faster by |
+|---|---|---|---|
+| 1 | 26.9 | 16.2 | 1.66x |
+| 2 | 53.2 | 30.7 | 1.73x |
+| 4 | 102.1 | 67.9 | 1.50x |
+| 8 | 161.3 | 114.0 | 1.41x |
+
+So **PocketFFT costs roughly 1.4–1.7x FFT throughput** in F2Dock's actual
+architecture. (A single-transform latency comparison flatters PocketFFT —
+`nthreads=4` makes one transform 2.6x *faster* than single-threaded FFTW — but
+that is spending four cores to do one transform, and F2Dock already spends
+those cores on four rotations.)
+
+Options, in order of licensing cleanliness:
+
+1. **PocketFFT (BSD-3)** — clean LGPL, header-only, no new bundle needed, at
+   ~1.4–1.7x FFT cost.
+2. **Intel MKL or cuFFT** — proprietary but redistributable, which LGPL-2.1
+   permits linking; likely matches or beats FFTW. This is the cvcpkg roadmap's
+   D9 item.
+3. **Buy FFTW's commercial licence from MIT** — no code change at all.
+
+`sparsefft3` sits on top of whichever base transform is chosen: it is a pruned
+FFT exploiting input/output sparsity, and its output is *identical* to the
+dense path (verified on 1A2K), so it is recoverable as a pure optimisation
+against a permissive base rather than something that must be kept.
+
 ## Cuckoo hashing
 
 - **Path:** `inc/PG-range/cuckoo.h`, `src/PG-range/cuckoo.cc`
