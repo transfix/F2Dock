@@ -36,6 +36,9 @@ depends:
   build:
     - name: libcvc
     - name: fftw3
+    # Unit tests only -- but a build dep, not a runtime one, so it is not in
+    # the runtime list below and does not end up in the published bundle.
+    - name: googletest
     - name: pthreads4w
       platforms: [windows]
   runtime:
