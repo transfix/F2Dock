@@ -1343,11 +1343,21 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
           return false;
         }
       } else if (strcasecmp(key, "useSparseFFT") == 0) {
-        if (strcasecmp(val, "true") == 0)
+        if (strcasecmp(val, "true") == 0) {
+#ifdef F2DOCK_WITH_SPARSEFFT
           p->useSparseFFT = true;
-        else if (strcasecmp(val, "false") == 0)
+#else
+          printf("Error: useSparseFFT=true requested but this F2Dock build "
+                 "was configured without the sparse 3-D FFT module, which "
+                 "is GPL-licensed (F2DOCK_WITH_SPARSEFFT undefined). "
+                 "Rebuild with -DF2DOCK_ENABLE_GPL_COMPONENTS=ON -- which "
+                 "produces a GPL binary -- or set useSparseFFT=false to use "
+                 "the dense FFTW transform.\n");
+          return false;
+#endif
+        } else if (strcasecmp(val, "false") == 0) {
           p->useSparseFFT = false;
-        else {
+        } else {
           printf("Error: %s must be a Boolean value!\n", key);
           return false;
         }
@@ -1670,11 +1680,20 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
         p->domainMaxStates = ival;
 
       } else if (strcasecmp(key, "icpRefine") == 0) {
-        if (strcasecmp(val, "true") == 0)
+        if (strcasecmp(val, "true") == 0) {
+#ifdef F2DOCK_WITH_LIBICP
           p->icpRefineEnabled = true;
-        else if (strcasecmp(val, "false") == 0)
+#else
+          printf("Error: icpRefine=true requested but this F2Dock build was "
+                 "configured without libicp, which is GPL-licensed "
+                 "(F2DOCK_WITH_LIBICP undefined). Rebuild with "
+                 "-DF2DOCK_ENABLE_GPL_COMPONENTS=ON -- which produces a GPL "
+                 "binary -- or set icpRefine=false.\n");
+          return false;
+#endif
+        } else if (strcasecmp(val, "false") == 0) {
           p->icpRefineEnabled = false;
-        else {
+        } else {
           printf("Error: %s must be a Boolean value!\n", key);
           return false;
         }
@@ -2294,8 +2313,15 @@ int main(int argc, char *argv[]) {
   // unless either explicitly set or randomRotate is 'true' )
   pr.initRot.reset();
 
-  pr.useSparseFFT =
-      true; // speed up FFT using the sparsity of input and/or output matrices
+  // Speed up the FFT using the sparsity of the input and/or output matrices.
+  // The sparse transform is GPL-licensed and optional (see LICENSE and
+  // THIRD-PARTY.md); when it is not built the default is the dense FFTW
+  // path, which is slower but produces the same scores.
+#ifdef F2DOCK_WITH_SPARSEFFT
+  pr.useSparseFFT = true;
+#else
+  pr.useSparseFFT = false;
+#endif
   pr.narrowBand = true; // if 'true', consider only the solutions within a
                         // narrow band in the output grid
 
@@ -2627,6 +2653,25 @@ int main(int argc, char *argv[]) {
   printf("NFFT acceleration: requested=%s available=%s active=%s\n",
          pr.nfftAccelerate ? "on" : "off", nfft_available ? "yes" : "no",
          nfft_active ? "yes" : "no");
+
+  // Same three axes for the two optional GPL modules, so a run log records
+  // which FFT path actually executed and whether this binary is the plain
+  // LGPL build or the combined GPL one. See THIRD-PARTY.md.
+#ifdef F2DOCK_WITH_SPARSEFFT
+  const bool sparsefft_available = true;
+#else
+  const bool sparsefft_available = false;
+#endif
+#ifdef F2DOCK_WITH_LIBICP
+  const bool libicp_available = true;
+#else
+  const bool libicp_available = false;
+#endif
+  printf("GPL components: sparseFFT=%s libicp=%s (build licence: %s)\n",
+         sparsefft_available ? "yes" : "no", libicp_available ? "yes" : "no",
+         (sparsefft_available || libicp_available) ? "GPL-2.0-or-later"
+                                                   : "LGPL-2.1-only");
+  printf("FFT path: %s\n", pr.useSparseFFT ? "sparse" : "dense (FFTW)");
 
   // F3Dock mode: enumerate hinge/shear flex states up front so the FFT
   // scoring loop can iterate `pr.flexStates` unconditionally. With no

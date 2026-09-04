@@ -1,16 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        f8d7d77c06936315286eb55f8de22cd23c188571  # v1.14.0
-)
-# Prevent GTest from overriding our compiler/linker options on Windows
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# Don't install GTest headers/libs with our project
-set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+# GoogleTest comes from cvcpkg like every other dependency -- it is declared
+# in cvcpkg/recipes/f2dock/recipe.yaml, so `cvcpkg install-deps` puts it in
+# the same prefix as libcvc and FFTW. This used to FetchContent v1.14.0 from
+# github at configure time, which was the last network fetch in an otherwise
+# hermetic build.
+find_package(GTest CONFIG REQUIRED)
 
 include(GoogleTest)
 

@@ -56,6 +56,14 @@ jobs:
             build_type: Release
             coverage: false
             integration: false
+          # The optional GPL modules (sparsefft3, libicp) are OFF by
+          # default, so nothing else in this matrix compiles them. One job
+          # keeps that path from rotting. See THIRD-PARTY.md.
+          - os: ubuntu-latest
+            build_type: Release
+            coverage: false
+            integration: false
+            gpl_components: true
           # macOS
           - os: macos-latest
             build_type: Debug
@@ -76,9 +84,9 @@ jobs:
             integration: false
 
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} / ${{ matrix.build_type }}
+    name: ${{ matrix.os }} / ${{ matrix.build_type }}${{ matrix.gpl_components && ' / GPL components' || '' }}
     concurrency:
-      group: ci-${{ github.ref }}-build-${{ matrix.os }}-${{ matrix.build_type }}
+      group: ci-${{ github.ref }}-build-${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.gpl_components && 'gpl' || 'lgpl' }}
       cancel-in-progress: true
 
     steps:
@@ -87,129 +95,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ── Linux dependencies ──
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            cmake \
-            ninja-build \
-            libfftw3-dev \
-            libboost-all-dev \
-            libhdf5-dev \
-            libgsl-dev \
-            libcgal-dev
-          # Coverage tools
-          if [ "${{ matrix.coverage }}" = "true" ]; then
-            sudo apt-get install -y --no-install-recommends lcov
-          fi
-
-      # ── macOS dependencies ──
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install \
-            cmake \
-            ninja \
-            fftw \
-            boost \
-            hdf5 \
-            gsl \
-            cgal
-          echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$(brew --prefix boost)" >> $GITHUB_ENV
-
-      # ── libcvc-deps bundle (Linux only) ──
-      # Pulls a prebuilt dep bundle (FFTW + NFFT3 among others) from
-      # the libcvc-deps release page. F2Dock's CMakeLists detects NFFT
-      # via pkg_check_modules; pointing PKG_CONFIG_PATH and
-      # CMAKE_PREFIX_PATH at the bundle activates F2DOCK_HAVE_NFFT and
-      # links libnfft3 into f3dock_science_stack. On miss the action
-      # returns an empty path and the build falls back to the system
-      # FFTW (no NFFT, same as before).
-      #
-      # macOS is intentionally excluded here: the macos-arm64 bundle
-      # ships its own Boost which shadows brew's and triggers Boost
-      # multi_array concept-check failures inside libcvc's sources.
-      # Re-enable once that compatibility is resolved upstream.
-      - name: Fetch libcvc-deps
-        if: runner.os == 'Linux'
-        id: libcvc-deps
-        uses: ./.github/actions/fetch-libcvc-deps
+      # ── Dependencies: cvcpkg, and nothing else ──
+      # No apt, no brew, no vcpkg, no libcvc-deps release tarball. See the
+      # action's own description for why that is a requirement rather than a
+      # preference.
+      - name: Provision dependencies (cvcpkg)
+        id: deps
+        uses: ./.github/actions/cvcpkg-deps
         with:
-          build_type: Release
+          build_type: ${{ matrix.build_type }}
           link: shared
 
-      # ── Windows dependencies (vcpkg) ──
-      # cgal pulls gmp, which fetches gmp-6.3.0.tar.xz from a GNU mirror
-      # that times out roughly 1-in-3 cold runs. We mitigate with:
-      #   1) Route vcpkg working dirs to D: so we have ~80 GB free.
-      #   2) Cache the installed/ + packages/ + archives/ tree so warm
-      #      runs skip the download entirely.
-      #   3) Wrap vcpkg install in a 5-attempt retry loop with backoff
-      #      so transient network errors don't fail the job.
-      - name: 'Free disk space and route vcpkg to D: (Windows)'
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path D:\vcpkg-buildtrees | Out-Null
-          New-Item -ItemType Directory -Force -Path D:\vcpkg-packages   | Out-Null
-          New-Item -ItemType Directory -Force -Path D:\vcpkg-downloads  | Out-Null
-          "VCPKG_DOWNLOADS=D:\vcpkg-downloads"   | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          "VCPKG_BUILDTREES=D:\vcpkg-buildtrees" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          "VCPKG_PACKAGES=D:\vcpkg-packages"     | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-
-      - name: Restore vcpkg cache (Windows)
-        if: runner.os == 'Windows'
-        id: vcpkg-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
-            ${{ env.VCPKG_INSTALLATION_ROOT }}\packages
-            ~\AppData\Local\vcpkg\archives
-          key: vcpkg-f2dock-${{ matrix.build_type }}-v1
-          restore-keys: |
-            vcpkg-f2dock-${{ matrix.build_type }}-
-
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $packages = @(
-            'fftw3','pthreads',
-            'boost-thread','boost-date-time','boost-regex','boost-filesystem',
-            'boost-system','boost-chrono','boost-program-options','boost-signals2',
-            'boost-format','boost-property-tree','boost-algorithm','boost-asio',
-            'boost-any','boost-array','boost-dynamic-bitset','boost-exception',
-            'boost-foreach','boost-function','boost-lambda','boost-lexical-cast',
-            'boost-multi-array','boost-optional','boost-smart-ptr','boost-tuple',
-            'boost-utility','hdf5[cpp]','gsl','cgal'
-          )
-          for ($i = 1; $i -le 5; $i++) {
-            Write-Host "vcpkg install attempt $i / 5"
-            vcpkg install @packages --triplet x64-windows `
-              --clean-after-build `
-              --x-buildtrees-root=D:\vcpkg-buildtrees `
-              --x-packages-root=D:\vcpkg-packages
-            if ($LASTEXITCODE -eq 0) { break }
-            if ($i -eq 5) { exit $LASTEXITCODE }
-            $sleep = [Math]::Min(60 * $i, 180)
-            Write-Host "Retrying after transient failure (sleeping $sleep s)..."
-            Start-Sleep -Seconds $sleep
-          }
-
-      - name: Save vcpkg cache (Windows)
-        if: runner.os == 'Windows' && steps.vcpkg-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
-            ${{ env.VCPKG_INSTALLATION_ROOT }}\packages
-            ~\AppData\Local\vcpkg\archives
-          key: vcpkg-f2dock-${{ matrix.build_type }}-v1
+      # lcov is a coverage-report tool, not a build dependency, and has no
+      # cvcpkg bundle. It runs only on the one Linux Debug lane that uploads
+      # coverage and never participates in compiling or linking F2Dock.
+      - name: Install lcov (coverage lane only)
+        if: matrix.coverage
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends lcov
 
       # ── Configure (Unix) ──
       - name: Configure (Unix)
@@ -219,30 +121,23 @@ jobs:
           if [ "${{ matrix.integration }}" = "true" ]; then
             integration_tests=ON
           fi
-          # If libcvc-deps was fetched successfully, expose its
-          # include/lib/pkgconfig trees so pkg_check_modules(NFFT) and
-          # any future find_package() calls pick it up. Existing
-          # CMAKE_PREFIX_PATH (e.g. brew Boost root) is preserved.
-          deps_path="${{ steps.libcvc-deps.outputs.path }}"
-          if [ -n "$deps_path" ]; then
-            export CMAKE_PREFIX_PATH="$deps_path${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}"
-            export PKG_CONFIG_PATH="$deps_path/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
-            # Persist for subsequent build/test steps so the dynamic
-            # loader can resolve libnfft3.so / libfftw3.so etc.
-            echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
-            echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"     >> "$GITHUB_ENV"
-            if [ "$RUNNER_OS" = "macOS" ]; then
-              echo "DYLD_LIBRARY_PATH=$deps_path/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
-            else
-              echo "LD_LIBRARY_PATH=$deps_path/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"       >> "$GITHUB_ENV"
-            fi
+          gpl_components=OFF
+          if [ "${{ matrix.gpl_components }}" = "true" ]; then
+            gpl_components=ON
           fi
+          # pkg_check_modules(NFFT) reads PKG_CONFIG_PATH; CMAKE_PREFIX_PATH
+          # and the loader paths are already exported by the cvcpkg-deps
+          # action.
+          deps_path="${{ steps.deps.outputs.prefix }}"
+          export PKG_CONFIG_PATH="$deps_path/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+          echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> "$GITHUB_ENV"
           cmake_args=(
             -B build
             -G Ninja
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
             -DF2DOCK_BUILD_INTEGRATION_TESTS=${integration_tests}
+            -DF2DOCK_ENABLE_GPL_COMPONENTS=${gpl_components}
           )
           if [ "${{ matrix.coverage }}" = "true" ]; then
             # F2Dock's CMakeLists.txt overwrites CMAKE_CXX_FLAGS via set(),
@@ -262,10 +157,17 @@ jobs:
           if [ "${{ matrix.integration }}" = "true" ]; then
             integration_tests=ON
           fi
+          gpl_components=OFF
+          if [ "${{ matrix.gpl_components }}" = "true" ]; then
+            gpl_components=ON
+          fi
+          # No toolchain file: the cvcpkg prefix is on CMAKE_PREFIX_PATH and
+          # every windows bundle in it is MSVC-built, which the default
+          # Visual Studio generator matches.
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
             -DF2DOCK_BUILD_INTEGRATION_TESTS=${integration_tests} \
+            -DF2DOCK_ENABLE_GPL_COMPONENTS=${gpl_components} \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
 
       # ── Build ──
@@ -351,7 +253,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.os }}-${{ matrix.build_type }}
+          name: build-${{ matrix.os }}-${{ matrix.build_type }}${{ matrix.gpl_components && '-gpl' || '' }}
           path: |
             build/bin/
             build/lib/
@@ -376,12 +278,17 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential cmake ninja-build libfftw3-dev dpkg-dev \
-            libboost-all-dev libhdf5-dev libgsl-dev libcgal-dev
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      - name: Provision dependencies (cvcpkg)
+        uses: ./.github/actions/cvcpkg-deps
+        with:
+          build_type: Release
+          link: shared
+
+      # dpkg-dev is a packaging tool for the .deb step, not a build
+      # dependency, and has no cvcpkg bundle.
+      - name: Install dpkg-dev (packaging only)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends dpkg-dev
 
       - name: Configure
         run: |
@@ -459,11 +366,12 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        run: |
-          brew install cmake ninja fftw boost hdf5 gsl cgal
-          echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$(brew --prefix boost):$(brew --prefix hdf5)" >> $GITHUB_ENV
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      - name: Provision dependencies (cvcpkg)
+        uses: ./.github/actions/cvcpkg-deps
+        with:
+          build_type: Release
+          link: shared
 
       - name: Configure
         run: |
@@ -531,70 +439,23 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "arch=x64" >> "$GITHUB_OUTPUT"
 
-      - name: 'Free disk space and route vcpkg to D:'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path D:\vcpkg-buildtrees | Out-Null
-          New-Item -ItemType Directory -Force -Path D:\vcpkg-packages   | Out-Null
-          New-Item -ItemType Directory -Force -Path D:\vcpkg-downloads  | Out-Null
-          "VCPKG_DOWNLOADS=D:\vcpkg-downloads"   | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          "VCPKG_BUILDTREES=D:\vcpkg-buildtrees" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          "VCPKG_PACKAGES=D:\vcpkg-packages"     | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-
-      - name: Restore vcpkg cache
-        id: vcpkg-cache
-        uses: actions/cache/restore@v4
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      # This replaces the whole vcpkg apparatus that used to live here: the
+      # D: drive re-routing for disk space, the cache save/restore, and the
+      # 5-attempt retry loop around `vcpkg install` that existed because the
+      # gmp tarball's GNU mirror timed out on roughly one cold run in three.
+      - name: Provision dependencies (cvcpkg)
+        id: deps
+        uses: ./.github/actions/cvcpkg-deps
         with:
-          path: |
-            ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
-            ${{ env.VCPKG_INSTALLATION_ROOT }}\packages
-            ~\AppData\Local\vcpkg\archives
-          key: vcpkg-f2dock-package-release-v1
-          restore-keys: |
-            vcpkg-f2dock-package-release-
-
-      - name: Install dependencies
-        shell: pwsh
-        run: |
-          $packages = @(
-            'fftw3','pthreads',
-            'boost-thread','boost-date-time','boost-regex','boost-filesystem',
-            'boost-system','boost-chrono','boost-program-options','boost-signals2',
-            'boost-format','boost-property-tree','boost-algorithm','boost-asio',
-            'boost-any','boost-array','boost-dynamic-bitset','boost-exception',
-            'boost-foreach','boost-function','boost-lambda','boost-lexical-cast',
-            'boost-multi-array','boost-optional','boost-smart-ptr','boost-tuple',
-            'boost-utility','hdf5[cpp]','gsl','cgal'
-          )
-          for ($i = 1; $i -le 5; $i++) {
-            Write-Host "vcpkg install attempt $i / 5"
-            vcpkg install @packages --triplet x64-windows `
-              --clean-after-build `
-              --x-buildtrees-root=D:\vcpkg-buildtrees `
-              --x-packages-root=D:\vcpkg-packages
-            if ($LASTEXITCODE -eq 0) { break }
-            if ($i -eq 5) { exit $LASTEXITCODE }
-            $sleep = [Math]::Min(60 * $i, 180)
-            Write-Host "Retrying after transient failure (sleeping $sleep s)..."
-            Start-Sleep -Seconds $sleep
-          }
-
-      - name: Save vcpkg cache
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
-            ${{ env.VCPKG_INSTALLATION_ROOT }}\packages
-            ~\AppData\Local\vcpkg\archives
-          key: vcpkg-f2dock-package-release-v1
+          build_type: Release
+          link: shared
 
       - name: Configure
         shell: bash
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
             -DCMAKE_INSTALL_PREFIX=install \
             -DF2DOCK_BUILD_TESTS=OFF
 
@@ -606,8 +467,10 @@ jobs:
         run: |
           STEM="F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-windows-${{ steps.meta.outputs.arch }}"
           cmake --install build --config Release --prefix staging/F2Dock
-          cp "$VCPKG_INSTALLATION_ROOT"/installed/x64-windows/bin/*.dll staging/F2Dock/bin/ 2>/dev/null || true
-          cp README.md staging/F2Dock/
+          # Runtime DLLs now come from the cvcpkg prefix (libcvc, FFTW, Boost,
+          # ... ) rather than a vcpkg installed tree.
+          cp "${{ steps.deps.outputs.prefix }}"/bin/*.dll staging/F2Dock/bin/ 2>/dev/null || true
+          cp README.md LICENSE staging/F2Dock/
           cd staging
           7z a -tzip ../"$STEM.zip" F2Dock/
 

@@ -23,11 +23,17 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential cmake ninja-build libfftw3-dev dpkg-dev
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      - name: Provision dependencies (cvcpkg)
+        id: deps
+        uses: ./.github/actions/cvcpkg-deps
+        with:
+          build_type: Release
+          link: shared
+
+      # dpkg-dev is a packaging tool for the .deb step, not a build dependency.
+      - name: Install dpkg-dev (packaging only)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends dpkg-dev
 
       - name: Configure
         run: |
@@ -98,8 +104,13 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        run: brew install cmake ninja fftw
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      - name: Provision dependencies (cvcpkg)
+        id: deps
+        uses: ./.github/actions/cvcpkg-deps
+        with:
+          build_type: Release
+          link: shared
 
       - name: Configure
         run: |
@@ -161,16 +172,19 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "arch=x64" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        shell: bash
-        run: vcpkg install fftw3:x64-windows pthreads:x64-windows
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      - name: Provision dependencies (cvcpkg)
+        id: deps
+        uses: ./.github/actions/cvcpkg-deps
+        with:
+          build_type: Release
+          link: shared
 
       - name: Configure
         shell: bash
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
             -DCMAKE_INSTALL_PREFIX=install \
             -DF2DOCK_BUILD_TESTS=OFF
 
@@ -182,11 +196,11 @@ jobs:
         run: |
           cmake --install build --config Release --prefix staging/F2Dock
 
-          # Bundle vcpkg runtime DLLs alongside the executables
-          cp "$VCPKG_INSTALLATION_ROOT"/installed/x64-windows/bin/*.dll \
+          # Bundle the cvcpkg prefix's runtime DLLs alongside the executables
+          cp "${{ steps.deps.outputs.prefix }}"/bin/*.dll \
              staging/F2Dock/bin/ 2>/dev/null || true
 
-          cp README.md staging/F2Dock/
+          cp README.md LICENSE staging/F2Dock/
 
           cd staging
           7z a -tzip ../F2Dock-${{ steps.meta.outputs.version }}-windows-${{ steps.meta.outputs.arch }}.zip F2Dock/

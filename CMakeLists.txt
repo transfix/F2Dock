@@ -28,9 +28,86 @@ SET(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH})
 
 # include macro for setting up FFTW
-include( SetupFFTW )
+# ── FFT provider ─────────────────────────────────────────────────────
+# F2Dock is LGPL-2.1-only. FFTW is GPL-2.0-or-later, so linking it makes the
+# binary a combined work under the GPL -- that is why the default is NOT FFTW,
+# and why this is a licence control rather than a tuning knob.
+#
+#   pocketfft  BSD-3-Clause. Default. Verified against FFTW to float64
+#              round-off (<= 7.3e-12, N=64..256). ~1.4-1.7x slower on
+#              throughput at equal core count.
+#   mkl        Intel oneMKL. Proprietary but redistributable, which LGPL
+#              permits linking; comparable to FFTW.
+#   cufft      NVIDIA cuFFT. Same licensing shape as MKL; needs a GPU.
+#   fftw       GPL-2.0-or-later. OPT-IN, warns loudly, and the binary reports
+#              itself as GPL at startup.
+set(F2DOCK_FFT_PROVIDER "pocketfft" CACHE STRING
+    "FFT backend: pocketfft (default, BSD-3) | mkl | cufft | fftw (GPL)")
+set_property(CACHE F2DOCK_FFT_PROVIDER PROPERTY STRINGS pocketfft mkl cufft fftw)
 
-SetupFFTW()
+string(TOLOWER "${F2DOCK_FFT_PROVIDER}" _f2dock_fft_provider)
+set(_f2dock_fft_known pocketfft mkl cufft fftw)
+if(NOT _f2dock_fft_provider IN_LIST _f2dock_fft_known)
+  message(FATAL_ERROR
+    "F2DOCK_FFT_PROVIDER='${F2DOCK_FFT_PROVIDER}' is not one of: "
+    "${_f2dock_fft_known}")
+endif()
+
+if(_f2dock_fft_provider STREQUAL "fftw")
+  # SetupFFTW is only invoked on this path: an LGPL build should not even
+  # search for a GPL library, let alone link it.
+  include(SetupFFTW)
+  SetupFFTW()
+  message(WARNING
+    "\n"
+    "  ============================================================\n"
+    "   F2DOCK_FFT_PROVIDER=fftw selects FFTW3, which is\n"
+    "   GPL-2.0-or-later. The F2Dock binary produced by this build\n"
+    "   is a COMBINED WORK COVERED BY THE GNU GPL, not by F2Dock's\n"
+    "   own LGPL-2.1. Do not redistribute it under F2Dock's licence.\n"
+    "\n"
+    "   Reconfigure with -DF2DOCK_FFT_PROVIDER=pocketfft (BSD-3),\n"
+    "   mkl or cufft to keep the build LGPL.\n"
+    "  ============================================================\n")
+endif()
+
+
+# ── Optional GPL components ──────────────────────────────────────────
+# F2Dock itself is LGPL-2.1-only (see LICENSE). Two vendored modules are
+# not:
+#
+#   inc/fft-utils/sparsefft3*.h, src/fft-utils/sparsefft3*.cpp
+#       GPL-2.0-or-later (MIT 2000, modified at CVC Lab) -- the sparse
+#       3-D FFT used by the `useSparseFFT` parameter.
+#   inc/libicp/*.h, src/f3dock-icp/{icp,icpPointToPoint,icpPointToPlane,
+#   matrix}.cpp
+#       GPL-2.0-or-later (Andreas Geiger, KIT) -- the ICP solver behind
+#       the `icpRefine` parameter. src/f3dock-icp/kdtree.cpp is AFL-1.1
+#       and references a LICENSE file that is not in the tree.
+#
+# Linking either into F2Dock makes the resulting binary a combined work
+# covered by the GPL, which is not what this project distributes. They are
+# therefore OFF by default. With the option OFF the sources are not
+# compiled and not linked, `useSparseFFT` is forced off in favour of the
+# dense FFTW path, and `icpRefine` is a no-op.
+#
+# Turning this ON produces a GPL-2.0-or-later binary. Do not ship the
+# result under F2Dock's own licence. See THIRD-PARTY.md.
+option(F2DOCK_ENABLE_GPL_COMPONENTS
+  "Build the GPL-licensed sparse FFT and libicp modules. The resulting binary is covered by the GPL, not the LGPL."
+  OFF)
+
+if(F2DOCK_ENABLE_GPL_COMPONENTS)
+  message(WARNING
+    "F2DOCK_ENABLE_GPL_COMPONENTS=ON: sparsefft3 and libicp are GPL-2.0-or-later. "
+    "The F2Dock binary produced by this build is a combined work covered by the "
+    "GNU GPL v2 or later, not by F2Dock's own LGPL-2.1. See THIRD-PARTY.md.")
+else()
+  message(STATUS
+    "F2Dock: GPL components disabled (default). Sparse FFT and ICP refinement "
+    "are unavailable; the dense FFTW transform is used. "
+    "Re-run with -DF2DOCK_ENABLE_GPL_COMPONENTS=ON to build them.")
+endif()
 
 option(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL "Build experimental features ported from F3Dock" ON)
 option(F2DOCK_ENABLE_F3DOCK_SCIENCE_STACK "Discover optional scientific dependencies for F3Dock ports" ON)
@@ -68,133 +145,54 @@ if(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL)
   endif()
 endif()
 
-include(FetchContent)
 # ── libcvc dependency ────────────────────────────────────────────────
-# Resolution order, falling through on failure:
-#   1. find_package(cvc CONFIG) against a pre-installed libcvc on
-#      CMAKE_PREFIX_PATH (fastest, no download or build).
-#   2. Download the prebuilt release tarball matching this platform /
-#      build type and find_package against the extracted tree.
-#   3. FetchContent_Declare(GIT_REPOSITORY ...) and build from source.
+# libcvc comes from cvcpkg. Nothing else: no FetchContent source build, no
+# release-tarball download, no system package manager.
 #
-# F2Dock links cvc::xmlrpc (XML-RPC support used by F2DockServer). When
-# the prebuilt archive does not ship cvc::xmlrpc, or when no prebuilt
-# archive has been published for the requested tag at all, strategies
-# 1 and 2 are rejected and we fall through to the source build (which
-# in turn pulls libcvc-deps for the heavy science stack, including
-# NFFT). The source path is the supported way to consume a libcvc
-# release that does not yet have platform binaries attached.
-set(LIBCVC_TAG     "v3.2.1" CACHE STRING "libcvc release tag to consume")
-# Package version that libcvc reports via cvcConfigVersion.cmake. The v3.2.1
-# release artifacts still carry the 3.2.0 project version baked at build
-# time (the bump shipped in #64 was tagged but not re-versioned in the
-# CMake project() call). Keep the find_package() version match aligned
-# with what's actually inside the prebuilt archive so the prebuilt path
-# does not silently fall through to a from-source build.
-set(LIBCVC_VERSION "3.2.0"  CACHE STRING "libcvc package version to look up")
-set(LIBCVC_ARCHIVE_VERSION "${LIBCVC_VERSION}"
-    CACHE STRING "Version string embedded in the prebuilt archive filename")
-set(LIBCVC_GIT_SHA "08c15b5e244564469a34cddb6cdea00c87add906"
-    CACHE STRING "libcvc commit SHA used when falling through to source build")
-option(LIBCVC_FORCE_SOURCE "Skip prebuilt libcvc and always build from source" OFF)
-set(LIBCVC_NEEDS_XMLRPC TRUE)
+# Provision the prefix from F2Dock's own recipe, which declares the closure:
+#
+#     cvcpkg install-deps cvcpkg/recipes/f2dock --prefix deps \
+#         --config release --link shared
+#     cmake -B build -DCMAKE_PREFIX_PATH="$PWD/deps"
+#
+# That installs libcvc plus everything cvcConfig.cmake find_dependency()s
+# (Boost, assimp) and everything F2Dock links directly (FFTW3, pthreads4w on
+# Windows) -- ~40 components, all hermetic cvcpkg bundles.
+#
+# Why the source build is gone rather than kept as a fallback: compiling
+# libcvc here is what pulled CGAL and the host toolchain into F2Dock's build,
+# and it broke on both non-Linux platforms at once. CGAL 6.2 (which Homebrew
+# and vcpkg both ship now) collides with a `#define error(x)` in libcvc's
+# reg3data.h, and windows-latest's VS18 v180 crashes CL.exe outright compiling
+# cvc.vcxproj. A published bundle compiles none of that. A fallback that only
+# runs when the fast path fails is a fallback that only runs on the broken
+# platforms, so there is no version of it worth keeping.
+set(LIBCVC_VERSION "3.3.0" CACHE STRING "Minimum libcvc version to require")
 
-# Lean on libcvc for XML-RPC support used by F2DockServer.
-set(CVC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(CVC_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
-set(CVC_ENABLE_COVERAGE OFF CACHE BOOL "" FORCE)
-set(CVC_BUILD_VOLROVER3 OFF CACHE BOOL "" FORCE)
-set(CVC_USING_XMLRPC ON CACHE BOOL "" FORCE)
-# F2Dock does not load MRC volumes. Disable libcvc's IMOD MRC path so the
-# source build does not require libiimod (only shipped via libcvc-deps as
-# of libcvc 3.2.1).
-set(CVC_USING_IMOD_MRC OFF CACHE BOOL "" FORCE)
+find_package(cvc ${LIBCVC_VERSION} CONFIG QUIET)
 
-function(_libcvc_check_usable out_var)
-  set(${out_var} FALSE PARENT_SCOPE)
-  if(NOT cvc_FOUND)
-    return()
-  endif()
-  if(LIBCVC_NEEDS_XMLRPC AND NOT TARGET cvc::xmlrpc)
-    message(STATUS "libcvc package found (${cvc_VERSION}) but cvc::xmlrpc is missing")
-    return()
-  endif()
-  set(${out_var} TRUE PARENT_SCOPE)
-endfunction()
-
-set(_libcvc_usable FALSE)
-
-# 1. Pre-installed package
-if(NOT LIBCVC_FORCE_SOURCE)
-  find_package(cvc ${LIBCVC_VERSION} CONFIG QUIET)
-  _libcvc_check_usable(_libcvc_usable)
-  if(_libcvc_usable)
-    message(STATUS "Using pre-installed libcvc ${cvc_VERSION}")
-  endif()
+if(NOT cvc_FOUND)
+  message(FATAL_ERROR
+    "libcvc ${LIBCVC_VERSION} or newer was not found.\n"
+    "F2Dock consumes libcvc from cvcpkg. Provision it with:\n"
+    "    cvcpkg install-deps cvcpkg/recipes/f2dock --prefix deps "
+    "--config release --link shared\n"
+    "then configure with -DCMAKE_PREFIX_PATH=<abs path to deps>.")
 endif()
 
-# 2. Prebuilt release tarball
-if(NOT _libcvc_usable AND NOT LIBCVC_FORCE_SOURCE)
-  if(WIN32)
-    set(_libcvc_plat "windows-x86_64")
-    set(_libcvc_ext  "zip")
-  elseif(APPLE)
-    set(_libcvc_plat "macos-arm64")
-    set(_libcvc_ext  "zip")
-  elseif(UNIX)
-    set(_libcvc_plat "linux-x86_64")
-    set(_libcvc_ext  "tar.gz")
-  endif()
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(_libcvc_cfg "debug")
-  else()
-    set(_libcvc_cfg "release")
-  endif()
-  if(DEFINED _libcvc_plat)
-    set(_libcvc_archive "libcvc-${LIBCVC_ARCHIVE_VERSION}-${_libcvc_plat}-${_libcvc_cfg}.${_libcvc_ext}")
-    set(_libcvc_url     "https://github.com/transfix/libcvc/releases/download/${LIBCVC_TAG}/${_libcvc_archive}")
-    set(_libcvc_stage   "${CMAKE_BINARY_DIR}/libcvc-prebuilt")
-    set(_libcvc_cfgfile "${_libcvc_stage}/lib/cmake/cvc/cvcConfig.cmake")
-    if(NOT EXISTS "${_libcvc_cfgfile}")
-      message(STATUS "Downloading prebuilt libcvc: ${_libcvc_url}")
-      file(MAKE_DIRECTORY "${_libcvc_stage}")
-      file(DOWNLOAD "${_libcvc_url}" "${_libcvc_stage}/${_libcvc_archive}"
-           STATUS _libcvc_dl TLS_VERIFY ON)
-      list(GET _libcvc_dl 0 _libcvc_dl_code)
-      if(_libcvc_dl_code EQUAL 0)
-        execute_process(
-          COMMAND ${CMAKE_COMMAND} -E tar xzf "${_libcvc_archive}"
-          WORKING_DIRECTORY "${_libcvc_stage}"
-          RESULT_VARIABLE _libcvc_extract)
-        if(NOT _libcvc_extract EQUAL 0)
-          message(STATUS "Failed to extract ${_libcvc_archive} (exit ${_libcvc_extract})")
-        endif()
-      else()
-        message(STATUS "Prebuilt libcvc download failed: ${_libcvc_dl}")
-      endif()
-    endif()
-    if(EXISTS "${_libcvc_cfgfile}")
-      list(PREPEND CMAKE_PREFIX_PATH "${_libcvc_stage}")
-      find_package(cvc ${LIBCVC_VERSION} CONFIG QUIET)
-      _libcvc_check_usable(_libcvc_usable)
-      if(_libcvc_usable)
-        message(STATUS "Using prebuilt libcvc ${cvc_VERSION} from ${_libcvc_url}")
-      endif()
-    endif()
-  endif()
+# F2DockServer is built on libcvc's XML-RPC module. A libcvc bundle published
+# without -DCVC_USING_XMLRPC=ON exports no cvc::xmlrpc and ships no
+# lib/libxmlrpc archive, only include/xmlrpc/ headers -- fail loudly and name
+# the minimum revision rather than letting the link fail later.
+if(NOT TARGET cvc::xmlrpc)
+  message(FATAL_ERROR
+    "libcvc ${cvc_VERSION} was found but exports no cvc::xmlrpc target.\n"
+    "F2DockServer requires it. Bundles before libcvc 3.3.0+cvc.4 were "
+    "published with CVC_USING_XMLRPC off and are unusable here; install "
+    "3.3.0+cvc.4 or newer.")
 endif()
 
-# 3. Source build (fallback)
-if(NOT _libcvc_usable)
-  message(STATUS "Building libcvc ${LIBCVC_TAG} from source")
-  FetchContent_Declare(
-    libcvc
-    GIT_REPOSITORY https://github.com/transfix/libcvc.git
-    GIT_TAG        ${LIBCVC_GIT_SHA}
-  )
-  FetchContent_MakeAvailable(libcvc)
-endif()
-
+message(STATUS "Using libcvc ${cvc_VERSION} from ${cvc_DIR}")
 #output 
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
@@ -210,6 +208,14 @@ configure_file(
   "${CMAKE_BINARY_DIR}/inc/f2dock/Version.h"
   @ONLY)
 include_directories("${CMAKE_BINARY_DIR}/inc")
+
+# Applied here rather than beside the option() above so the definitions reach
+# F2Dock's own targets (src/ and tests/unit/, which compiles IcpRefine.cpp
+# directly) without leaking into the libcvc subproject that FetchContent adds
+# between the two points.
+if(F2DOCK_ENABLE_GPL_COMPONENTS)
+  add_compile_definitions(F2DOCK_WITH_SPARSEFFT=1 F2DOCK_WITH_LIBICP=1)
+endif()
 
 add_subdirectory (src)
 
@@ -240,7 +246,7 @@ install(FILES
   DESTINATION share/F2Dock/data)
 
 # Install documentation and examples
-install(FILES README.md DESTINATION .)
+install(FILES README.md LICENSE DESTINATION .)
 install(FILES
   tests/1A2K.inp tests/1ACB.inp tests/1AHW.inp tests/1JZD.inp
   DESTINATION share/F2Dock/examples)
@@ -260,7 +266,7 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Fast Fourier protein-protein docking")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/INSTALL")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 
 # DEB-specific
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CVC Lab <bajaj@cs.utexas.edu>")

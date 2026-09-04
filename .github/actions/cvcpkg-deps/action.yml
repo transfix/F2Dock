@@ -1,0 +1,92 @@
+name: 'Provision dependencies via cvcpkg'
+description: |
+  Installs F2Dock's entire third-party dependency closure from the cvcpkg
+  catalog into a prefix, and exports that prefix to the calling job.
+
+  This is the ONLY dependency source F2Dock uses. There is deliberately no
+  apt / Homebrew / vcpkg path and no libcvc-deps release-tarball download:
+
+    * libcvc arrives as a published bundle, so F2Dock never compiles it.
+      That matters because compiling libcvc is what pulls CGAL and the host
+      toolchain into F2Dock's build. Homebrew and vcpkg have both moved to
+      CGAL 6.2, which collides with a `#define error(x)` in libcvc's
+      reg3data.h, and windows-latest's VS18 v180 crashes CL.exe outright on
+      cvc.vcxproj. Neither can reach a build that consumes a bundle.
+    * cmake and ninja come from the catalog too (--include-host-tools), so
+      the runner image's toolchain versions are never in play.
+
+  The closure is not listed here: it is whatever cvcpkg/recipes/f2dock
+  declares, resolved transitively. Adding a dependency to the recipe is
+  enough to make CI install it.
+
+inputs:
+  build_type:
+    description: 'Debug or Release. Selects the matching bundle config.'
+    required: true
+  link:
+    description: 'shared or static.'
+    required: false
+    default: 'shared'
+  prefix:
+    description: 'Install prefix. Defaults to <workspace>/deps.'
+    required: false
+    default: ''
+  python-version:
+    description: 'Python used to run cvcpkg itself.'
+    required: false
+    default: '3.11'
+
+outputs:
+  prefix:
+    description: 'Absolute path to the provisioned cvcpkg prefix.'
+    value: ${{ steps.install.outputs.path }}
+
+runs:
+  using: 'composite'
+  steps:
+    # Delegate to libcvc-deps' own cvcpkg-install action rather than
+    # pip-installing cvcpkg: it is NOT on PyPI, so `pip install cvcpkg` fails
+    # with "No matching distribution found". That action is the supported
+    # entry point -- it provisions cvcpkg itself and runs
+    # `cvcpkg install-deps` against the recipe.
+    #
+    # include_host_tools brings cmake, ninja and anything else the recipe pins
+    # from the catalog, so the runner image's toolchain is never in play.
+    - name: Install dependency closure via cvcpkg
+      id: install
+      uses: transfix/libcvc-deps/.github/actions/cvcpkg-install@master
+      with:
+        recipe: cvcpkg/recipes/f2dock
+        build_type: ${{ inputs.build_type }}
+        link: ${{ inputs.link }}
+        prefix: ${{ inputs.prefix }}
+        include_host_tools: 'true'
+        # The catalog does not yet carry every component for every tuple this
+        # matrix builds (googletest is published for linux-release and both
+        # windows configs, but not linux-debug or macOS). Build the gap from
+        # the pinned recipe source rather than failing a lane for a reason
+        # F2Dock's own diff cannot cause or fix.
+        fallback_to_source: 'true'
+        python_version: ${{ inputs.python-version }}
+
+    - name: Export prefix to the job
+      shell: bash
+      env:
+        PREFIX: ${{ steps.install.outputs.path }}
+      run: |
+        set -euo pipefail
+        if [ -z "$PREFIX" ]; then
+          echo "::error::cvcpkg-install produced no prefix -- dependency provisioning failed."
+          exit 1
+        fi
+        echo "CMAKE_PREFIX_PATH=$PREFIX" >> "$GITHUB_ENV"
+        echo "$PREFIX/bin" >> "$GITHUB_PATH"
+        case "$RUNNER_OS" in
+          Linux)
+            echo "LD_LIBRARY_PATH=$PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+            ;;
+          macOS)
+            echo "DYLD_LIBRARY_PATH=$PREFIX/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+            ;;
+        esac
+        echo "cvcpkg prefix: $PREFIX"
