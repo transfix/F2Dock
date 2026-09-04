@@ -40,7 +40,6 @@
 #include "math/Gaussian.h"
 #include "math/Vector.h"
 #include "math/SmoothingFunction.h"
-#include "fft-utils/fftw3.h"
 #include "fft-utils/fftwPrecision.h"
 #include "fft-utils/rank-fftw.h"
 #include "fft-utils/sparsefft3-api.h"

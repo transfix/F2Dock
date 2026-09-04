@@ -28,9 +28,49 @@ SET(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH})
 
 # include macro for setting up FFTW
-include( SetupFFTW )
+# ── FFT provider ─────────────────────────────────────────────────────
+# F2Dock is LGPL-2.1-only. FFTW is GPL-2.0-or-later, so linking it makes the
+# binary a combined work under the GPL -- that is why the default is NOT FFTW,
+# and why this is a licence control rather than a tuning knob.
+#
+#   pocketfft  BSD-3-Clause. Default. Verified against FFTW to float64
+#              round-off (<= 7.3e-12, N=64..256). ~1.4-1.7x slower on
+#              throughput at equal core count.
+#   mkl        Intel oneMKL. Proprietary but redistributable, which LGPL
+#              permits linking; comparable to FFTW.
+#   cufft      NVIDIA cuFFT. Same licensing shape as MKL; needs a GPU.
+#   fftw       GPL-2.0-or-later. OPT-IN, warns loudly, and the binary reports
+#              itself as GPL at startup.
+set(F2DOCK_FFT_PROVIDER "pocketfft" CACHE STRING
+    "FFT backend: pocketfft (default, BSD-3) | mkl | cufft | fftw (GPL)")
+set_property(CACHE F2DOCK_FFT_PROVIDER PROPERTY STRINGS pocketfft mkl cufft fftw)
 
-SetupFFTW()
+string(TOLOWER "${F2DOCK_FFT_PROVIDER}" _f2dock_fft_provider)
+set(_f2dock_fft_known pocketfft mkl cufft fftw)
+if(NOT _f2dock_fft_provider IN_LIST _f2dock_fft_known)
+  message(FATAL_ERROR
+    "F2DOCK_FFT_PROVIDER='${F2DOCK_FFT_PROVIDER}' is not one of: "
+    "${_f2dock_fft_known}")
+endif()
+
+if(_f2dock_fft_provider STREQUAL "fftw")
+  # SetupFFTW is only invoked on this path: an LGPL build should not even
+  # search for a GPL library, let alone link it.
+  include(SetupFFTW)
+  SetupFFTW()
+  message(WARNING
+    "\n"
+    "  ============================================================\n"
+    "   F2DOCK_FFT_PROVIDER=fftw selects FFTW3, which is\n"
+    "   GPL-2.0-or-later. The F2Dock binary produced by this build\n"
+    "   is a COMBINED WORK COVERED BY THE GNU GPL, not by F2Dock's\n"
+    "   own LGPL-2.1. Do not redistribute it under F2Dock's licence.\n"
+    "\n"
+    "   Reconfigure with -DF2DOCK_FFT_PROVIDER=pocketfft (BSD-3),\n"
+    "   mkl or cufft to keep the build LGPL.\n"
+    "  ============================================================\n")
+endif()
+
 
 # ── Optional GPL components ──────────────────────────────────────────
 # F2Dock itself is LGPL-2.1-only (see LICENSE). Two vendored modules are
