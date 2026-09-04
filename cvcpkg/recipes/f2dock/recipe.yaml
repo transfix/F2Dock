@@ -1,0 +1,77 @@
+schema_version: 1
+recipe:
+  name: f2dock
+  upstream_version: "2.1.0"
+  cvc_revision: 1
+  maintainer: "cvcpkg group"
+  maintainer_email: "info@cvcpkg.org"
+  maintainer_url: "https://cvcpkg.org"
+  description: "F2Dock — FFT-accelerated rigid-body protein-protein docking (F2 mode) and flexible docking (F3 mode), plus the GB-Rerank Generalized-Born rescoring tool. Built on the libcvc SDK."
+  homepage: https://github.com/transfix/F2Dock
+  license: LGPL-2.1-only
+  tags: [scientific, molecular, docking, bioinformatics, fft]
+
+provides: ["f2dock"]
+
+source:
+  # Co-located with the F2Dock source tree; ../../.. is the repo root.
+  # `pack-from-prefix` does not consume this, but the schema requires it.
+  type: vendored
+  path: ../../..
+
+patches: []
+
+depends:
+  # F2Dock's own direct surface is small: FFTW for the correlation core,
+  # libcvc for volume I/O (src/vol/RAWIV.cpp) and cvc::xmlrpc (F2DockServer),
+  # and pthreads on Windows. Everything else -- Boost, CGAL, HDF5,
+  # ImageMagick, assimp, libiimod, grpc -- arrives transitively through
+  # libcvc's own closure, which cvcpkg resolves; cvcConfig.cmake
+  # find_dependency()s Boost and assimp unconditionally, so they must be in
+  # the prefix even though F2Dock never names them.
+  #
+  # NOTE: the GPL components (sparsefft3, libicp) are OFF by default -- see
+  # THIRD-PARTY.md -- so this bundle is unambiguously LGPL-2.1 and needs no
+  # extra deps for them.
+  build:
+    - name: libcvc
+    - name: fftw3
+    - name: pthreads4w
+      platforms: [windows]
+  runtime:
+    - name: libcvc
+    - name: fftw3
+    - name: pthreads4w
+      platforms: [windows]
+  host_tools:
+    - cmake
+    - ninja
+
+build:
+  matrix:
+    - platform: linux
+      script: build.sh
+    - platform: macos
+      script: build.sh
+      env:
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+    - platform: windows
+      script: build.ps1
+
+package:
+  files:
+    # F2Dock, GB-Rerank, FilterOutput and F2DockServer. The install() rules
+    # in the top-level CMakeLists place all four under bin/.
+    - bin/F2Dock*
+    - bin/GB-Rerank*
+    - bin/FilterOutput*
+    - bin/F2DockServer*
+    # Rotation matrices and the example inputs the binaries read at runtime.
+    - share/F2Dock/
+    # LICENSE ships beside README.md at the prefix root (see the top-level
+    # install(FILES README.md LICENSE ...) rule).
+    - LICENSE
+    - README.md
+
+abi:
+  cxx_std: 20

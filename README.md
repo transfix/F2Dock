@@ -24,18 +24,36 @@ Developed at the [Computational Visualization Center](https://cvc-lab.github.io)
 | Dependency | Notes |
 |---|---|
 | C++20 compiler | GCC 13+, Clang 16+, or MSVC 19.4+ |
-| CMake 3.16+ | |
-| FFTW 3 | `libfftw3-dev` (apt), `fftw` (brew), or via vcpkg |
-| pthreads | Built-in on Linux/macOS; PThreads4W via vcpkg on Windows |
+| Python 3.9+ | Only to run `cvcpkg` itself |
+| [cvcpkg](https://cvcpkg.org) | `pip install cvcpkg` |
+
+Everything else — libcvc, FFTW3, Boost, CGAL, HDF5, ImageMagick, pthreads4w
+on Windows, and even CMake and Ninja — is installed from the cvcpkg catalog.
+F2Dock does not use apt, Homebrew or vcpkg, and does not build libcvc from
+source.
 
 ### Build
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+pip install cvcpkg
+cvcpkg install-deps cvcpkg/recipes/f2dock --prefix deps \
+    --config release --link shared --include-host-tools
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/deps"
 cmake --build build --parallel
 ```
 
-Executables are placed in `build/bin/`.
+Executables are placed in `build/bin/`. The dependency set is whatever
+[`cvcpkg/recipes/f2dock/recipe.yaml`](cvcpkg/recipes/f2dock/recipe.yaml)
+declares, resolved transitively — the same recipe CI uses, and the same one
+that builds and publishes the `f2dock` package.
+
+### Packaging
+
+F2Dock ships as a cvcpkg package under the `cvc` organization:
+
+```bash
+cvcpkg install f2dock --prefix /some/prefix --config release --link shared
+```
 
 #### Optional GPL components
 
