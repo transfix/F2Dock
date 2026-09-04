@@ -39,50 +39,48 @@ inputs:
 outputs:
   prefix:
     description: 'Absolute path to the provisioned cvcpkg prefix.'
-    value: ${{ steps.install.outputs.prefix }}
+    value: ${{ steps.install.outputs.path }}
 
 runs:
   using: 'composite'
   steps:
-    - name: Set up Python (for cvcpkg)
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ inputs.python-version }}
-
-    - name: Install cvcpkg
-      shell: bash
-      run: python -m pip install --upgrade cvcpkg
-
-    - name: Install dependency closure
+    # Delegate to libcvc-deps' own cvcpkg-install action rather than
+    # pip-installing cvcpkg: it is NOT on PyPI, so `pip install cvcpkg` fails
+    # with "No matching distribution found". That action is the supported
+    # entry point -- it provisions cvcpkg itself and runs
+    # `cvcpkg install-deps` against the recipe.
+    #
+    # include_host_tools brings cmake, ninja and anything else the recipe pins
+    # from the catalog, so the runner image's toolchain is never in play.
+    - name: Install dependency closure via cvcpkg
       id: install
+      uses: transfix/libcvc-deps/.github/actions/cvcpkg-install@master
+      with:
+        recipe: cvcpkg/recipes/f2dock
+        build_type: ${{ inputs.build_type }}
+        link: ${{ inputs.link }}
+        prefix: ${{ inputs.prefix }}
+        include_host_tools: 'true'
+        python_version: ${{ inputs.python-version }}
+
+    - name: Export prefix to the job
       shell: bash
       env:
-        IN_BUILD_TYPE: ${{ inputs.build_type }}
-        IN_LINK: ${{ inputs.link }}
-        IN_PREFIX: ${{ inputs.prefix }}
+        PREFIX: ${{ steps.install.outputs.path }}
       run: |
         set -euo pipefail
-        config=$(echo "$IN_BUILD_TYPE" | tr '[:upper:]' '[:lower:]')
-        prefix="${IN_PREFIX:-$GITHUB_WORKSPACE/deps}"
-
-        cvcpkg install-deps cvcpkg/recipes/f2dock \
-          --prefix "$prefix" \
-          --config "$config" \
-          --link "$IN_LINK" \
-          --include-host-tools
-
-        echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
-
-        # Export to the rest of the job: CMake finds libcvc/FFTW/Boost here,
-        # PATH picks up the catalog's cmake+ninja, and the loader path lets
-        # ctest run binaries linked against the prefix's shared libraries.
-        echo "CMAKE_PREFIX_PATH=$prefix" >> "$GITHUB_ENV"
-        echo "$prefix/bin" >> "$GITHUB_PATH"
+        if [ -z "$PREFIX" ]; then
+          echo "::error::cvcpkg-install produced no prefix -- dependency provisioning failed."
+          exit 1
+        fi
+        echo "CMAKE_PREFIX_PATH=$PREFIX" >> "$GITHUB_ENV"
+        echo "$PREFIX/bin" >> "$GITHUB_PATH"
         case "$RUNNER_OS" in
           Linux)
-            echo "LD_LIBRARY_PATH=$prefix/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+            echo "LD_LIBRARY_PATH=$PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
             ;;
           macOS)
-            echo "DYLD_LIBRARY_PATH=$prefix/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+            echo "DYLD_LIBRARY_PATH=$PREFIX/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
             ;;
         esac
+        echo "cvcpkg prefix: $PREFIX"
