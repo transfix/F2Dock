@@ -26,6 +26,12 @@ find_package(Threads REQUIRED)
 if(WIN32)
   # CMake/FindPThreads4W.cmake: the cvcpkg bundle ships no package config.
   find_package(PThreads4W REQUIRED)
+  # <pthread.h> is included from the headers of most of F2Dock's static
+  # libraries (utils, fast-GB, fast-clash, ...), not only from the executables
+  # that link PThreads4W::PThreads4W, so its include directory goes on every
+  # target. vcpkg's MSBuild integration used to do this implicitly.
+  include_directories(
+    $<TARGET_PROPERTY:PThreads4W::PThreads4W,INTERFACE_INCLUDE_DIRECTORIES>)
 endif()
 
 # ── FFT provider ─────────────────────────────────────────────────────
