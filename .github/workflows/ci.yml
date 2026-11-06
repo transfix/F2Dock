@@ -22,10 +22,18 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install clang-format
+      # clang-format 18 from cvcpkg, like every other tool: nothing from apt.
+      # The binary installer is enough here -- this job is Linux-only.
+      - name: Install clang-format (cvcpkg)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang-format
+          set -euo pipefail
+          curl -fsSL https://cvcpkg.org/install.sh | sh
+          export PATH="$HOME/.local/bin:$PATH"
+          fmt="$RUNNER_TEMP/clang-format"
+          cvcpkg install clang-format --prefix "$fmt" \
+            --config release --link static --no-fallback-to-source
+          "$fmt/bin/clang-format" --version
+          echo "$fmt/bin" >> "$GITHUB_PATH"
 
       - name: Run clang-format --dry-run --Werror on all tracked sources
         run: |
@@ -47,23 +55,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Linux
-          - os: ubuntu-latest
+          # Linux. ubuntu-24.04 rather than ubuntu-latest, which moves to a
+          # new compiler without notice (it became 26.04 with gcc 15.2 under
+          # libcvc's CI); 24.04's gcc 13 is what this tree is verified with.
+          - os: ubuntu-24.04
             build_type: Debug
             coverage: true
             integration: true
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             build_type: Release
             coverage: false
             integration: false
           # The optional GPL modules (sparsefft3, libicp) are OFF by
           # default, so nothing else in this matrix compiles them. One job
-          # keeps that path from rotting. See THIRD-PARTY.md.
-          - os: ubuntu-latest
+          # keeps that path from rotting. sparsefft3 is written against FFTW,
+          # so this lane also selects the FFTW provider -- which makes it the
+          # one lane that runs the golden integration cases on the transform
+          # they were recorded with. See THIRD-PARTY.md.
+          - os: ubuntu-24.04
             build_type: Release
             coverage: false
-            integration: false
+            integration: true
             gpl_components: true
+            fft_provider: fftw
+            extra_deps: fftw3
           # macOS
           - os: macos-latest
             build_type: Debug
@@ -73,15 +88,18 @@ jobs:
             build_type: Release
             coverage: false
             integration: false
-          # Windows
-          - os: windows-latest
-            build_type: Debug
-            coverage: false
-            integration: true
-          - os: windows-latest
+          # Windows: Release only, on windows-2022 (VS2022, v143).
+          #   * The catalog publishes no windows-debug libcvc, and a Debug
+          #     (/MDd) F2Dock against the release (/MD) bundles is a CRT
+          #     mismatch across the libcvc DLL boundary, not a usable build.
+          #     libcvc's own CI drops Windows Debug for the same reason.
+          #   * windows-latest ships VS2026 (v180), whose CL.exe ICEs on
+          #     libcvc's C++20 headers; the bundles are built with v143.
+          # The integration cases that ran on the Debug lane run here.
+          - os: windows-2022
             build_type: Release
             coverage: false
-            integration: false
+            integration: true
 
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} / ${{ matrix.build_type }}${{ matrix.gpl_components && ' / GPL components' || '' }}
@@ -105,13 +123,20 @@ jobs:
         with:
           build_type: ${{ matrix.build_type }}
           link: shared
+          extra: ${{ matrix.extra_deps || '' }}
 
-      # lcov is a coverage-report tool, not a build dependency, and has no
-      # cvcpkg bundle. It runs only on the one Linux Debug lane that uploads
-      # coverage and never participates in compiling or linking F2Dock.
+      # lcov is a coverage-report tool, not a build dependency, but it comes
+      # from cvcpkg too (with the perl it runs on). gcov is the runner gcc's
+      # own, which is the compiler that wrote the .gcno files it reads.
       - name: Install lcov (coverage lane only)
         if: matrix.coverage
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends lcov
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/lcov"
+          cvcpkg install lcov --prefix "$tools" \
+            --config release --link shared --no-fallback-to-source
+          echo "$tools/bin" >> "$GITHUB_PATH"
+          "$tools/bin/lcov" --version
 
       # ── Configure (Unix) ──
       - name: Configure (Unix)
@@ -125,6 +150,7 @@ jobs:
           if [ "${{ matrix.gpl_components }}" = "true" ]; then
             gpl_components=ON
           fi
+          fft_provider="${{ matrix.fft_provider || 'pocketfft' }}"
           # pkg_check_modules(NFFT) reads PKG_CONFIG_PATH; CMAKE_PREFIX_PATH
           # and the loader paths are already exported by the cvcpkg-deps
           # action.
@@ -138,6 +164,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
             -DF2DOCK_BUILD_INTEGRATION_TESTS=${integration_tests}
             -DF2DOCK_ENABLE_GPL_COMPONENTS=${gpl_components}
+            -DF2DOCK_FFT_PROVIDER=${fft_provider}
           )
           if [ "${{ matrix.coverage }}" = "true" ]; then
             # F2Dock's CMakeLists.txt overwrites CMAKE_CXX_FLAGS via set(),
@@ -161,6 +188,7 @@ jobs:
           if [ "${{ matrix.gpl_components }}" = "true" ]; then
             gpl_components=ON
           fi
+          fft_provider="${{ matrix.fft_provider || 'pocketfft' }}"
           # No toolchain file: the cvcpkg prefix is on CMAKE_PREFIX_PATH and
           # every windows bundle in it is MSVC-built, which the default
           # Visual Studio generator matches.
@@ -168,6 +196,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DF2DOCK_BUILD_INTEGRATION_TESTS=${integration_tests} \
             -DF2DOCK_ENABLE_GPL_COMPONENTS=${gpl_components} \
+            -DF2DOCK_FFT_PROVIDER=${fft_provider} \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install"
 
       # ── Build ──
@@ -260,7 +289,7 @@ jobs:
           retention-days: 14
 
   package-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: package / linux
     concurrency:
       group: ci-${{ github.ref }}-package-linux
@@ -279,16 +308,14 @@ jobs:
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
       # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      # Nothing from apt either: CPack's DEB generator writes the archive
+      # itself and needs only the base image's dpkg, not dpkg-dev.
       - name: Provision dependencies (cvcpkg)
+        id: deps
         uses: ./.github/actions/cvcpkg-deps
         with:
           build_type: Release
           link: shared
-
-      # dpkg-dev is a packaging tool for the .deb step, not a build
-      # dependency, and has no cvcpkg bundle.
-      - name: Install dpkg-dev (packaging only)
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends dpkg-dev
 
       - name: Configure
         run: |
@@ -304,9 +331,14 @@ jobs:
         run: |
           STEM="F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-linux-${{ steps.meta.outputs.arch }}"
           cmake --install build --prefix staging/F2Dock
+          # Bundle every shared library the binaries resolve from the cvcpkg
+          # prefix (libcvc and its closure); system libraries stay the
+          # system's. This used to match libfftw only, which the default
+          # PocketFFT build no longer links.
+          deps="${{ steps.deps.outputs.prefix }}"
           mkdir -p staging/F2Dock/lib
           for bin in staging/F2Dock/bin/*; do
-            ldd "$bin" 2>/dev/null | grep -oP '/\S+libfftw\S+' | while read lib; do
+            ldd "$bin" 2>/dev/null | awk -v p="$deps/" '$3 ~ "^"p {print $3}' | while read lib; do
               cp -uL "$lib" staging/F2Dock/lib/
             done
           done
@@ -421,7 +453,8 @@ jobs:
           retention-days: 30
 
   package-windows:
-    runs-on: windows-latest
+    # windows-2022 for the reason given on the build matrix's Windows lane.
+    runs-on: windows-2022
     name: package / windows
     concurrency:
       group: ci-${{ github.ref }}-package-windows
@@ -467,8 +500,8 @@ jobs:
         run: |
           STEM="F2Dock-${{ steps.meta.outputs.version }}-${{ steps.meta.outputs.sha }}-windows-${{ steps.meta.outputs.arch }}"
           cmake --install build --config Release --prefix staging/F2Dock
-          # Runtime DLLs now come from the cvcpkg prefix (libcvc, FFTW, Boost,
-          # ... ) rather than a vcpkg installed tree.
+          # Runtime DLLs now come from the cvcpkg prefix (libcvc, Boost,
+          # pthreads4w, ...) rather than a vcpkg installed tree.
           cp "${{ steps.deps.outputs.prefix }}"/bin/*.dll staging/F2Dock/bin/ 2>/dev/null || true
           cp README.md LICENSE staging/F2Dock/
           cd staging
