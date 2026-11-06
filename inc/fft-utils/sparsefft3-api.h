@@ -32,15 +32,18 @@
   prototypes.
 
   This header is the seam. Include it instead of sparsefft3.h. When the build
-  opts in to the GPL components (F2DOCK_ENABLE_GPL_COMPONENTS=ON, which sets
-  F2DOCK_WITH_SPARSEFFT), it forwards to the real header. Otherwise it
+  opts in to the GPL components with the FFTW provider
+  (F2DOCK_ENABLE_GPL_COMPONENTS=ON and F2DOCK_FFT_PROVIDER=fftw, which
+  together set F2DOCK_WITH_SPARSEFFT), it forwards to the real header; the
+  module calls FFTW directly, so no other provider can build it. Otherwise it
   declares the same entry points against an incomplete plan type, which is
   all the LGPL core ever needs: the plan is only ever held and passed as an
   opaque pointer.
 
   In the default build the plan pointers are held at NULL (Docking.cpp, at
   the `if (!useSparseFFT)` branch) and every call site falls through to the
-  dense FFTW path, so none of the functions declared below is reached.
+  provider's dense transform, so none of the functions declared below is
+  reached.
   src/fft-utils/sparsefft3-stub.cpp satisfies the link.
 */
 

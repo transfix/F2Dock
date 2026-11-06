@@ -21,14 +21,15 @@
 
 /*
   Link-time stand-in for the GPL sparse 3-D FFT module, compiled in place of
-  sparsefft3.cpp / sparsefft3-plan.cpp when F2DOCK_ENABLE_GPL_COMPONENTS is
-  OFF (the default). See inc/fft-utils/sparsefft3-api.h.
+  sparsefft3.cpp / sparsefft3-plan.cpp unless the build has both
+  F2DOCK_ENABLE_GPL_COMPONENTS=ON and F2DOCK_FFT_PROVIDER=fftw. The default
+  build has neither. See inc/fft-utils/sparsefft3-api.h.
 
   Nothing here is reachable in a well-formed run: the engine forces
   useSparseFFT off when the module is absent, which pins both plan pointers
-  to NULL and routes every transform through dense FFTW. The bodies exist so
-  that a future caller which forgets that guard fails loudly rather than
-  silently producing a wrong score.
+  to NULL and routes every transform through the provider's dense transform.
+  The bodies exist so that a future caller which forgets that guard fails
+  loudly rather than silently producing a wrong score.
 */
 
 #include "fft-utils/sparsefft3-api.h"
@@ -44,9 +45,10 @@ static void sparsefft3_unavailable(const char *fn) {
           "of this build.\n"
           "        It is GPL-licensed and is only compiled when F2Dock is "
           "configured with\n"
-          "        -DF2DOCK_ENABLE_GPL_COMPONENTS=ON. Set 'useSparseFFT "
-          "false' in the\n"
-          "        parameter file to use the dense FFTW path instead.\n",
+          "        -DF2DOCK_ENABLE_GPL_COMPONENTS=ON "
+          "-DF2DOCK_FFT_PROVIDER=fftw. Set\n"
+          "        'useSparseFFT false' in the parameter file to use the "
+          "dense transform instead.\n",
           fn);
 }
 

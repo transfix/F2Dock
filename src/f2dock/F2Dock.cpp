@@ -25,6 +25,7 @@
 #include "TopValues.h"
 #include "f2dock/Version.h"
 #include "f3dock/DockMode.h"
+#include "fft-utils/fft_provider.h"
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1350,9 +1351,9 @@ bool setParamFromFile(PARAMS_IN *p, char *paramFile) {
           printf("Error: useSparseFFT=true requested but this F2Dock build "
                  "was configured without the sparse 3-D FFT module, which "
                  "is GPL-licensed (F2DOCK_WITH_SPARSEFFT undefined). "
-                 "Rebuild with -DF2DOCK_ENABLE_GPL_COMPONENTS=ON -- which "
-                 "produces a GPL binary -- or set useSparseFFT=false to use "
-                 "the dense FFTW transform.\n");
+                 "Rebuild with -DF2DOCK_ENABLE_GPL_COMPONENTS=ON "
+                 "-DF2DOCK_FFT_PROVIDER=fftw -- which produces a GPL binary "
+                 "-- or set useSparseFFT=false to use the dense transform.\n");
           return false;
 #endif
         } else if (strcasecmp(val, "false") == 0) {
@@ -2315,8 +2316,9 @@ int main(int argc, char *argv[]) {
 
   // Speed up the FFT using the sparsity of the input and/or output matrices.
   // The sparse transform is GPL-licensed and optional (see LICENSE and
-  // THIRD-PARTY.md); when it is not built the default is the dense FFTW
-  // path, which is slower but produces the same scores.
+  // THIRD-PARTY.md); when it is not built the default is the dense
+  // transform of the selected FFT provider, which is slower but produces
+  // the same scores.
 #ifdef F2DOCK_WITH_SPARSEFFT
   pr.useSparseFFT = true;
 #else
@@ -2655,8 +2657,9 @@ int main(int argc, char *argv[]) {
          nfft_active ? "yes" : "no");
 
   // Same three axes for the two optional GPL modules, so a run log records
-  // which FFT path actually executed and whether this binary is the plain
-  // LGPL build or the combined GPL one. See THIRD-PARTY.md.
+  // which FFT path and provider actually executed and whether this binary is
+  // the plain LGPL build or the combined GPL one. Linking FFTW makes it GPL
+  // even with both modules off. See THIRD-PARTY.md.
 #ifdef F2DOCK_WITH_SPARSEFFT
   const bool sparsefft_available = true;
 #else
@@ -2667,11 +2670,13 @@ int main(int argc, char *argv[]) {
 #else
   const bool libicp_available = false;
 #endif
+  const bool build_is_gpl =
+      sparsefft_available || libicp_available || cvc::fft::provider_is_gpl();
   printf("GPL components: sparseFFT=%s libicp=%s (build licence: %s)\n",
          sparsefft_available ? "yes" : "no", libicp_available ? "yes" : "no",
-         (sparsefft_available || libicp_available) ? "GPL-2.0-or-later"
-                                                   : "LGPL-2.1-only");
-  printf("FFT path: %s\n", pr.useSparseFFT ? "sparse" : "dense (FFTW)");
+         build_is_gpl ? "GPL-2.0-or-later" : "LGPL-2.1-only");
+  printf("FFT path: %s, provider %s\n", pr.useSparseFFT ? "sparse" : "dense",
+         cvc::fft::provider_name());
 
   // F3Dock mode: enumerate hinge/shear flex states up front so the FFT
   // scoring loop can iterate `pr.flexStates` unconditionally. With no

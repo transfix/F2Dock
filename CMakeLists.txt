@@ -27,7 +27,6 @@ SET(CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/CMake
   ${CMAKE_MODULE_PATH})
 
-# include macro for setting up FFTW
 # ── FFT provider ─────────────────────────────────────────────────────
 # F2Dock is LGPL-2.1-only. FFTW is GPL-2.0-or-later, so linking it makes the
 # binary a combined work under the GPL -- that is why the default is NOT FFTW,
@@ -36,18 +35,26 @@ SET(CMAKE_MODULE_PATH
 #   pocketfft  BSD-3-Clause. Default. Verified against FFTW to float64
 #              round-off (<= 7.3e-12, N=64..256). ~1.4-1.7x slower on
 #              throughput at equal core count.
-#   mkl        Intel oneMKL. Proprietary but redistributable, which LGPL
-#              permits linking; comparable to FFTW.
-#   cufft      NVIDIA cuFFT. Same licensing shape as MKL; needs a GPU.
 #   fftw       GPL-2.0-or-later. OPT-IN, warns loudly, and the binary reports
 #              itself as GPL at startup.
+#
+# Intel oneMKL and NVIDIA cuFFT are proprietary but redistributable, which
+# LGPL permits linking, so they are the planned non-GPL alternatives to FFTW's
+# speed. Neither has a backend yet (src/fft-utils/fft_<provider>.cpp), so
+# asking for one is a configure error rather than a missing-file build error.
 set(F2DOCK_FFT_PROVIDER "pocketfft" CACHE STRING
-    "FFT backend: pocketfft (default, BSD-3) | mkl | cufft | fftw (GPL)")
-set_property(CACHE F2DOCK_FFT_PROVIDER PROPERTY STRINGS pocketfft mkl cufft fftw)
+    "FFT backend: pocketfft (default, BSD-3) | fftw (GPL)")
+set_property(CACHE F2DOCK_FFT_PROVIDER PROPERTY STRINGS pocketfft fftw)
 
 string(TOLOWER "${F2DOCK_FFT_PROVIDER}" _f2dock_fft_provider)
-set(_f2dock_fft_known pocketfft mkl cufft fftw)
-if(NOT _f2dock_fft_provider IN_LIST _f2dock_fft_known)
+set(_f2dock_fft_known pocketfft fftw)
+set(_f2dock_fft_planned mkl cufft)
+if(_f2dock_fft_provider IN_LIST _f2dock_fft_planned)
+  message(FATAL_ERROR
+    "F2DOCK_FFT_PROVIDER='${F2DOCK_FFT_PROVIDER}' is planned but not "
+    "implemented: there is no src/fft-utils/fft_${_f2dock_fft_provider}.cpp "
+    "yet. Use one of: ${_f2dock_fft_known}")
+elseif(NOT _f2dock_fft_provider IN_LIST _f2dock_fft_known)
   message(FATAL_ERROR
     "F2DOCK_FFT_PROVIDER='${F2DOCK_FFT_PROVIDER}' is not one of: "
     "${_f2dock_fft_known}")
@@ -66,8 +73,8 @@ if(_f2dock_fft_provider STREQUAL "fftw")
     "   is a COMBINED WORK COVERED BY THE GNU GPL, not by F2Dock's\n"
     "   own LGPL-2.1. Do not redistribute it under F2Dock's licence.\n"
     "\n"
-    "   Reconfigure with -DF2DOCK_FFT_PROVIDER=pocketfft (BSD-3),\n"
-    "   mkl or cufft to keep the build LGPL.\n"
+    "   Reconfigure with -DF2DOCK_FFT_PROVIDER=pocketfft (BSD-3)\n"
+    "   to keep the build LGPL.\n"
     "  ============================================================\n")
 endif()
 
@@ -89,7 +96,11 @@ endif()
 # covered by the GPL, which is not what this project distributes. They are
 # therefore OFF by default. With the option OFF the sources are not
 # compiled and not linked, `useSparseFFT` is forced off in favour of the
-# dense FFTW path, and `icpRefine` is a no-op.
+# provider's dense transform, and `icpRefine` is rejected with an error.
+#
+# sparsefft3 calls FFTW's plan_many_dft / execute_dft directly, so it is
+# built only when F2DOCK_FFT_PROVIDER=fftw as well. With any other provider
+# the option builds libicp alone. libicp does no transforms.
 #
 # Turning this ON produces a GPL-2.0-or-later binary. Do not ship the
 # result under F2Dock's own licence. See THIRD-PARTY.md.
@@ -97,15 +108,29 @@ option(F2DOCK_ENABLE_GPL_COMPONENTS
   "Build the GPL-licensed sparse FFT and libicp modules. The resulting binary is covered by the GPL, not the LGPL."
   OFF)
 
+set(_f2dock_with_libicp OFF)
+set(_f2dock_with_sparsefft OFF)
+if(F2DOCK_ENABLE_GPL_COMPONENTS)
+  set(_f2dock_with_libicp ON)
+  if(_f2dock_fft_provider STREQUAL "fftw")
+    set(_f2dock_with_sparsefft ON)
+  endif()
+endif()
+
 if(F2DOCK_ENABLE_GPL_COMPONENTS)
   message(WARNING
     "F2DOCK_ENABLE_GPL_COMPONENTS=ON: sparsefft3 and libicp are GPL-2.0-or-later. "
     "The F2Dock binary produced by this build is a combined work covered by the "
     "GNU GPL v2 or later, not by F2Dock's own LGPL-2.1. See THIRD-PARTY.md.")
+  if(NOT _f2dock_with_sparsefft)
+    message(STATUS
+      "F2Dock: building libicp only. sparsefft3 is written against FFTW and "
+      "needs -DF2DOCK_FFT_PROVIDER=fftw as well; useSparseFFT is unavailable.")
+  endif()
 else()
   message(STATUS
     "F2Dock: GPL components disabled (default). Sparse FFT and ICP refinement "
-    "are unavailable; the dense FFTW transform is used. "
+    "are unavailable; the dense transform of the selected FFT provider is used. "
     "Re-run with -DF2DOCK_ENABLE_GPL_COMPONENTS=ON to build them.")
 endif()
 
@@ -156,8 +181,10 @@ endif()
 #     cmake -B build -DCMAKE_PREFIX_PATH="$PWD/deps"
 #
 # That installs libcvc plus everything cvcConfig.cmake find_dependency()s
-# (Boost, assimp) and everything F2Dock links directly (FFTW3, pthreads4w on
-# Windows) -- ~40 components, all hermetic cvcpkg bundles.
+# (Boost, assimp) and everything F2Dock builds against directly (PocketFFT,
+# GoogleTest, pthreads4w on Windows), all hermetic cvcpkg bundles. FFTW is not
+# in the closure: the FFTW provider is opt-in, so a build that selects it adds
+# it with `cvcpkg install fftw3 --prefix deps`.
 #
 # Why the source build is gone rather than kept as a fallback: compiling
 # libcvc here is what pulled CGAL and the host toolchain into F2Dock's build,
@@ -209,12 +236,14 @@ configure_file(
   @ONLY)
 include_directories("${CMAKE_BINARY_DIR}/inc")
 
-# Applied here rather than beside the option() above so the definitions reach
-# F2Dock's own targets (src/ and tests/unit/, which compiles IcpRefine.cpp
-# directly) without leaking into the libcvc subproject that FetchContent adds
-# between the two points.
-if(F2DOCK_ENABLE_GPL_COMPONENTS)
-  add_compile_definitions(F2DOCK_WITH_SPARSEFFT=1 F2DOCK_WITH_LIBICP=1)
+# Applied here, after find_package(cvc), so the definitions reach F2Dock's
+# own targets (src/ and tests/unit/, which compiles IcpRefine.cpp directly)
+# and nothing else.
+if(_f2dock_with_sparsefft)
+  add_compile_definitions(F2DOCK_WITH_SPARSEFFT=1)
+endif()
+if(_f2dock_with_libicp)
+  add_compile_definitions(F2DOCK_WITH_LIBICP=1)
 endif()
 
 add_subdirectory (src)
@@ -271,6 +300,8 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 # DEB-specific
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CVC Lab <bajaj@cs.utexas.edu>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "science")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-3")
+if(_f2dock_fft_provider STREQUAL "fftw")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-3")
+endif()
 
 include(CPack)

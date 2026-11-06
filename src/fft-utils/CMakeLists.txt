@@ -15,17 +15,16 @@ SET(SOURCE_FILES
   rank-fftw.cpp
 )
 
-# Exactly one provider backend is compiled.
+# Exactly one provider backend is compiled. The top-level CMakeLists.txt
+# rejects any provider not listed here, so there is no fall-through.
 if(_f2dock_fft_provider STREQUAL "fftw")
   LIST(APPEND SOURCE_FILES fft_fftw.cpp)
 elseif(_f2dock_fft_provider STREQUAL "pocketfft")
   LIST(APPEND SOURCE_FILES fft_pocketfft.cpp)
-elseif(_f2dock_fft_provider STREQUAL "mkl")
-  LIST(APPEND SOURCE_FILES fft_mkl.cpp)
-elseif(_f2dock_fft_provider STREQUAL "cufft")
-  LIST(APPEND SOURCE_FILES fft_cufft.cpp)
 endif()
-if(F2DOCK_ENABLE_GPL_COMPONENTS)
+# sparsefft3 is written against FFTW's plan_many_dft / execute_dft, so it
+# needs the FFTW provider as well as the GPL option (see the top level).
+if(_f2dock_with_sparsefft)
   LIST(APPEND SOURCE_FILES sparsefft3.cpp sparsefft3-plan.cpp)
 else()
   LIST(APPEND SOURCE_FILES sparsefft3-stub.cpp)
@@ -52,12 +51,4 @@ elseif(_f2dock_fft_provider STREQUAL "pocketfft")
   find_path(POCKETFFT_INCLUDE_DIR pocketfft_hdronly.h REQUIRED)
   target_include_directories(fft-utils PUBLIC ${POCKETFFT_INCLUDE_DIR})
   message(STATUS "F2Dock: FFT provider = PocketFFT (BSD-3) from ${POCKETFFT_INCLUDE_DIR}")
-elseif(_f2dock_fft_provider STREQUAL "mkl")
-  find_package(MKL CONFIG REQUIRED)
-  target_link_libraries(fft-utils PUBLIC MKL::MKL)
-  message(STATUS "F2Dock: FFT provider = Intel oneMKL")
-elseif(_f2dock_fft_provider STREQUAL "cufft")
-  find_package(CUDAToolkit REQUIRED)
-  target_link_libraries(fft-utils PUBLIC CUDA::cufft)
-  message(STATUS "F2Dock: FFT provider = NVIDIA cuFFT")
 endif()

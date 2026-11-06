@@ -26,7 +26,7 @@
 // hot loop runs (3-D c2c, double, N=64..256): agrees to float64 round-off,
 // <= 7.3e-12. It is slower -- FFTW leads by 1.41-1.73x on throughput at equal
 // core count -- which is the price of the licence, and why MKL and cuFFT are
-// also selectable.
+// the planned (not yet implemented) alternatives.
 //
 // PocketFFT has no planning stage: it computes twiddles per call and caches
 // them internally. So a "plan" here is just the captured shape and buffers,
