@@ -24,21 +24,20 @@ Developed at the [Computational Visualization Center](https://cvc-lab.github.io)
 | Dependency | Notes |
 |---|---|
 | C++20 compiler | GCC 13+, Clang 16+, or MSVC 19.4+ |
-| Python 3.9+ | Only to run `cvcpkg` itself |
-| [cvcpkg](https://cvcpkg.org) | `pip install cvcpkg` |
+| [cvcpkg](https://cvcpkg.org) | `curl -fsSL https://cvcpkg.org/install.sh \| sh` (Linux, macOS) or `irm https://cvcpkg.org/install.ps1 \| iex` (Windows). It is not on PyPI. |
 
-Everything else — libcvc, FFTW3, Boost, CGAL, HDF5, ImageMagick, pthreads4w
-on Windows, and even CMake and Ninja — is installed from the cvcpkg catalog.
-F2Dock does not use apt, Homebrew or vcpkg, and does not build libcvc from
-source.
+Everything else — libcvc, PocketFFT, GoogleTest, Boost, CGAL, HDF5,
+ImageMagick, pthreads4w on Windows, and even CMake and Ninja — is installed
+from the cvcpkg catalog. F2Dock does not use apt, Homebrew or vcpkg, and does
+not build libcvc from source.
 
 ### Build
 
 ```bash
-pip install cvcpkg
 cvcpkg install-deps cvcpkg/recipes/f2dock --prefix deps \
     --config release --link shared --include-host-tools
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/deps"
+export PATH="$PWD/deps/bin:$PATH"
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/deps"
 cmake --build build --parallel
 ```
 
@@ -49,11 +48,33 @@ that builds and publishes the `f2dock` package.
 
 ### Packaging
 
-F2Dock ships as a cvcpkg package under the `cvc` organization:
+[`cvcpkg/recipes/f2dock`](cvcpkg/recipes/f2dock) builds the `f2dock` cvcpkg
+package (PocketFFT, GPL components off, so LGPL-2.1). It is not published to
+the catalog yet; once it is:
 
 ```bash
 cvcpkg install f2dock --prefix /some/prefix --config release --link shared
 ```
+
+#### FFT provider
+
+FFTW is GPL-2.0-or-later, so a binary that links it is a combined work under
+the GPL, not F2Dock's LGPL-2.1. The transform is therefore selectable, and the
+default is not FFTW:
+
+| `-DF2DOCK_FFT_PROVIDER=` | Licence | Notes |
+|---|---|---|
+| `pocketfft` (default) | BSD-3-Clause | Header-only, from the cvcpkg `pocketfft` bundle |
+| `fftw` | GPL-2.0-or-later | Opt-in; configure warns, and the binary reports itself as GPL at startup. Add FFTW to the prefix first: `cvcpkg install fftw3 --prefix deps --config release --link shared` |
+
+Intel oneMKL and NVIDIA cuFFT (proprietary but redistributable, which the LGPL
+permits linking) are planned; selecting either today is a configure error.
+
+PocketFFT agrees with FFTW to float64 round-off. On the golden integration
+cases the poses, ranks and RMSDs are identical and scores differ by at most
+one unit in the last printed digit; see
+[THIRD-PARTY.md](THIRD-PARTY.md#fftw-the-linked-library). It is slower, by
+1.4-1.7x on transform throughput.
 
 #### Optional GPL components
 
@@ -65,21 +86,26 @@ so they are **not built by default**:
 | `sparsefft3` | `useSparseFFT` — sparse 3-D FFT | MIT 2000, modified at CVC Lab |
 | `libicp` | `icpRefine` — point-to-plane pose refinement | Andreas Geiger, KIT |
 
-The default build uses the **dense FFTW** transform instead of the sparse one.
-It is slower, and it produces the same scores. `icpRefine` is unavailable.
-Both parameters are rejected with an explanatory message rather than silently
-ignored, and the binary prints which modules it contains at startup:
+The default build uses the provider's **dense** transform instead of the
+sparse one. It is slower, and it produces the same scores. `icpRefine` is
+unavailable. Both parameters are rejected with an explanatory message rather
+than silently ignored, and the binary prints what it contains at startup:
 
 ```
 GPL components: sparseFFT=no libicp=no (build licence: LGPL-2.1-only)
-FFT path: dense (FFTW)
+FFT path: dense, provider PocketFFT (BSD-3-Clause)
 ```
 
 To build them:
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DF2DOCK_ENABLE_GPL_COMPONENTS=ON
+cvcpkg install fftw3 --prefix deps --config release --link shared
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/deps" \
+    -DF2DOCK_ENABLE_GPL_COMPONENTS=ON -DF2DOCK_FFT_PROVIDER=fftw
 ```
+
+`sparsefft3` calls FFTW directly, so it needs the FFTW provider. With
+`-DF2DOCK_ENABLE_GPL_COMPONENTS=ON` alone, only `libicp` is built.
 
 The resulting binary is a combined work covered by the GNU GPL v2 or later,
 **not** by F2Dock's LGPL-2.1. See [THIRD-PARTY.md](THIRD-PARTY.md).
@@ -141,7 +167,7 @@ numThreads       4
 | `rerank` / `numRerank` | Enable GB-Rerank rescoring and number of top poses to rescore |
 | `outFile` | Output file for ranked docking poses |
 | `numThreads` | Number of CPU threads |
-| `useSparseFFT` | Sparse FFT instead of dense FFTW. Requires `-DF2DOCK_ENABLE_GPL_COMPONENTS=ON`; see [Optional GPL components](#optional-gpl-components) |
+| `useSparseFFT` | Sparse FFT instead of the dense transform. Requires `-DF2DOCK_ENABLE_GPL_COMPONENTS=ON -DF2DOCK_FFT_PROVIDER=fftw`; see [Optional GPL components](#optional-gpl-components) |
 | `icpRefine` | Point-to-plane ICP refinement of the top poses. Requires `-DF2DOCK_ENABLE_GPL_COMPONENTS=ON` |
 
 All file paths are relative to the current working directory.  See [doc/params/](doc/params/) for the full parameter reference.

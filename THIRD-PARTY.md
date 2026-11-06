@@ -18,7 +18,7 @@ settled facts.
 | Tree | Files | Licence | In the default build? |
 |---|---:|---|---|
 | [`inc/libmol`, `src/libmol`](#libmol) | 76 | Boston University notice — **not free, not redistributable** | No (`HAVE_LIBMOL=OFF`) |
-| [`inc/fft-utils/sparsefft3*`, `src/fft-utils/sparsefft3*`](#sparsefft3) | 4 | GPL-2.0-or-later | No (`F2DOCK_ENABLE_GPL_COMPONENTS=OFF`) |
+| [`inc/fft-utils/sparsefft3*`, `src/fft-utils/sparsefft3*`](#sparsefft3) | 4 | GPL-2.0-or-later | No (`F2DOCK_ENABLE_GPL_COMPONENTS=OFF`, and needs `F2DOCK_FFT_PROVIDER=fftw`) |
 | [`inc/libicp`, `src/f3dock-icp`](#libicp) | 8 | GPL-2.0-or-later, plus AFL-1.1 | No (`F2DOCK_ENABLE_GPL_COMPONENTS=OFF`) |
 | [`src/f3dock-loop-closure/tripep_closure.*`](#tripeptide-loop-closure) | 2 | **No grant stated** | Yes |
 | [`src/f3dock-loop-closure/sturm.h`](#sturm-solver) | 1 | Graphics Gems, grant not restated | Yes |
@@ -27,9 +27,11 @@ settled facts.
 | [`inc/PG-range/cuckoo.h`, `src/PG-range/cuckoo.cc`](#cuckoo-hashing) | 2 | Permissive, attribution required | Yes |
 | [`inc/PG-range/dsexceptions.h`](#dsexceptionsh) | 1 | **Provenance unknown** | Yes |
 
-External libraries F2Dock links but does not vendor — FFTW3, pthreads,
-libcvc, and the optional Eigen3 / LAPACK / NFFT3 — are not listed here. FFTW3
-is itself GPL-2.0-or-later and is linked dynamically.
+External libraries F2Dock links but does not vendor — PocketFFT (header-only,
+BSD-3-Clause), pthreads, libcvc, and the optional Eigen3 / LAPACK / NFFT3 —
+are not listed here. FFTW3 is GPL-2.0-or-later and is linked only when a build
+opts in to `-DF2DOCK_FFT_PROVIDER=fftw`; see
+[FFTW, the linked library](#fftw-the-linked-library).
 
 ## The GPL build switch
 
@@ -39,19 +41,24 @@ what this project distributes, so both are behind one option that is **OFF by
 default**:
 
 ```
-cmake -S . -B build -DF2DOCK_ENABLE_GPL_COMPONENTS=ON
+cmake -S . -B build -DF2DOCK_ENABLE_GPL_COMPONENTS=ON -DF2DOCK_FFT_PROVIDER=fftw
 ```
+
+`sparsefft3` is written against FFTW's `plan_many_dft` / `execute_dft`, so it
+is built only when the FFTW provider is selected too. With the option ON and
+any other provider, `libicp` is built and `sparsefft3` is not.
 
 With the option OFF the GPL sources are not compiled and not linked, and:
 
 - `useSparseFFT` defaults to `false` and is refused if a parameter file asks
-  for it. Transforms go through dense FFTW instead — slower, same scores.
+  for it. Transforms go through the provider's dense transform instead —
+  slower, same scores.
 - `icpRefine` is refused if a parameter file asks for it, and
   `f2dock::refine_pose_point_to_plane` is a no-op returning `refined == false`.
 
-With the option ON, CMake emits a warning and the binary reports
-`build licence: GPL-2.0-or-later` at startup. Do not ship that binary under
-F2Dock's own licence.
+With the option ON, or with the FFTW provider, CMake emits a warning and the
+binary reports `build licence: GPL-2.0-or-later` at startup. Do not ship that
+binary under F2Dock's own licence.
 
 The LGPL core does not `#include` the GPL headers in either configuration.
 `inc/fft-utils/sparsefft3-api.h` is the seam: it forwards to the real header
@@ -185,23 +192,34 @@ default. No action needed.
 - **Authors:** Matteo Frigo and MIT, 2003/2006
 - **Licence:** BSD-2-Clause. The file says so explicitly: the BSD terms apply
   "*only* to this header file, and *not* to the other files distributed with
-  FFTW or derived therefrom". The FFTW library itself is GPL-2.0-or-later and
-  is linked dynamically.
+  FFTW or derived therefrom". The FFTW library itself is GPL-2.0-or-later;
+  see below for when it is linked.
 
 Permissive and LGPL-compatible. It does shadow the system `fftw3.h`, which is a
-maintenance hazard independent of licensing.
+maintenance hazard independent of licensing. Several headers still include it
+for its type names in the default build; dropping it is part of the
+reentrancy work, not this file.
 
-### The library behind that header is the largest open licensing question
+## FFTW, the linked library
 
-The *header* is BSD-2. **The library is GPL-2.0-or-later**, and the cvcpkg
-recipe agrees (`recipes/fftw3/recipe.yaml`: `license: GPL-2.0-or-later`).
-`SetupFFTW()` is called unconditionally at `CMakeLists.txt:32` and `FFTW_LIB`
-is linked unconditionally, so **every F2Dock binary is a combined work with
-GPL code** — independently of the vendored `sparsefft3` and `libicp` this file
+The *header* above is BSD-2. **The library is GPL-2.0-or-later**, and the
+cvcpkg recipe agrees (`recipes/fftw3/recipe.yaml`: `license: GPL-2.0-or-later`).
+Until the FFT provider seam, `SetupFFTW()` ran unconditionally and `FFTW_LIB`
+was linked unconditionally, so **every F2Dock binary was a combined work with
+GPL code**, independently of the vendored `sparsefft3` and `libicp` this file
 already covers, and not fixed by gating those off. Under the usual reading,
 dynamic linking does not change that.
 
-That makes an FFT-provider swap the load-bearing item for LGPL status, not an
+**Status: resolved for the default build.** The transform is now selected by
+`F2DOCK_FFT_PROVIDER`, and the default is PocketFFT (BSD-3-Clause). FFTW is
+searched for and linked only with `-DF2DOCK_FFT_PROVIDER=fftw`, which warns at
+configure time and makes the binary report itself as GPL at startup. The
+`f2dock` cvcpkg recipe builds with PocketFFT and does not depend on `fftw3`.
+The libcvc bundles F2Dock consumes (3.7.11) are built without FFTW too, so
+nothing in a default build's link line or loader closure is FFTW: `ldd` on all
+four default binaries finds no `libfftw3`.
+
+That made an FFT-provider swap the load-bearing item for LGPL status, not an
 optimisation. The swap itself is small: F2Dock's whole FFTW surface is already
 funnelled through the `FFTW_*` macros in `inc/fft-utils/fftwPrecision.h`, and
 amounts to `plan_dft_3d` (11 sites), `plan_dft_1d` (5), `plan_dft_r2c_3d` (4),
@@ -243,11 +261,33 @@ those cores on four rotations.)
 Options, in order of licensing cleanliness:
 
 1. **PocketFFT (BSD-3)** — clean LGPL, header-only, no new bundle needed, at
-   ~1.4–1.7x FFT cost.
+   ~1.4–1.7x FFT cost. **This is the default now.**
 2. **Intel MKL or cuFFT** — proprietary but redistributable, which LGPL-2.1
    permits linking; likely matches or beats FFTW. This is the cvcpkg roadmap's
-   D9 item.
+   D9 item. Not implemented yet: selecting `mkl` or `cufft` is a configure
+   error until `src/fft-utils/fft_mkl.cpp` / `fft_cufft.cpp` exist.
 3. **Buy FFTW's commercial licence from MIT** — no code change at all.
+
+**End to end, on the golden integration cases** (`tests/integration`, the
+baselines recorded with FFTW and the sparse transform), the PocketFFT dense
+build matches on every row: identical poses, ranks, RMSDs, rotations and
+translations, with scores differing by at most one unit in the fifth printed
+decimal and some zeros printed with the opposite sign:
+
+| Case | Rows | PocketFFT dense vs golden | FFTW + sparse vs golden | PocketFFT dense vs FFTW dense |
+|---|---:|---|---|---|
+| 1ACB | 54 | 2e-5 abs, 6.95e-6 rel | 2e-5 abs, 6.95e-6 rel | 0 |
+| 1A2K | 108 | 1e-5 abs, 1.56e-6 rel | 1e-5 abs, 1.56e-6 rel | 0 |
+| 1A2K_flex | 108 | 0 | 0 | 0 |
+| 1A2K_domain | 108 | 0 | 0 | 0 |
+
+Largest differences over every row (the tests compare the first 50, at
+`ABS_TOL 1e-3`, `REL_TOL 1e-5`, which are unchanged). PocketFFT and FFTW agree
+exactly at the printed precision on all four cases. The small deltas against
+the baselines appear with FFTW and the sparse transform as well, which is the
+configuration they were recorded with, so they come from the build that
+recorded them, not from the provider. Measured on this workstation with
+libcvc 3.7.11 and gcc 13, Release.
 
 `sparsefft3` sits on top of whichever base transform is chosen: it is a pruned
 FFT exploiting input/output sparsity, and its output is *identical* to the

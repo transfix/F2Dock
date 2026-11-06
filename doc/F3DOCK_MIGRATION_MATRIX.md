@@ -57,8 +57,9 @@ is LGPL-2.1-only, so the whole `f3dock-icp` target -- including UT Austin's own
 `refined == false`. Everything described under Phase 2 and Phase 4 task 4 below
 is therefore accurate but only reachable in a GPL build.
 
-The same applies to the sparse FFT (`sparsefft3`) behind `useSparseFFT`; the
-default build uses dense FFTW, which produces the same scores.
+The same applies to the sparse FFT (`sparsefft3`) behind `useSparseFFT`, which
+also needs `-DF2DOCK_FFT_PROVIDER=fftw`; the default build uses PocketFFT's
+dense transform, which produces the same scores.
 
 Any future F3Dock parity work that reaches for `IcpAligner` needs either that
 build flag or a permissively-licensed ICP. See [THIRD-PARTY.md](../THIRD-PARTY.md).
