@@ -22,7 +22,7 @@ source:
 patches: []
 
 depends:
-  # F2Dock's own direct surface is small: FFTW for the correlation core,
+  # F2Dock's own direct surface is small: PocketFFT for the correlation core,
   # libcvc for volume I/O (src/vol/RAWIV.cpp) and cvc::xmlrpc (F2DockServer),
   # and pthreads on Windows. Everything else -- Boost, CGAL, HDF5,
   # ImageMagick, assimp, libiimod, grpc -- arrives transitively through
@@ -30,12 +30,19 @@ depends:
   # find_dependency()s Boost and assimp unconditionally, so they must be in
   # the prefix even though F2Dock never names them.
   #
-  # NOTE: the GPL components (sparsefft3, libicp) are OFF by default -- see
-  # THIRD-PARTY.md -- so this bundle is unambiguously LGPL-2.1 and needs no
-  # extra deps for them.
+  # NOTE: this bundle is built with the PocketFFT provider and the GPL
+  # components (sparsefft3, libicp) OFF -- see build.sh and THIRD-PARTY.md --
+  # so it is unambiguously LGPL-2.1 and FFTW is not a dependency of it.
+  # FFTW (GPL-2.0-or-later) is only needed by a local build that opts in to
+  # -DF2DOCK_FFT_PROVIDER=fftw; the recipe schema has no optional deps, so
+  # such a build adds it to the prefix itself:
+  #
+  #     cvcpkg install fftw3 --prefix deps --config release --link shared
   build:
     - name: libcvc
-    - name: fftw3
+    # Header-only (pocketfft_hdronly.h), so a build dep only: nothing of it
+    # is linked, and it is not in the runtime list below.
+    - name: pocketfft
     # Unit tests only -- but a build dep, not a runtime one, so it is not in
     # the runtime list below and does not end up in the published bundle.
     - name: googletest
@@ -43,7 +50,6 @@ depends:
       platforms: [windows]
   runtime:
     - name: libcvc
-    - name: fftw3
     - name: pthreads4w
       platforms: [windows]
   host_tools:

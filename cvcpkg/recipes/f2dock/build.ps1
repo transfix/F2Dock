@@ -18,7 +18,9 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # CMAKE_PREFIX_PATH is deliberately NOT passed: env-windows.ps1 sets it to
 # CVC_DEPS_PREFIX;CVC_BUILD_PREFIX, and a -D here would override that and drop
 # the build prefix.
+# PocketFFT and the GPL modules OFF keep the bundle LGPL-2.1; see build.sh.
 Invoke-CvcCMakeBuild @(
     '-DF2DOCK_BUILD_TESTS=OFF'
+    '-DF2DOCK_FFT_PROVIDER=pocketfft'
     '-DF2DOCK_ENABLE_GPL_COMPONENTS=OFF'
 )

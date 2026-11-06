@@ -26,15 +26,17 @@ CMAKE_ARGS=(
   -B "$CVC_BUILD_DIR"
   -DCMAKE_INSTALL_PREFIX="$CVC_INSTALL_DIR"
   -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE"
-  # Tests pull googletest over the network; a recipe build is not the place
-  # for that. CI runs the suite separately from a normal source build.
+  # The bundle ships no tests; CI runs the suite from a normal source build.
   -DF2DOCK_BUILD_TESTS=OFF
-  # The GPL modules (sparsefft3, libicp) stay OFF so the published bundle is
-  # unambiguously LGPL-2.1. See THIRD-PARTY.md.
+  # PocketFFT (BSD-3) and the GPL modules (sparsefft3, libicp) OFF, so the
+  # published bundle is unambiguously LGPL-2.1. Both are the defaults; they
+  # are spelled out so a change of default cannot change the bundle's
+  # licence. See THIRD-PARTY.md.
+  -DF2DOCK_FFT_PROVIDER=pocketfft
   -DF2DOCK_ENABLE_GPL_COMPONENTS=OFF
 )
 
-# The deps prefix carries libcvc (find_package(cvc CONFIG)), FFTW and the
+# The deps prefix carries libcvc (find_package(cvc CONFIG)), PocketFFT and the
 # whole transitive closure libcvc's config file find_dependency()s.
 if [[ -n "${CVC_DEPS_PREFIX:-}" ]]; then
   CMAKE_ARGS+=("-DCMAKE_PREFIX_PATH=$CVC_DEPS_PREFIX")
