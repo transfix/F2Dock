@@ -17,15 +17,16 @@ else()
   set(CMAKE_LD_FLAGS "$ENV{LDFLAGS}")
 endif()
 
-find_package(Threads REQUIRED)
-if(WIN32)
-  find_package(PThreads4W REQUIRED)
-endif()
-
 # CMake Modules
 SET(CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/CMake
   ${CMAKE_MODULE_PATH})
+
+find_package(Threads REQUIRED)
+if(WIN32)
+  # CMake/FindPThreads4W.cmake: the cvcpkg bundle ships no package config.
+  find_package(PThreads4W REQUIRED)
+endif()
 
 # ── FFT provider ─────────────────────────────────────────────────────
 # F2Dock is LGPL-2.1-only. FFTW is GPL-2.0-or-later, so linking it makes the
