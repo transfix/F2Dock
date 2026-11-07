@@ -131,20 +131,14 @@ jobs:
           cmake --install build --prefix staging/F2Dock.app/Contents/Resources
           mkdir -p staging/F2Dock.app/Contents/MacOS
 
-          # Copy binaries into MacOS dir
-          cp staging/F2Dock.app/Contents/Resources/bin/* \
+          # Move (not copy) the binaries into the MacOS dir, then bundle every
+          # non-OS dylib they load from the cvcpkg prefix and check nothing
+          # leads outside the bundle. Same steps as ci.yml's package-macos.
+          mv staging/F2Dock.app/Contents/Resources/bin/* \
              staging/F2Dock.app/Contents/MacOS/
-
-          # Bundle FFTW dylib
-          mkdir -p staging/F2Dock.app/Contents/Frameworks
-          for bin in staging/F2Dock.app/Contents/MacOS/*; do
-            otool -L "$bin" 2>/dev/null | grep -oE '/[^ ]+libfftw[^ ]+' | while read lib; do
-              bname=$(basename "$lib")
-              cp -n "$lib" staging/F2Dock.app/Contents/Frameworks/ 2>/dev/null || true
-              install_name_tool -change "$lib" \
-                "@executable_path/../Frameworks/$bname" "$bin" 2>/dev/null || true
-            done
-          done
+          rmdir staging/F2Dock.app/Contents/Resources/bin
+          bash .github/scripts/macos-bundle-app.sh staging/F2Dock.app "${{ steps.deps.outputs.prefix }}"
+          bash .github/scripts/macos-check-app.sh staging/F2Dock.app
 
           # Create the DMG
           cp README.md staging/F2Dock.app/Contents/Resources/
@@ -153,6 +147,18 @@ jobs:
             -srcfolder staging/F2Dock.app \
             -ov -format UDZO \
             F2Dock-${{ steps.meta.outputs.version }}-macos-${{ steps.meta.outputs.arch }}.dmg
+
+      - name: Check the .zip runs without the build's prefix
+        run: |
+          set -euo pipefail
+          deps="${{ steps.deps.outputs.prefix }}"
+          check="$RUNNER_TEMP/zip-check"
+          rm -rf "$check"
+          mkdir -p "$check"
+          ditto -x -k "F2Dock-${{ steps.meta.outputs.version }}-macos-${{ steps.meta.outputs.arch }}.zip" "$check"
+          mv "$deps" "$deps.hidden"
+          trap 'mv "$deps.hidden" "$deps"' EXIT
+          bash .github/scripts/macos-check-app.sh "$check/F2Dock.app" --run
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
