@@ -300,7 +300,7 @@ jobs:
       - name: Compute artifact metadata
         id: meta
         run: |
-          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          VERSION=$(sed -nE 's/^[[:space:]]*project\(F2Dock[[:space:]]+VERSION[[:space:]]+([0-9.]+).*/\1/p' CMakeLists.txt)
           SHA=$(git rev-parse --short=8 HEAD)
           ARCH=$(uname -m)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -391,7 +391,7 @@ jobs:
       - name: Compute artifact metadata
         id: meta
         run: |
-          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          VERSION=$(sed -nE 's/^[[:space:]]*project\(F2Dock[[:space:]]+VERSION[[:space:]]+([0-9.]+).*/\1/p' CMakeLists.txt)
           SHA=$(git rev-parse --short=8 HEAD)
           ARCH=$(uname -m)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -466,7 +466,7 @@ jobs:
         id: meta
         shell: bash
         run: |
-          VERSION=$(awk '/^[[:space:]]*VERSION[[:space:]]+[0-9]/{gsub(/[^0-9.]/,"",$2); print $2; exit}' CMakeLists.txt)
+          VERSION=$(sed -nE 's/^[[:space:]]*project\(F2Dock[[:space:]]+VERSION[[:space:]]+([0-9.]+).*/\1/p' CMakeLists.txt)
           SHA=$(git rev-parse --short=8 HEAD)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
