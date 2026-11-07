@@ -22,7 +22,13 @@ ENDIF(HAVE_LIBMOL)
 ADD_SUBDIRECTORY (PG-range)
 if(F2DOCK_ENABLE_F3DOCK_EXPERIMENTAL)
 ADD_SUBDIRECTORY (f3dock-loop-closure)
+# libicp (src/f3dock-icp/{icp,icpPointToPoint,icpPointToPlane,matrix}.cpp
+# and inc/libicp/) is GPL-2.0-or-later, and kdtree.cpp is AFL-1.1. The whole
+# target is gated: IcpAligner is a thin wrapper over libicp and has nothing
+# to wrap without it.
+if(F2DOCK_ENABLE_GPL_COMPONENTS)
 ADD_SUBDIRECTORY (f3dock-icp)
+endif()
 ADD_SUBDIRECTORY (f3dock-flex)
 ADD_SUBDIRECTORY (f3dock-domain)
 ADD_SUBDIRECTORY (f3dock-nfft)

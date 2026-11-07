@@ -36,32 +36,31 @@
 #include <string>
 #include <vector>
 
-#include <cvc/app.h>
-#include <cvc/bounding_box.h>
-#include <cvc/dimension.h>
-#include <cvc/types.h>
-#include <cvc/volume.h>
-#include <cvc/volume_file_info.h>
+#include <cvc/core/app.h>
+#include <cvc/volume/bounding_box.h>
+#include <cvc/volume/dimension.h>
+#include <cvc/core/types.h>
+#include <cvc/volume/volume.h>
+#include <cvc/volume/volume_file_info.h>
 
 #include "RAWIV.h"
 
 namespace {
 
 #ifdef FFTW_SINGLE_PRECISION
-constexpr CVC_NAMESPACE::data_type kFftwVoxelType = CVC_NAMESPACE::Float;
+constexpr cvc::data_type kFftwVoxelType = cvc::Float;
 #else
-constexpr CVC_NAMESPACE::data_type kFftwVoxelType = CVC_NAMESPACE::Double;
+constexpr cvc::data_type kFftwVoxelType = cvc::Double;
 #endif
 
 // Build a libcvc bounding_box from the (xCenter, yCenter, zCenter, scale)
 // convention used throughout F2Dock. F2Dock stores `scale` as the inverse of
 // the cube edge length, so the half-extent in each dimension is 0.5/scale.
-CVC_NAMESPACE::bounding_box centerScaleToBox(double xCenter, double yCenter,
-                                             double zCenter, double scale) {
+cvc::bounding_box centerScaleToBox(double xCenter, double yCenter,
+                                   double zCenter, double scale) {
   const double half = 0.5 / scale;
-  return CVC_NAMESPACE::bounding_box(xCenter - half, yCenter - half,
-                                     zCenter - half, xCenter + half,
-                                     yCenter + half, zCenter + half);
+  return cvc::bounding_box(xCenter - half, yCenter - half, zCenter - half,
+                           xCenter + half, yCenter + half, zCenter + half);
 }
 
 // Helper: write an n^3 cube of FFTW samples to a RAWIV file via libcvc.
@@ -73,11 +72,10 @@ int writeRAWIVCube(const FFTW_DATA_TYPE *vol, int n, double xCenter,
   }
 
   try {
-    CVC_NAMESPACE::app ctx;
-    CVC_NAMESPACE::volume cvol(
-        ctx, reinterpret_cast<const unsigned char *>(vol),
-        CVC_NAMESPACE::dimension(n, n, n), kFftwVoxelType,
-        centerScaleToBox(xCenter, yCenter, zCenter, scale));
+    cvc::app ctx;
+    cvc::volume cvol(ctx, reinterpret_cast<const unsigned char *>(vol),
+                     cvc::dimension(n, n, n), kFftwVoxelType,
+                     centerScaleToBox(xCenter, yCenter, zCenter, scale));
     cvol.write(std::string(fileName));
     return 1;
   } catch (const std::exception &e) {
@@ -99,8 +97,8 @@ int readRAWIVCube(FFTW_DATA_TYPE **outVol, int *xDim, int *yDim, int *zDim,
   }
 
   try {
-    CVC_NAMESPACE::app ctx;
-    CVC_NAMESPACE::volume cvol(ctx, std::string(fileName));
+    cvc::app ctx;
+    cvc::volume cvol(ctx, std::string(fileName));
 
     *xDim = static_cast<int>(cvol.XDim());
     *yDim = static_cast<int>(cvol.YDim());
@@ -128,20 +126,20 @@ int readRAWIVCube(FFTW_DATA_TYPE **outVol, int *xDim, int *yDim, int *zDim,
     // Cast through the per-element accessor so we get a clean conversion to
     // FFTW_DATA_TYPE regardless of whether the on-disk type was Float,
     // Double, or UChar.
-    const CVC_NAMESPACE::data_type vt = cvol.voxelType();
+    const cvc::data_type vt = cvol.voxelType();
     const unsigned char *raw = *cvol;
 
     if (vt == kFftwVoxelType) {
       memcpy(*outVol, raw, n * sizeof(FFTW_DATA_TYPE));
-    } else if (vt == CVC_NAMESPACE::Float) {
+    } else if (vt == cvc::Float) {
       const float *src = reinterpret_cast<const float *>(raw);
       for (std::size_t i = 0; i < n; ++i)
         (*outVol)[i] = static_cast<FFTW_DATA_TYPE>(src[i]);
-    } else if (vt == CVC_NAMESPACE::Double) {
+    } else if (vt == cvc::Double) {
       const double *src = reinterpret_cast<const double *>(raw);
       for (std::size_t i = 0; i < n; ++i)
         (*outVol)[i] = static_cast<FFTW_DATA_TYPE>(src[i]);
-    } else if (vt == CVC_NAMESPACE::UChar) {
+    } else if (vt == cvc::UChar) {
       const unsigned char *src = raw;
       for (std::size_t i = 0; i < n; ++i)
         (*outVol)[i] = static_cast<FFTW_DATA_TYPE>(src[i]);
@@ -235,8 +233,8 @@ int readRAWIVHeader(int *xDim, int *yDim, int *zDim, double *xCenter,
     return 0;
 
   try {
-    CVC_NAMESPACE::app ctx;
-    CVC_NAMESPACE::volume_file_info info(ctx, std::string(fileName));
+    cvc::app ctx;
+    cvc::volume_file_info info(ctx, std::string(fileName));
 
     *xDim = static_cast<int>(info.XDim());
     *yDim = static_cast<int>(info.YDim());

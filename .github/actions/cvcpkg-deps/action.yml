@@ -1,0 +1,177 @@
+name: 'Provision dependencies via cvcpkg'
+description: |
+  Installs F2Dock's entire third-party dependency closure from the cvcpkg
+  catalog into a prefix, and exports that prefix to the calling job.
+
+  This is the ONLY dependency source F2Dock uses. There is deliberately no
+  apt / Homebrew / vcpkg path and no libcvc-deps release-tarball download:
+
+    * libcvc arrives as a published bundle, so F2Dock never compiles it.
+      That matters because compiling libcvc is what pulls CGAL and the host
+      toolchain into F2Dock's build. Homebrew and vcpkg have both moved to
+      CGAL 6.2, which collides with a `#define error(x)` in libcvc's
+      reg3data.h, and windows-latest's VS18 v180 crashes CL.exe outright on
+      cvc.vcxproj. Neither can reach a build that consumes a bundle.
+    * cmake and ninja come from the catalog too (--include-host-tools), so
+      the runner image's toolchain versions are never in play.
+
+  The closure is not listed here: it is whatever cvcpkg/recipes/f2dock
+  declares, resolved transitively. Adding a dependency to the recipe is
+  enough to make CI install it. `extra` adds components a particular lane
+  opts in to and the recipe deliberately leaves out (fftw3, for the GPL
+  FFTW provider).
+
+  The dependency bundles are always the release ones, whatever the build
+  type. The catalog's debug coverage is partial (there is no windows-debug
+  libcvc at all), and a Debug F2Dock links the release, ABI-stable shared
+  bundles fine on Linux and macOS. libcvc's own recipe CI follows the same
+  rule. On Windows a Debug build against release bundles is a CRT mismatch,
+  which is why ci.yml has no Windows Debug lane.
+
+inputs:
+  build_type:
+    description: >
+      Debug or Release. Informational only: the bundles installed are always
+      the release ones (see the description).
+    required: false
+    default: 'Release'
+  link:
+    description: 'shared or static.'
+    required: false
+    default: 'shared'
+  prefix:
+    description: 'Install prefix. Defaults to $RUNNER_TEMP/f2dock-deps.'
+    required: false
+    default: ''
+  extra:
+    description: >
+      Space-separated catalog components to install into the same prefix on
+      top of the recipe's closure, e.g. `fftw3` for -DF2DOCK_FFT_PROVIDER=fftw.
+    required: false
+    default: ''
+  cvcpkg-ref:
+    description: >
+      Git ref of cy-pca/cvcpkg to install the CLI from. A release tag, so a
+      re-run resolves the same tool it originally used.
+    required: false
+    default: 'cvcpkg-v2.5.11'
+
+outputs:
+  prefix:
+    description: 'Absolute path to the provisioned cvcpkg prefix.'
+    value: ${{ steps.install.outputs.path }}
+
+runs:
+  using: 'composite'
+  steps:
+    # The CLI is installed from source with pip, as libcvc's CI does. The
+    # https://cvcpkg.org/install.sh binary installer has no Windows build, and
+    # cvcpkg is not on PyPI. This used to go through
+    # transfix/libcvc-deps/.github/actions/cvcpkg-install, but that repository
+    # is archived (cvcpkg moved to cy-pca/cvcpkg) and its action never had the
+    # include_host_tools / fallback_to_source inputs this file passed it, so
+    # every lane ran without host tools and died on the first missing tuple.
+    #
+    # Every path pip needs to BUILD the package is listed, not only the ones
+    # needed to run it: pep517-backend/ holds the in-tree build backend that
+    # pyproject.toml names.
+    - name: Check out cvcpkg
+      uses: actions/checkout@v5
+      with:
+        repository: cy-pca/cvcpkg
+        ref: ${{ inputs.cvcpkg-ref }}
+        path: _cvcpkg
+        sparse-checkout: |
+          src
+          pyproject.toml
+          README.md
+          packaging
+          pep517-backend
+        sparse-checkout-cone-mode: false
+
+    - name: Set up Python for cvcpkg
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install the cvcpkg CLI
+      shell: bash
+      run: |
+        set -euo pipefail
+        pip install ./_cvcpkg
+        cvcpkg --version
+
+    - name: Install the dependency closure
+      id: install
+      shell: bash
+      env:
+        F2D_LINK: ${{ inputs.link }}
+        F2D_PREFIX: ${{ inputs.prefix }}
+        F2D_EXTRA: ${{ inputs.extra }}
+      run: |
+        set -euo pipefail
+
+        case "$RUNNER_OS" in
+          Linux)   platform=linux ;;
+          macOS)   platform=macos ;;
+          Windows) platform=windows ;;
+          *) echo "::error::unsupported runner OS: $RUNNER_OS"; exit 1 ;;
+        esac
+        case "$(uname -m)" in
+          x86_64|amd64|x64) arch=x86_64 ;;
+          aarch64|arm64)    arch=arm64 ;;
+          *)                arch=$(uname -m) ;;
+        esac
+        # cvcpkg and CMake are native programs on Windows: hand them a
+        # C:/style path, not an MSYS /d/ one.
+        native() { if [ "$RUNNER_OS" = Windows ]; then cygpath -m "$1"; else echo "$1"; fi; }
+
+        prefix="${F2D_PREFIX:-$RUNNER_TEMP/f2dock-deps}"
+        prefix=$(native "$prefix")
+        mkdir -p "$prefix"
+
+        # --no-fallback-to-source: a tuple the catalog lacks is a red lane
+        # that names the component, not a silent from-source build of it.
+        common=(--prefix "$prefix" --platform "$platform" --arch "$arch"
+                --config release --link "$F2D_LINK" --no-fallback-to-source)
+
+        echo "::group::cvcpkg install-deps cvcpkg/recipes/f2dock"
+        cvcpkg install-deps cvcpkg/recipes/f2dock "${common[@]}" --include-host-tools
+        echo "::endgroup::"
+
+        if [ -n "$F2D_EXTRA" ]; then
+          read -r -a extra <<<"$F2D_EXTRA"
+          echo "::group::cvcpkg install ${extra[*]}"
+          cvcpkg install "${extra[@]}" "${common[@]}"
+          echo "::endgroup::"
+        fi
+
+        echo "path=$prefix" >> "$GITHUB_OUTPUT"
+
+    - name: Export prefix to the job
+      shell: bash
+      env:
+        PREFIX: ${{ steps.install.outputs.path }}
+      run: |
+        set -euo pipefail
+        echo "CMAKE_PREFIX_PATH=$PREFIX" >> "$GITHUB_ENV"
+        case "$RUNNER_OS" in
+          Linux)
+            echo "$PREFIX/bin" >> "$GITHUB_PATH"
+            echo "LD_LIBRARY_PATH=$PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+            ;;
+          macOS)
+            echo "$PREFIX/bin" >> "$GITHUB_PATH"
+            echo "DYLD_LIBRARY_PATH=$PREFIX/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+            ;;
+          Windows)
+            # DLLs live in bin/; that is also where the loader finds them.
+            echo "$(cygpath -w "$PREFIX/bin")" >> "$GITHUB_PATH"
+            ;;
+        esac
+        echo "cvcpkg prefix: $PREFIX"
+        # Fail here, not at configure, if the host tools did not land.
+        bindir="$PREFIX/bin"
+        if [ "$RUNNER_OS" = Windows ]; then bindir=$(cygpath -u "$bindir"); fi
+        "$bindir/cmake" --version
+        "$bindir/ninja" --version

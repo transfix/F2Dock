@@ -31,7 +31,10 @@ SET(F2DOCK_LINK_LIBS
   vol
   fft-utils
   misc-ident
-  ${FFTW_LIB}
+  # No ${FFTW_LIB} here: the transform library is whatever
+  # F2DOCK_FFT_PROVIDER selected, and fft-utils links it PUBLIC so it
+  # propagates. Naming FFTW here would drag the GPL library into every
+  # build regardless of the provider chosen.
   Threads::Threads
 )
 if(UNIX)

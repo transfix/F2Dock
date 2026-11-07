@@ -11,7 +11,8 @@ permissions:
 jobs:
   # ── Linux: .deb + portable tarball ──
   linux:
-    runs-on: ubuntu-latest
+    # Pinned to the image ci.yml builds and tests on.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
 
@@ -23,11 +24,16 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential cmake ninja-build libfftw3-dev dpkg-dev
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      - name: Provision dependencies (cvcpkg)
+        id: deps
+        uses: ./.github/actions/cvcpkg-deps
+        with:
+          build_type: Release
+          link: shared
+
+      # No dpkg-dev from apt: CPack's DEB generator writes the archive itself
+      # and needs only the base image's dpkg.
 
       - name: Configure
         run: |
@@ -43,10 +49,14 @@ jobs:
       - name: Create portable tarball
         run: |
           cmake --install build --prefix staging/F2Dock
-          # Bundle the required shared libs next to the binaries
+          # Bundle every shared library the binaries resolve from the cvcpkg
+          # prefix (libcvc and its closure) next to them; system libraries
+          # stay the system's. This used to match libfftw only, which the
+          # default PocketFFT build no longer links.
+          deps="${{ steps.deps.outputs.prefix }}"
           mkdir -p staging/F2Dock/lib
           for bin in staging/F2Dock/bin/*; do
-            ldd "$bin" 2>/dev/null | grep -oP '/\S+libfftw\S+' | while read lib; do
+            ldd "$bin" 2>/dev/null | awk -v p="$deps/" '$3 ~ "^"p {print $3}' | while read lib; do
               cp -uL "$lib" staging/F2Dock/lib/
             done
           done
@@ -98,8 +108,13 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        run: brew install cmake ninja fftw
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      - name: Provision dependencies (cvcpkg)
+        id: deps
+        uses: ./.github/actions/cvcpkg-deps
+        with:
+          build_type: Release
+          link: shared
 
       - name: Configure
         run: |
@@ -149,7 +164,9 @@ jobs:
 
   # ── Windows: .zip ──
   windows:
-    runs-on: windows-latest
+    # windows-2022 (VS2022, v143): the toolchain the cvcpkg bundles are built
+    # with. windows-latest's VS2026 CL.exe ICEs on libcvc's C++20 headers.
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v5
 
@@ -161,16 +178,19 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "arch=x64" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        shell: bash
-        run: vcpkg install fftw3:x64-windows pthreads:x64-windows
+      # Dependencies come from cvcpkg only — see .github/actions/cvcpkg-deps.
+      - name: Provision dependencies (cvcpkg)
+        id: deps
+        uses: ./.github/actions/cvcpkg-deps
+        with:
+          build_type: Release
+          link: shared
 
       - name: Configure
         shell: bash
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
             -DCMAKE_INSTALL_PREFIX=install \
             -DF2DOCK_BUILD_TESTS=OFF
 
@@ -182,11 +202,11 @@ jobs:
         run: |
           cmake --install build --config Release --prefix staging/F2Dock
 
-          # Bundle vcpkg runtime DLLs alongside the executables
-          cp "$VCPKG_INSTALLATION_ROOT"/installed/x64-windows/bin/*.dll \
+          # Bundle the cvcpkg prefix's runtime DLLs alongside the executables
+          cp "${{ steps.deps.outputs.prefix }}"/bin/*.dll \
              staging/F2Dock/bin/ 2>/dev/null || true
 
-          cp README.md staging/F2Dock/
+          cp README.md LICENSE staging/F2Dock/
 
           cd staging
           7z a -tzip ../F2Dock-${{ steps.meta.outputs.version }}-windows-${{ steps.meta.outputs.arch }}.zip F2Dock/

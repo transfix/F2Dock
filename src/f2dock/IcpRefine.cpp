@@ -1,4 +1,27 @@
+/*
+  Copyright 2026 The University of Texas at Austin
+
+        Advisor: Chandrajit Bajaj <bajaj@cs.utexas.edu>
+
+  This file is part of F2Dock.
+
+  F2Dock is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License version 2.1 as published by the Free Software Foundation.
+
+  F2Dock is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+*/
+
 #include "f2dock/IcpRefine.h"
+
+#ifdef F2DOCK_WITH_LIBICP
 
 #include <algorithm>
 #include <vector>
@@ -94,3 +117,39 @@ IcpRefineResult refine_pose_point_to_plane(
 }
 
 } // namespace f2dock
+
+#else /* !F2DOCK_WITH_LIBICP */
+
+// The ICP solver behind this pass (inc/libicp, src/f3dock-icp) is
+// GPL-2.0-or-later and is not built unless F2DOCK_ENABLE_GPL_COMPONENTS is
+// ON. Without it the refinement is a no-op that leaves the pose untouched
+// and reports refined == false, which is exactly what the caller in
+// Docking.cpp already does when ICP fails to converge. F2Dock.cpp refuses
+// the `icpRefine` parameter in this configuration, so this path is only
+// reached by a direct caller.
+
+namespace f2dock {
+
+IcpRefineResult refine_pose_point_to_plane(
+    const double *receptor_x, const double *receptor_y,
+    const double *receptor_z, int n_receptor, const double *ligand_x,
+    const double *ligand_y, const double *ligand_z, int n_ligand,
+    std::array<std::array<double, 3>, 3> *rotation,
+    std::array<double, 3> *translation, const IcpRefineConfig &config) {
+  (void)receptor_x;
+  (void)receptor_y;
+  (void)receptor_z;
+  (void)n_receptor;
+  (void)ligand_x;
+  (void)ligand_y;
+  (void)ligand_z;
+  (void)n_ligand;
+  (void)rotation;
+  (void)translation;
+  (void)config;
+  return IcpRefineResult{};
+}
+
+} // namespace f2dock
+
+#endif /* F2DOCK_WITH_LIBICP */
