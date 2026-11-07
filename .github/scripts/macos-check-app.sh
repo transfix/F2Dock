@@ -101,7 +101,28 @@ fi
 
 out=$(mktemp)
 err=$(mktemp)
-trap 'rm -f "$out" "$err"' EXIT
+st=$(mktemp)
+trap 'rm -f "$out" "$err" "$st"' EXIT
+
+# run STATUSFILE CMD...: run CMD with a 60 s limit and write how it ended to
+# STATUSFILE: "exit N", "signal N" or "timeout". A shell's $? cannot tell an
+# exit status of 255 (`return -1` from main, as F2DockServer and FilterOutput
+# do) from death by a signal; waitpid can.
+run() {
+  perl -e '
+    my $st = shift @ARGV;
+    my $pid = fork() // die "fork: $!";
+    if ($pid == 0) { exec @ARGV or die "exec: $!" }
+    my $how;
+    local $SIG{ALRM} = sub { kill "KILL", $pid; $how = "timeout" };
+    alarm 60;
+    waitpid($pid, 0);
+    alarm 0;
+    $how //= ($? & 127) ? "signal " . ($? & 127) : "exit " . ($? >> 8);
+    open(my $fh, ">", $st) or die "$st: $!";
+    print $fh "$how\n";
+  ' "$@"
+}
 
 for f in $exes; do
   name=$(basename "$f")
@@ -109,24 +130,28 @@ for f in $exes; do
   # None of them starts work, or a server, in that case.
   args=""
   if [ "$name" = F2Dock ]; then args=--version; fi
-  # perl is the timeout and must come first: /usr/bin/perl and /usr/bin/env
+  # The wrapper (perl) must come before env: /usr/bin/perl and /usr/bin/env
   # are SIP-protected, and macOS strips DYLD_* from the environment of a
   # protected binary it launches, so env has to be the last thing to set
-  # them before the binary under test. The alarm survives both execs.
-  status=0
-  perl -e 'alarm 60; exec @ARGV or die "exec: $!"' \
-    env -u DYLD_LIBRARY_PATH -u DYLD_FRAMEWORK_PATH -u DYLD_INSERT_LIBRARIES \
+  # them before the binary under test.
+  : >"$st"
+  run "$st" env -u DYLD_LIBRARY_PATH -u DYLD_FRAMEWORK_PATH -u DYLD_INSERT_LIBRARIES \
     DYLD_FALLBACK_LIBRARY_PATH=/usr/lib DYLD_PRINT_LIBRARIES=1 \
-    "$f" $args >"$out" 2>"$err" || status=$?
+    "$f" $args >"$out" 2>"$err" || true
+  how=$(cat "$st")
 
   loaded=$(sed -n 's/^dyld\[[0-9]*\]: <[^>]*> //p' "$err")
   outside=$(echo "$loaded" | awk -v a="$app/" 'NF && index($0, a) != 1 && $0 !~ /^\/usr\/lib\// && $0 !~ /^\/System\//')
-  said=$({ cat "$out"; grep -v '^dyld\[' "$err" || true; } | sed -n '1p')
+  # The first line it printed that is not blank and not dyld's.
+  said=$({ cat "$out"; grep -v '^dyld\[' "$err" || true; } | grep -v '^[[:space:]]*$' | sed -n '1p' || true)
   ok=yes
-  if [ "$status" -ge 128 ]; then
-    echo "FAIL: $name died with signal $((status - 128))"
-    ok=no
-  fi
+  case "$how" in
+    exit\ *) ;;
+    *)
+      echo "FAIL: $name: ${how:-the wrapper reported nothing}"
+      ok=no
+      ;;
+  esac
   if grep -q 'Library not loaded\|Symbol not found\|dyld\[[0-9]*\]: [A-Z]' "$err"; then
     echo "FAIL: $name: dyld error:"
     grep -v '^dyld\[[0-9]*\]: <' "$err" | head -n 5
@@ -143,7 +168,7 @@ for f in $exes; do
   fi
   if [ "$ok" = yes ]; then
     n=$(echo "$loaded" | awk -v a="$app/" 'index($0, a) == 1' | wc -l | tr -d ' ')
-    echo "run: $name $args -> exit $status, $n images from the bundle: $said"
+    echo "run: $name $args -> $how, $n images from the bundle: $said"
   else
     bad=1
   fi
