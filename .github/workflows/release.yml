@@ -73,6 +73,12 @@ jobs:
             sed -i "s/BINNAME/$name/" "$bin"
             chmod +x "$bin"
           done
+          # Third-party licence texts for the libraries bundled above, from each
+          # cvcpkg package's share/licenses/<name>/, plus a README of package,
+          # version and licence. Report-only until the closure is republished
+          # with cy-pca/cvcpkg#576; then --require makes a gap a red job.
+          python .github/scripts/bundle-licences.py "$deps" staging/F2Dock/licenses \
+            --libs staging/F2Dock/lib
           tar -czf "F2Dock-${{ steps.meta.outputs.version }}-linux-${{ steps.meta.outputs.arch }}.tar.gz" -C staging F2Dock
 
       # Copy README into staging for the .deb as well
@@ -139,6 +145,13 @@ jobs:
           rmdir staging/F2Dock.app/Contents/Resources/bin
           bash .github/scripts/macos-bundle-app.sh staging/F2Dock.app "${{ steps.deps.outputs.prefix }}"
           bash .github/scripts/macos-check-app.sh staging/F2Dock.app
+          # Third-party licence texts for the libraries bundled above, from each
+          # cvcpkg package's share/licenses/<name>/, plus a README of package,
+          # version and licence. Report-only until the closure is republished
+          # with cy-pca/cvcpkg#576; then --require makes a gap a red job.
+          python .github/scripts/bundle-licences.py "${{ steps.deps.outputs.prefix }}" \
+            staging/F2Dock.app/Contents/Resources/licenses \
+            --libs staging/F2Dock.app/Contents/Frameworks
 
           # Create the DMG
           cp README.md staging/F2Dock.app/Contents/Resources/
@@ -211,6 +224,12 @@ jobs:
           # Bundle the cvcpkg prefix's runtime DLLs alongside the executables
           cp "${{ steps.deps.outputs.prefix }}"/bin/*.dll \
              staging/F2Dock/bin/ 2>/dev/null || true
+          # Third-party licence texts for the libraries bundled above, from each
+          # cvcpkg package's share/licenses/<name>/, plus a README of package,
+          # version and licence. Report-only until the closure is republished
+          # with cy-pca/cvcpkg#576; then --require makes a gap a red job.
+          python .github/scripts/bundle-licences.py "${{ steps.deps.outputs.prefix }}" \
+            staging/F2Dock/licenses --libs staging/F2Dock/bin
 
           cp README.md LICENSE staging/F2Dock/
 
