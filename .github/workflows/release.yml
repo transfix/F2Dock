@@ -75,10 +75,10 @@ jobs:
           done
           # Third-party licence texts for the libraries bundled above, from each
           # cvcpkg package's share/licenses/<name>/, plus a README of package,
-          # version and licence. Report-only until the closure is republished
-          # with cy-pca/cvcpkg#576; then --require makes a gap a red job.
+          # version and licence. --require: a bundled library whose package
+          # carries no licence texts (or that no manifest lists) fails the job.
           python .github/scripts/bundle-licences.py "$deps" staging/F2Dock/licenses \
-            --libs staging/F2Dock/lib
+            --libs staging/F2Dock/lib --require
           tar -czf "F2Dock-${{ steps.meta.outputs.version }}-linux-${{ steps.meta.outputs.arch }}.tar.gz" -C staging F2Dock
 
       # Copy README into staging for the .deb as well
@@ -147,11 +147,11 @@ jobs:
           bash .github/scripts/macos-check-app.sh staging/F2Dock.app
           # Third-party licence texts for the libraries bundled above, from each
           # cvcpkg package's share/licenses/<name>/, plus a README of package,
-          # version and licence. Report-only until the closure is republished
-          # with cy-pca/cvcpkg#576; then --require makes a gap a red job.
+          # version and licence. --require: a bundled library whose package
+          # carries no licence texts (or that no manifest lists) fails the job.
           python .github/scripts/bundle-licences.py "${{ steps.deps.outputs.prefix }}" \
             staging/F2Dock.app/Contents/Resources/licenses \
-            --libs staging/F2Dock.app/Contents/Frameworks
+            --libs staging/F2Dock.app/Contents/Frameworks --require
 
           # Create the DMG
           cp README.md staging/F2Dock.app/Contents/Resources/
@@ -226,10 +226,10 @@ jobs:
              staging/F2Dock/bin/ 2>/dev/null || true
           # Third-party licence texts for the libraries bundled above, from each
           # cvcpkg package's share/licenses/<name>/, plus a README of package,
-          # version and licence. Report-only until the closure is republished
-          # with cy-pca/cvcpkg#576; then --require makes a gap a red job.
+          # version and licence. --require: a bundled library whose package
+          # carries no licence texts (or that no manifest lists) fails the job.
           python .github/scripts/bundle-licences.py "${{ steps.deps.outputs.prefix }}" \
-            staging/F2Dock/licenses --libs staging/F2Dock/bin
+            staging/F2Dock/licenses --libs staging/F2Dock/bin --require
 
           cp README.md LICENSE staging/F2Dock/
 
